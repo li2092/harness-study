@@ -2,11 +2,9 @@
 
 > 中文版（主版本）: [README.md](README.md)
 
-> Current status: **the introductory volume is under review.** The manuscript is complete and undergoing final review; it will be pushed to [`intro/`](intro/) once review is finished. This README sets out the purpose, audience, structure, and acceptance criteria of the volume.
-
 ---
 
-## 1. What This Volume Addresses
+## 1. What This Project Is For
 
 Most existing material on agents stops at how to build one that runs — pick a framework, write a prompt, add a few tools, run a demo. That layer is well covered on the public internet.
 
@@ -14,19 +12,36 @@ What appears once an agent is actually deployed to office work, contract review,
 
 In most of these cases, the cause is not in the prompt. Past a certain point, further investment in prompt iteration yields rapidly diminishing returns. What actually determines whether an agent is stable is the layer around the model — in English, the **harness**. A harness is not LangChain or any particular SDK — those are frameworks. The harness is the structure you build on top of a framework for a particular task: how the model is mounted, how tools are managed, how context accumulates, where artifacts land, how things are verified, how safety is enforced, what happens when something fails.
 
-This volume — the introductory one — extracts that layer around the model and treats it as an engineering object in its own right, going through what it is composed of, why each part must be there, how to choose, and how to recognise when you have chosen wrongly.
+This project — Harness Study — exists to take that layer around the model as an engineering object in its own right and explain it systematically. **The project is organised into volumes.** The introductory volume — which walks the full skeleton once — is complete; further volumes will be per-chapter and per-module expansions, more focused and more detailed, in planning.
 
-## 2. What the Introductory Volume Delivers
+## 2. What Reading the Full Series Should Enable
 
-The volume decomposes an agent harness into **eight runtime mechanisms + one cross-cutting control plane + engineering patterns + a workbench + a composability matrix + four principles from control theory**, and walks through this skeleton in full. Each item is given a complete three-tier mental model: What / Why / How to start.
+For human readers:
 
-By the end, the reader should have a complete mental model of an agent harness, and be able to locate any agent engineering problem to a specific component and a specific anti-pattern.
+- to build a complete mental model of an agent harness;
+- to locate any agent engineering problem to a specific component and a specific anti-pattern;
+- to independently design and tune an agent harness.
 
-Further volumes — **per-chapter / per-module expansions** — are planned. Each runtime component, each engineering pattern, and each layer of the workbench will get its own deeper volume, covering finer engineering discipline, real-world cases, and deployment pitfalls. After those, the reader should be able to design and tune an agent harness independently.
+For AI readers:
 
-There is a further objective: **any AI coding assistant that reads this volume should be able to take a user's specific requirement or scenario and produce a deployable agent of reasonably high accuracy**. The volume is written on the assumption that some of its readers are AI themselves; for those readers, the downstream action is not to *understand the concepts*, but to *construct a usable engineering artifact* on behalf of the user.
+- any AI coding assistant that reads this project should be able to take a user's specific requirement or scenario and produce a deployable agent of reasonably high accuracy.
 
-## 3. Six Questions Answerable After Reading
+The project is written on the assumption that some of its readers are AI themselves; for those readers, the downstream action is not to *understand the concepts*, but to *construct a usable engineering artifact* on behalf of the user.
+
+## 3. Current Status
+
+- ✓ **Introductory volume**: the manuscript is complete and under final review; it will be pushed to [`intro/`](intro/) once review is finished.
+- ⏳ **Expansion volumes to follow**: in planning.
+
+---
+
+## 4. The Introductory Volume
+
+The introductory volume is the opening — the overture — of this project. It decomposes an agent harness into **eight runtime mechanisms + one cross-cutting control plane + engineering patterns + a workbench + a composability matrix + four principles from control theory**, and walks through this skeleton in full. Each item is given a complete three-tier mental model: What / Why / How to start.
+
+The volume runs to roughly 250,000 Chinese characters, prose-dominant. That scale is set by the introductory positioning — *walk the full skeleton once, give a complete mental model*; later expansion volumes will be more focused and more detailed.
+
+### Six Questions Answerable After Reading
 
 1. **My agent is unstable — is it because the prompt is poorly written?** Most likely not. The prompt is one piece of the harness; tuning it past a certain point yields diminishing returns.
 2. **Is ReAct still relevant? Should I move to plan-execute?** It depends on the setting. Four of ReAct's eight original assumptions no longer hold, but invalidation of assumptions does not mean ReAct is wholesale obsolete.
@@ -35,7 +50,7 @@ There is a further objective: **any AI coding assistant that reads this volume s
 5. **How do I systematically optimise the harness rather than tune by feel?** Observe trajectories, Score them, Ablate mechanisms, Tune parameters, Iterate. This is an outer loop independent of the business loop; the volume calls it the **Harness Lab**.
 6. **Which part of this is for me?** See *Who Should Read What* below.
 
-## 4. Who Should Read What
+### Who Should Read What
 
 The introductory volume does not require linear reading. Three reader types have recommended paths.
 
@@ -51,7 +66,7 @@ The introductory volume does not require linear reading. Three reader types have
 
 Follow the `depends_on` chain in each chapter's frontmatter. The entry hook and cognitive-node definitions in each chapter are sufficient for modelling. Do not skip the mechanism-description sections — that is the prose body; skipping leaves only the names behind.
 
-## 5. Structure
+### Chapters
 
 | Section | Subject |
 |---|---|
@@ -78,34 +93,32 @@ Follow the `depends_on` chain in each chapter's frontmatter. The entry hook and 
 | §X | Learning paths |
 | Appendix | K1-K7 / primary sources / EG10 / OWASP / naming map / SPIFFE-biscuit / AP01-AP19 / arxiv index |
 
-The volume runs to roughly 250,000 Chinese characters, prose-dominant. That scale is set by the introductory positioning — *walk the full skeleton once, give a complete mental model*; later expansion volumes will be more focused and more detailed.
-
-## 6. What May Be Skipped
+### What May Be Skipped
 
 - **The appendix is reference material, not required reading** — consult on demand.
 - **Continuity sections** (§5.2 Model Adapter / §5.7 Trajectory) cover comparatively mature components and have lower methodological density than the main chapters; may be skimmed.
 - **The main chapters should not be skipped**: §5.1 Agent Loop / §5.4 Context-Memory-Artifact / §5.5 Prompt Assets / §5.6 Observation Surface / §5.8 Verifier / §VII Harness Lab / §VIII Composability Matrix / §IX Control Theory. These eight chapters carry the volume's thesis.
 
-## 7. Relation to the Workbench Project
+### Introductory Volume — Acceptance Criterion
+
+The introductory volume is complete when readers can answer the six questions above. **The full-series acceptance criterion is higher**: readers should be able to independently design and tune an agent harness — that level is carried by the expansion volumes to follow.
+
+---
+
+## 5. Relation to the Workbench Project
 
 The tutorial side — this repository — defines the object of study and the method. The engineering implementation side is carried by an independent project, [Harness · Lab](https://github.com/li2092/Harness-Lab), which puts this method onto a workbench specification. The two projects share the same vocabulary, the same node definitions, the same signal conventions.
 
 Order of use:
 
-- First-time readers of this tutorial: the workbench is not needed; start directly from `intro/01-introduction.md`.
-- After finishing the introductory volume, when deploying an actual harness: use the workbench specification as the visual language of the evidence graph.
+- **First-time readers of this tutorial**: the workbench is not needed; start directly from `intro/01-introduction.md`.
+- **After finishing the introductory volume, when deploying an actual harness**: use the workbench specification as the visual language of the evidence graph.
 
-## 8. Acceptance Criteria
-
-**Introductory volume completion** = the reader can answer the six questions above after reading.
-
-**Next-tier completion** (per-chapter / per-module expansion volumes): the reader can independently design and tune an agent harness — not merely answer the six questions.
-
-## 9. License
+## 6. License
 
 [Apache License 2.0](LICENSE) © 2026 Jinming Li
 
-## 10. Contact
+## 7. Contact
 
 - Issues and Discussions welcome.
 - Email: li2092@qq.com
