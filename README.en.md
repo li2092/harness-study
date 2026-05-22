@@ -19,7 +19,7 @@ This project — Harness Study — exists to take that layer around the model as
 For human readers:
 
 - to build a complete mental model of an agent harness;
-- to locate any agent engineering problem to a specific component and a specific anti-pattern;
+- to locate any agent engineering problem to a specific mechanism and a common pitfall;
 - to independently design and tune an agent harness.
 
 For AI readers:
@@ -56,7 +56,7 @@ The introductory volume does not require linear reading. Three reader types have
 
 **AI PMs / AI business roles** — for those evaluating vendors, selecting frameworks, setting the harness direction for a team. The most useful question for you is: *what are the parts, what fits which setting, what are the common errors?* Path:
 
-§I Why harness (build mental model in five minutes) → §5.3 Tool Registry & ACI (tools are the crucial part of B2B agent deployment) → §5.5 Prompt Assets (how the instruction layer is managed) → §VII Harness Lab anti-patterns (cache collusion / leakage / reward hacking) → §VIII Composability Matrix (see clearly which combination you are actually putting together).
+§I Why harness (build mental model in five minutes) → §5.3 Tool Registry & ACI (tools are the crucial part of B2B agent deployment) → §5.5 Prompt Assets (how the instruction layer is managed) → §VII Harness Lab common pitfalls (cache collusion / leakage / reward hacking) → §VIII Composability Matrix (see clearly which combination you are actually putting together).
 
 **Learners** — students of agent engineering, researchers, those preparing to enter the field. The point is to build a mental model that converses with any agent paper or tutorial — to understand why the line from ReAct to Reflexion to plan-execute has evolved the way it has. Path:
 

@@ -21,7 +21,7 @@
 给读者：
 
 - 建起完整的 agent harness mental model；
-- 拿到任何 agent 工程问题能定位到具体件 + 具体反模式；
+- 拿到任何 agent 工程问题能定位到具体的机制 + 常见的误区；
 - 独立设计、独立调优一个 agent harness。
 
 给 AI 读者：
@@ -39,13 +39,13 @@
 
 ## 四、入门卷概览
 
-入门卷是本项目的开篇导论卷。它把 agent harness 拆成**八件 runtime 机制 + 一件横切控制面 + 工程模式 + 工作台 + 可组合性矩阵 + 控制论四原则**，把整套骨架走一遍。每一件给出 What / Why / How to start 三档完整 mental model。
+入门卷是本项目的开篇导论卷。它把 agent harness 拆成**八种 runtime 机制 + 一种横切控制面 + 工程模式 + 工作台 + 可组合性矩阵 + 控制论四原则**，把整套骨架走一遍。每一种给出 What / Why / How to start 三档完整 mental model。
 
-入门卷整本约二十五万中文字，prose 主导。这件规模由"一次走完全骨架 + 给完整 mental model"的入门版定位决定；后续展开卷会更聚焦、更详细。
+入门卷整本约二十五万中文字，prose 主导。这一规模由"一次走完全骨架 + 给完整 mental model"的入门版定位决定；后续展开卷会更聚焦、更详细。
 
 ### 读完入门卷应能回答的六个问题
 
-1. **我的 agent 不稳定 · 是不是 prompt 写得不好？** 多半不是。prompt 只是 harness 的一件零件，调到极限收益会到顶。
+1. **我的 agent 不稳定 · 是不是 prompt 写得不好？** 多半不是。prompt 只是 harness 的一种零件，调到极限收益会到顶。
 2. **ReAct 还在用吗？我该升级到 plan-execute 吗？** 看场景。ReAct 八条原始假设里四条已经失效，但失效不等于 ReAct 整体过时。
 3. **我跑 N 次取平均看通过率 · 统计可信吗？** 不一定。DeepSeek 之类的 prefix KV cache 会让 N 次之间不独立——表面 80% 通过率可能其实是同一份缓存复用 N 次。这叫 cache 共谋。
 4. **我的 verifier 总放过看似对实际错的输出 · 怎么办？** 三种典型病：答案泄漏（verifier 见过 ground truth）、reward hacking（模型学会糊弄 verifier）、artifact-claim mismatch（agent 声称做了但产物里没有）。三种各有不同对策。
@@ -58,11 +58,11 @@
 
 **AI PM / AI 业务人员**——你要选型、评估外部 agent 厂商、给团队定 harness 方向。最需要"有哪些零件、什么场景该选什么、什么是常见误区"。推荐路径：
 
-§一 Why harness（5 分钟先建心智）→ §5.3 Tool Registry & ACI（工具是 To B agent 落地的关键）→ §5.5 Prompt Assets（指令层怎么管）→ §七 Harness Lab 三块反模式（cache 共谋 / leakage / reward hacking）→ §八 可组合性矩阵（看清自己手里在拼哪一组合）。
+§一 Why harness（5 分钟先建心智）→ §5.3 Tool Registry & ACI（工具是 To B agent 落地的关键）→ §5.5 Prompt Assets（指令层怎么管）→ §七 Harness Lab 三块常见误区（cache 共谋 / leakage / reward hacking）→ §八 可组合性矩阵（看清自己手里在拼哪一组合）。
 
 **学习者**（在学 agent 工程、做研究、准备入行）——你要建一套能跟任何 agent 论文 / 教程对话的 mental model，知道 ReAct 到 Reflexion 到 plan-execute 这条线为什么会这么演化。推荐路径：
 
-§一-§二（命名与历史）→ §5.1 Agent Loop（思维范式的进化）→ §5.8 Verifier（agent 工程最难的一件）→ §九 控制论四原则（整本教程 thesis 收束）。
+§一-§二（命名与历史）→ §5.1 Agent Loop（思维范式的进化）→ §5.8 Verifier（agent 工程最难的一种）→ §九 控制论四原则（整本教程 thesis 收束）。
 
 **给 AI 看**——AI agent 自己读本卷做下游决策（例如读完本卷之后调自己 harness 配置）。推荐路径：
 
@@ -76,7 +76,7 @@
 | §二 | 命名与历史 · prompt → harness engineering |
 | §三 | 跨度三层 |
 | §四 | 关键张力 |
-| §五 | 八件 runtime 机制 + Safety 控制面 + 端到端示例 |
+| §五 | 八种 runtime 机制 + Safety 控制面 + 端到端示例 |
 | §5.1 | Agent Loop |
 | §5.2 | Model Adapter & Routing |
 | §5.3 | Tool Registry & ACI |
@@ -103,7 +103,7 @@
 
 ### 入门卷完成判据
 
-入门卷读完，上述六个问题读者能答出来。**整套项目的完成判据**比这更高：读者能独立设计 + 独立调优一个 agent harness——这件由后续展开卷承担。
+入门卷读完，上述六个问题读者能答出来。**整套项目的完成判据**比这更高：读者能独立设计 + 独立调优一个 agent harness——这一目标由后续展开卷承担。
 
 ---
 
