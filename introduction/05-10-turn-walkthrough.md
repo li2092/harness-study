@@ -6,6 +6,8 @@
 
 ![](../diagrams/t1-flow-5.10-turn.png)
 
+*图 5.23 · 一次 agent turn 的 Step 0→7 五阶段流程*
+
 ```
 [一次 agent turn 微型流程 · 8 件 runtime + Safety 横切]
 

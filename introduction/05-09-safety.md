@@ -38,6 +38,8 @@ Safety 控制面不是 "agent 跑完一个 turn 用一下" 的件——是 **在
 
 ![](../diagrams/t1-layered-5.9-permission.png)
 
+*图 5.22 · Safety 的四层权限决策模型*
+
 第一层 **permission mode** 是 agent 整体运行模式开关。业界主流路径是 3-6 档梯度——Codex 2026 实施的是 3 档 read-only / workspace-write / danger-full-access（[Sandbox · Codex Docs](https://developers.openai.com/codex/concepts/sandboxing)）· Claude Code 实施的是 6 档（default / acceptEdits / plan / auto / dontAsk / bypassPermissions · [Choose a permission mode · Claude Code Docs](https://code.claude.com/docs/en/permission-modes)）。3 档 vs 6 档的取舍是 "user 易选 vs 表达力" 的张力——3 档简单清晰 · user 一眼能选；6 档表达力强 · 可以精细到 plan-only / accept-only-edits 等模式 · 但 user 需要学习。生产 harness 通常默认走 "workspace-write 或 default 模式 · interactive 让 user 自己选" 的路径——既不让 user 一开始被 6 档吓到 · 也不限制 power user 用细粒度模式。
 
 第二层 **allow-deny-ask rules** 是工具级别的细粒度规则。一条规则的语法通常是 `{允许 / 拒绝 / 询问} {工具名 + 参数 pattern}` —— 比如 "允许 `git status`" / "拒绝 `git push`" / "询问 `git commit`"。这一层的工程价值在于让 user 可以把"通常安全 · 但极端 case 不安全"的工具收紧到具体 case——`git status` 默认安全 · 但 `git status --no-optional-locks` 在某些场景会触发外部 process 也得考虑。规则的存储位置业界主流走 settings.json 配置 + 优先级层次（global / user / project / session 四层 · 越具体越优先）。Claude Code 跟 Codex 都用这一套层次 · 让 user 可以在不同项目设不同规则 · 也可以在 session 内临时放宽某个规则不影响 global。

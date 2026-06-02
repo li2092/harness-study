@@ -28,6 +28,7 @@ AutoGPT 那一波翻车给业界留下了一道清晰的工程命题：单纯依
 
 ![](../diagrams/t1-timeline-4-naming.png)
 
+*图 4.1 · 2026 命名收敛：两个月四人协奏*
 
 | 阶段 | 时间 | 流行术语 | 实际在做什么 | 这个名字的盲区 |
 |---|---|---|---|---|
@@ -163,6 +164,7 @@ Böckeler 进一步给 harness 三个评价维度：**可维护性（maintainabi
 
 ![](../diagrams/t2-matrix-4-generations.png)
 
+*图 4.2 · 五代算法的不可控来源与对应的约束层*
 
 对 harness engineering 来说，LLM 这代算法的不可控来源是什么？这一点已经在前面三节反复讲过——单步预测的概率性输出、多步执行的状态漂移、工具调用的失败级联、上下文窗口的爆炸、目标漂移、不可复现。这六件构成了 harness engineering 这门工程实践要回应的工程命题。可以预见的是，当下一代算法（比如完全 multi-modal 的 reasoning agent、或者 self-improving research loop）成熟到生产用例阶段，新的不可控来源会被工程师感知到，然后业界会再发明一个新的 "X engineering" 来命名那一代的约束层。
 
@@ -306,6 +308,7 @@ Andrej Karpathy 在 2025 年提了两个相关术语，都没赢。
 
 ![](../diagrams/t2-analogy-4-bridle.png)
 
+*图 4.3 · 马具五部件与五件 agent 机制的精准映射*
 
 **第三层精准 · "驯化是持续过程不是一次性事件"**。驯马师不是"装上 harness 就走人"——驯马师每天跟马打交道，根据马的脾气调整 harness 的扣眼松紧、根据天气调整缰绳的力度、根据训练阶段调整哪个工具加哪个工具减。这种"持续根据反馈调整"的工程纪律正是 Hashimoto 28 字定义的核心——anytime you find an agent makes a mistake, you take the time to engineer a solution。harness 这个词暗示了**这是一个工程师跟 agent 长期共处的关系**，不是一次性的项目交付。其他词都没这层暗示——framework 是"一次性引入的库"，scaffold 是"用完拆掉的杆"，infrastructure 是"建好了在那儿放着"。
 

@@ -28,6 +28,8 @@
 
 ![](../diagrams/t2-cardgrid-9-principles.png)
 
+*图 9.1 · 控制论四原则的工程实例与典型失守*
+
 #### 9.2 四原则 vs 常见误区映射
 
 把整本教程的常见误区逐一映射回四原则——读者读完应该能拿到任何一件 agent harness bug 直接判断它属于四原则的哪一档失守。这件映射不是穷举——是建一个跨章节诊断 framework。
@@ -83,6 +85,8 @@ HWMSE 跟西方三件主流方法论的关键差异要点透。**RAND Delphi met
 控制论的经典类比是**温控空调**——这件类比在业界控制论教学里几乎所有材料都用 · 因为它把四原则压在最小化的物理对象上。一个温控空调是 sensor + controller + actuator + feedback loop 四件组成的最小完整闭环系统。Sensor（温度传感器）量房间当前温度 · 对应**可观测性原则**——没有传感器空调不知道该不该开。Controller（温控逻辑 · 当前温度 vs 设定温度）算误差 · 对应**可控性原则**——空调能基于误差决定是制冷还是制热还是不动。Actuator（压缩机 / 风扇）执行决定 + Bound（压缩机最大功率限制）防超调 · 对应**稳定性原则**——压缩机不能无限大功率 · 否则房间温度会反复振荡；功率太小达不到设定温度。Feedback（温度变化反馈回 controller）让下一轮决策基于新观测 · 对应**闭环反馈原则**——开环空调（按时间表开关 · 不看温度）永远做不到精确控温。
 
 ![](../diagrams/t1-analogy-9-thermostat.png)
+
+*图 9.2 · 温控空调类比：控制论的四件对应*
 
 把温控空调类比映射到 agent harness · 四件对应——Sensor = trajectory + RunEvent + Evidence Graph；Controller = Verifier + Repair + Escalation 决策逻辑；Actuator = Tool Registry + Model Adapter + Agent Loop；Feedback = Harness Lab 跨 run 数据回流。类比的边界——温控空调被控对象（房间温度）是连续 + 线性 + 可数学建模 · LLM agent 被控对象（agent 行为）是离散 + 非线性 + 大部分不可数学建模——这件断层就是钱学森 1954 *Engineering Cybernetics* 跟 Wiener 1948 *Cybernetics* 关键区别的实例化——LLM 时代必须用钱学森的"对未知特性系统的工程设计方法"才能跑通 · Wiener 经典数学控制论方法直接套不上。
 

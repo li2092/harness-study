@@ -38,6 +38,7 @@ trajectory 是 event stream · event 有分类。业界主流 harness 的 event 
 
 ![](../diagrams/t1-cardgrid-5.7-events.png)
 
+*图 5.19 · trajectory 的九类 event 与公共字段*
 
 每条 event 必须有几件公共字段——**timestamp**（毫秒级或微秒级精度 · 不能只到秒）/ **event_id**（这条 event 的唯一标识）/ **parent_event_id**（这条 event 的因果父 · 让 event stream 形成可追溯的 DAG 不只是时间序列）/ **run_id**（这条 event 所属 run）。run_id 让 event 在跨 trajectory 文件聚合时不会混淆；event_id / parent_event_id 让 trajectory replay 跟 ablation 能精确重建因果链——比如"这条 verification 失败是哪条 tool_call_response 触发的"这件因果关系不能靠时间戳 + 启发式重建 · 必须有显式字段。这件 DAG 设计纪律是 2026 业界 trajectory 工程治理跟早期 log 设计的关键分水岭。
 

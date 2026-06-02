@@ -21,6 +21,8 @@
 
 ![](../diagrams/sample-05-mechanisms-overview.png)
 
+*图 5.1 · 机制总览：8 件 runtime 与 1 件 Safety 控制面*
+
 类比的边界要点一下——OS 工程里"control plane vs data plane"是一个成熟的分层抽象，Kubernetes 把它做成显式的 etcd + kubelet 架构，SDN 把它做成显式的 controller + switch 架构。harness 把 Safety 设计成控制面，是这个分层在 agent 工程里的对应。但 harness 的控制面跟 OS 的控制面不完全同构——OS 的控制面是独立进程（kubelet / controller），通过 RPC 跟数据面通信；harness 的 Safety 控制面是嵌入式 hook（每件 runtime 在关键节点上同步触发 Safety 判定），通过同步调用而不是 RPC。类比借的是"分层思想"——监管和加工要在不同抽象层上做——不是"实现细节"。在 harness 工程里，Safety 不需要独立进程，但需要独立的策略层、独立的事件接入点、独立的可观测性面板。
 
 下面 §5.1 到 §5.9 按这套结构详写每件机制。每件机制说清四件事——**它解决什么具体问题**（在 harness 里担什么角色 / 不做会出什么错 / 替代方案为什么不行），**核心接口形状**（它对外暴露什么 API / 接收什么数据 / 产出什么数据 / 跟相邻机制怎么交接），**关键设计取舍**（设计这一机制时有哪些岔路口 / 不同岔路对应什么场景 / 业界倾向哪一个 / 倾向的工程理由），**外部公开 citation**（开源 harness 里这一机制是怎么落地的 / 一手参考资料在哪）。每件还配 **P0 / P1 / P2 优先级标注**——P0 是 MVP 必备（不做这一机制 harness 跑不起来 / 跑起来也不可靠），P1 是生产前奏（不做有故障风险但 PoC 阶段可省 / 上 production 前必补），P2 是数据闭环（不做拿不到优化反馈但能跑 / 规模化后才看出价值）。这套优先级帮读者按工程阶段判断"现在该投入哪几件"——PoC 阶段做 P0 即可，生产前补 P1，规模化后再做 P2。读者按自己当前项目所处的阶段挑相应优先级的机制对照阅读即可，不需要一次全读完。
@@ -30,6 +32,8 @@
 下面 §5.1 到 §5.11 讲的 8 件 runtime + 1 件 Safety 控制面 · **全部是抽象功能不是具体技术**。读者在网上能听到的所有流行名字——MCP / function calling / RAG / GraphRAG / vector DB / 图数据库 / Memory / Artifact / Skill / CLAUDE.md / hook / Agent Skills open standard / LangGraph nodes / OpenAI Assistants——**都是某件抽象功能的具体实现**。
 
 ![](../diagrams/t1-layered-5.0-abstraction.png)
+
+*图 5.2 · 件 vs 实现：稳定的抽象功能层与易变的实现层*
 
 业界两年内大换血 · 实现层会反复推倒重来 · 抽象功能层稳定得多。读者拿到任何流行技术名 · 先问一个问题：**"它属于哪件抽象功能的实现 · 解决的是哪件的什么职能？"** 不要被业界常见的"RAG vs Memory 二选一 / MCP vs function calling / Skill vs CLAUDE.md"这种**实现层并列对照表**带偏——这些对照表不是错 · 但它们站在实现层做对比 · 解决的是"我落地时用哪一套技术栈" · 不是"harness 由哪几件抽象功能构成"。两层混在一起读者就晕。
 

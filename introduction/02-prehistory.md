@@ -10,6 +10,7 @@
 
 ![](../diagrams/t1-comparison-2-prompt.png)
 
+*图 2.1 · Prompt engineering 三件套的机制与限制*
 
 **Few-shot prompting**[^gpt3-few-shot-2020]——在 prompt 里塞几个 (input, output) 示例，让模型从示例里"学到"任务形态再处理真实输入。机制是 **in-context learning**（ICL）：transformer 不更新权重，但能在 attention 计算中"模仿"上下文里给定的输入输出模式。这件事本身是 LLM 的一种 emergent 能力，被工程化利用之后变成 prompt engineering 的支柱。限制也清楚：每个示例占 token、示例选不对反而误导模型、示例顺序敏感（同样几个示例换个顺序输出可能完全不同）。
 

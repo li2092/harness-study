@@ -4,6 +4,8 @@
 
 ![](../diagrams/t1-timeline-5.11-17turn.png)
 
+*图 5.24 · 17 个 turn 端到端修 logging bug 并提 PR*
+
 示例是作者构造的教学示例 · 不是某次真实运行 trajectory · 数值用于展示机制协作关系。
 
 ```
@@ -196,6 +198,8 @@ End of run.
 **Safety 控制面 4 层每 turn 都穿过但通常隐身** —— Turn 2/3/4/5/7/9/13/15 等 workspace-write 操作都过 4 层但都 pass · 读者看不到 Safety 显式存在；Turn 16 git push 触发 network egress + ask rule + Hook 同时 require user approval 三件叠加 · Safety 4 层完整介入显式可见。这种"通常隐身 · 关键 case 显式" 的 pattern 是 Safety 控制面工程化的核心 — Safety 不应该让 user 每个工具调用都被打断 · 但关键 high-impact 操作必须可见。
 
 ![](../diagrams/t1-sequence-5.11-turn16.png)
+
+*图 5.25 · git push 时 Safety 四层逐层穿过*
 
 跨 run 的 ablation 视角（前面 Observation Surface / Trajectory 两章讲的 self-evolution 基础设施 · 在后面 Harness Lab 章节系统展开）展示同一任务在不同 harness 配置下的成功率差异（hypothetical ablation matrix · 作者构造的教学示例 · 不是实证数据 · 仅用于说明机制贡献逻辑）：
 

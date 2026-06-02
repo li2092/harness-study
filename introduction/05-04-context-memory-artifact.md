@@ -6,6 +6,7 @@
 
 ![](../diagrams/t1-comparison-5.4-state.png)
 
+*图 5.10 · Context / Memory / Artifact 三种时间尺度*
 
 三种时间尺度决定三种工程治理方式完全不同。Context 受 token 窗口约束、要做压缩 / 缓存优化、跟 prompt cache 配套；Memory 受运行时内存约束、要做 eviction 控总量、跟 session lifecycle 配套；Artifact 受存储成本约束、要做索引和检索、跟权限 / 隐私 / GDPR 这类长期约束配套。混在一起治理就是要在同一个数据结构上同时满足三套互不兼容的约束——做不到。
 
@@ -13,6 +14,7 @@
 
 ![](../diagrams/t2-analogy-5.4-osmem.png)
 
+*图 5.11 · 操作系统内存层次的跨域类比*
 
 OS 工程里这三层有几十年成熟实践——什么数据放哪一层、层与层之间怎么 swap、cache 怎么 invalidate、文件系统怎么组织索引和事务——这些经验几乎可以直接迁移到 agent 状态管理工程。具体对应起来：OS 寄存器 / L1 → Context（都是计算单元最快能访问的位置、都受容量约束、都需要做 cache replacement 决策）；OS RAM → Memory（都是进程范围内共享的工作内存、都有 eviction 机制、都跟 cache 配合工作）；OS 硬盘 + 数据库 → Artifact（都是永久持久化、都需要索引才能高效访问、都有备份和访问控制问题）。
 
@@ -62,6 +64,7 @@ Context 压缩分三种力度，按触发时机和压缩范围分层。最轻的
 
 ![](../diagrams/t3-comparison-5.4-compress.png)
 
+*图 5.12 · Context 压缩的三种力度*
 
 micro-compact 的做法是**不直接塞 raw**——而是塞一个**摘要加引用指针**进 Context（"已读取 contract-2026.pdf · 12 页 · 关键章节第 3-5 节 · 涉及付款条款、违约责任、保密义务 · 完整内容索引：memory:doc-contract-2026"），完整 raw 内容存到 Memory（如果后续可能回查）或 Artifact（如果是产物的一部分）。micro-compact 是单轮单工具调用的局部决策，**每件工具按自己语义配 micro-compact 策略**——`read_file` 的摘要 schema 包括 file path / page count / key sections，`search_files` 的摘要 schema 包括 query / total results / top-N path list，`extract_clauses` 的摘要 schema 包括 clause count / per-clause id 加 summary。
 
@@ -169,6 +172,7 @@ stateless 路径的硬收益不是次要的——相对 stateful 能省下可观
 
 ![](../diagrams/t2-tree-5.4-memory.png)
 
+*图 5.13 · 该不该上 Memory 的判定五问*
 
 判定完之后边界要明示——**hybrid 模式是大规模生产系统的实际答案**。stateless frontend（K8s 水平扩展 · 无 session state）+ stateful orchestrator（独立服务 · 维护任务状态）· 用 correlation id 在两层之间传递。frontend 接 user 请求拿水平扩展的好处 · orchestrator 维护长任务状态拿连续性的好处。这种 hybrid pattern 是高并发 toB agent 的事实标准——纯 stateless 跟纯 stateful 都是极端 · 真实生产介于两者之间。
 
