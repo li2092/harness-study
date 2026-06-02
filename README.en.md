@@ -30,6 +30,23 @@
 
 ## 1. What This Project Is For
 
+In December 2025 I started trying to build a harness with Claude Code — back then the word didn't exist yet, and I called whatever I was making "an agent-driven balabala product." My first one was Cyber-Mantic: I gave an LLM tools so it could compute the results of various Chinese metaphysics systems accurately and reason over them, and for the agent runtime I simply bolted OpenCode straight in. The project fell short of what I'd hoped, but it sent one very strong signal — once an LLM is given stronger tool-calling, pairing it with an agent runtime is going to be one of the most important kinds of AI tooling for the next few years. So I set out to build agents from scratch, without leaning on any existing framework, and to try every shape the thing could possibly take. For the better part of four months I did this in the hours after my kid was asleep, cheerfully stepping on every harness landmine there was, vibe-coding into the small hours.
+
+After a post of mine on Xiaohongshu (RED) caught a little traction, I began swapping harness notes with a lot of other builders, and found that some of the small tricks I'd accumulated were genuinely useful to them — which is where the idea of writing a systematic tutorial came from. Along the way some of those friends landed internship offers, some caught the startup bug, and the most driven of the lot has already started building a product and raised his first round of funding. I wasn't idle either: I shipped several enterprise vertical-domain agent products of my own, which let me validate my understanding of harnesses from many angles. Light on academia, heavy on engineering.
+
+My hope is that Harness Study helps people understand what a harness is more systematically and more deeply — and that an AI coding tool, handed this tutorial, can turn a user's description of what they need into an agent product that is good enough to use. I also hope it can push along the work of translating *harness* into Chinese: only once every detail of the harness is defined more precisely and more uniformly will more people grasp the concept, and only then can it gradually prove its worth across one industry after another.
+
+Next, I will:
+- keep proofreading the Introduction;
+- flesh out the engineering detail of Harness · Lab;
+- put both Harness Study and Harness · Lab into practice by building an agent purpose-built for DeepSeek V4;
+- and distil that engineering process into the expansion chapters of Harness Study.
+
+There. The loop is closed.
+
+
+## Over to Claude Code to Introduce Harness Study
+
 Most existing material on agents stops at how to build one that runs — pick a framework, write a prompt, add a few tools, run a demo. That layer is well covered on the public internet.
 
 What appears once an agent is actually deployed to office work, contract review, or business process automation is a different class of problem: the same prompt produces different outputs at different times; the headline pass rate looks high but users report inconsistent behaviour in practice; given a document to consult, the agent fabricates details that are not in it and then declares the task complete; a change to a single tool-call convention — leaving the model untouched — causes the entire main loop to stop converging.
