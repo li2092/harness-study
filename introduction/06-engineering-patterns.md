@@ -102,7 +102,7 @@ JSONL session 这件 pattern 的工程价值最终落到 **跨 run audit 跟 rep
 
 #### 6.6 fork-join concurrency · sub-agent 并发协作 pattern
 
-**第六件工程模式** —— main agent 把任务拆给多个 sub-agent 并行跑 · 然后聚合结果回 main agent。这件是 v0.4 在前面 Safety 那章已经点过指针的 pattern —— Safety 维度的两个约束（approval mode 父子传递 + sub-agent 深度 / token budget 必须 hard cap）已经讲了 · 这一节展开工程实现细节。
+**第六件工程模式** —— main agent 把任务拆给多个 sub-agent 并行跑 · 然后聚合结果回 main agent。这件是本卷在前面 Safety 那章已经点过指针的 pattern —— Safety 维度的两个约束（approval mode 父子传递 + sub-agent 深度 / token budget 必须 hard cap）已经讲了 · 这一节展开工程实现细节。
 
 工程层面这件 pattern 解决什么问题—— single-agent 跑长任务（>30 turn）容易出几件事：context 累积超 budget / 推理路径线性串行慢 / 失败一次整个 session 都要 rollback。fork-join 把一件大任务拆成多件可并行的子任务 · sub-agent 各跑各的 · 结果聚合回 main agent 决策。理论上能拿到 2-5x 吞吐量提升（取决于任务可并行度）。**但 fork-join 不是免费的**——multi-agent 比普通对话多用约 15 倍 token，放大来自 orchestration（前面 Multi-Agent Over-Decomposition 那节拆过 token 烧在哪、为什么 coding 任务尤其不划算）。这一节不重复算账，只展开 fork-join 真要落地时的工程实现。
 

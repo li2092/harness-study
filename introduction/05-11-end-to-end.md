@@ -209,7 +209,7 @@ End of run.
 | F | 关 Prompt Assets P4 examples | 4/5 | 1 次走错 debug 方向（少了 prior debug case 借鉴） |
 | G | 关 Agent Loop ReAct mode（改 plain mode · 不外化 thought）| 3/5 | 2 次决策不可审 · 后期不知道为什么走错 |
 
-从这张表能看到几件 framing。**第一件** —— Verifier 跟 Context 管理是该任务的正贡献机制——关掉成功率明显下降。**第二件** —— Safety approval 对速度是负贡献（HITL 等人审）· 但对**风险**是正贡献——这种取舍 ablation 数据本身不能下结论 · 要看业务对 "快 vs 稳" 的权重。**第三件** —— Trajectory recorder 是**前提性机制**——它不影响成功率 · 但关掉就没办法做后续任何 ablation。这种"基础设施"机制不能用 ablation 直接评 · 要作为前提保留。**第四件** —— Agent Loop 跟 Prompt Assets 是 v0.4 新加的两件——ablation 显示它们都有可观察贡献（Agent Loop ReAct mode 让决策可审 · Prompt Assets examples 让 prior pattern 可借）。
+从这张表能看到几件 framing。**第一件** —— Verifier 跟 Context 管理是该任务的正贡献机制——关掉成功率明显下降。**第二件** —— Safety approval 对速度是负贡献（HITL 等人审）· 但对**风险**是正贡献——这种取舍 ablation 数据本身不能下结论 · 要看业务对 "快 vs 稳" 的权重。**第三件** —— Trajectory recorder 是**前提性机制**——它不影响成功率 · 但关掉就没办法做后续任何 ablation。这种"基础设施"机制不能用 ablation 直接评 · 要作为前提保留。**第四件** —— Agent Loop 跟 Prompt Assets 是本卷新加的两件——ablation 显示它们都有可观察贡献（Agent Loop ReAct mode 让决策可审 · Prompt Assets examples 让 prior pattern 可借）。
 
 跨 run 的 ablation 是 Harness Lab 章节的主题——本节只点到为止 · 让读者看到"单 run 内的 17 turn 协作"跟"跨 run 的 ablation 矩阵"是两个互补视角。前者是 runtime 协作 · 后者是 outer loop 优化。两者合起来构成完整的 harness 工程实践。
 
