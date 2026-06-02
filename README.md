@@ -1,8 +1,31 @@
 # Harness Study · 智能体的工程实践
 
-*The Engineering Practice for AI Agents*
+<p align="center">
+  <img src="diagrams/hero-readme.png" alt="Harness Study · 智能体的工程实践 — 8 件 runtime + 1 Safety 控制面" width="920">
+</p>
 
-> English version: [README.en.md](README.en.md)
+<p align="center">
+  <em>The Engineering Practice for AI Agents</em><br>
+  <strong>让智能抵达人力未及之处，让自治成为条理与高效的根基。</strong>
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-Apache_2.0-6d28d9?style=flat-square"></a>
+  <img alt="入门卷" src="https://img.shields.io/badge/入门卷-约25万字-8b5cf6?style=flat-square">
+  <img alt="配图" src="https://img.shields.io/badge/配图-46张-4c1d95?style=flat-square">
+  <img alt="语言" src="https://img.shields.io/badge/语言-中英双语-067a5b?style=flat-square">
+  <a href="README.en.md"><img alt="English" src="https://img.shields.io/badge/English-README.en.md-b56a09?style=flat-square"></a>
+</p>
+
+---
+
+> 一个好的 Agent Harness 工程，本质上是数字世界的管理学。
+>
+> 它拓展大模型的能力边界，赋能个体与组织。将治理延伸至人力未及之处，持续为系统带来熵减。
+>
+> 它回应个体的每一个定制化需求，让一切数字单元都在清晰边界内自主、高效、负责地运行。
+>
+> 这样的 Harness 不是简单的智能工具，而是让能力与克制并存的治理框架。
 
 ---
 
@@ -15,6 +38,10 @@
 这些问题里大多数原因不在提示词。把希望寄托在反复迭代提示词上，到一定阶段之后边际收益迅速衰减。真正决定智能体稳定与否的，是围绕模型的那一层结构——在英文文献里叫 **harness**。harness 不是 LangChain 或某个 SDK——那是 framework。harness 是你在 framework 之上为某个具体任务搭起来的整套结构：模型怎么挂、工具怎么管、上下文怎么累积、产物怎么落地、验证靠什么、安全靠什么、出错怎么兜底。
 
 本项目（Harness Study）就是为了把围绕模型的这一层作为独立的工程对象，系统化地讲清楚。**项目分卷展开**：当前已写完**入门卷**，一次性走完全骨架；后续会有逐章 / 逐模块的展开卷，更聚焦、更详细，规划中。
+
+<p align="center">
+  <img src="diagrams/t1-comparison-1-gap.png" alt="模型能做的是单步无副作用预测，任务要的是多步有副作用的状态机驱动——harness 就是中间这套工程系统" width="800">
+</p>
 
 ## 二、读完整套之后应该能
 
@@ -32,7 +59,7 @@
 
 ## 三、当前进度
 
-- ✓ **入门卷**：稿件已写完，正在终审；审稿完成后推到 [`intro/`](intro/) 目录。
+- ✓ **入门卷**：稿件已写完，章节正文 + 46 配图已落入 [`introduction/`](introduction/)；终审进行中。
 - ⏳ **后续展开卷**：规划中。
 
 ---
@@ -40,6 +67,12 @@
 ## 四、入门卷概览
 
 入门卷是本项目的开篇导论卷。它把 agent harness 拆成**八种 runtime 机制 + 一种横切控制面 + 工程模式 + 工作台 + 可组合性矩阵 + 控制论四原则**，把整套骨架走一遍。每一种给出 What / Why / How to start 三档完整 mental model。
+
+<p align="center">
+  <img src="diagrams/sample-05-mechanisms-overview.png" alt="八种 runtime 机制 + 一种 Safety 控制面 总览" width="840">
+</p>
+
+> 全卷 46 张配图（统一 jimi-ink 视觉）已嵌入 [`introduction/`](introduction/) 各章正文，可逐章浏览。
 
 入门卷整本约二十五万中文字，prose 主导。这一规模由"一次走完全骨架 + 给完整 mental model"的入门版定位决定；后续展开卷会更聚焦、更详细。
 
@@ -113,7 +146,7 @@
 
 使用顺序：
 
-- **第一次读本教程**：不需要工作台 · 直接读 `intro/01-introduction.md` 起。
+- **第一次读本教程**：不需要工作台 · 直接读 [`introduction/`](introduction/)（从目录 README 进各章）起。
 - **已读完入门卷、要落地某个具体 harness**：把工作台规范当作 evidence graph 的视觉语言来用。
 
 ## 六、协议

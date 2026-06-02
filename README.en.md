@@ -1,6 +1,30 @@
 # Harness Study · The Engineering Practice for AI Agents
 
-> 中文版（主版本）: [README.md](README.md)
+<p align="center">
+  <img src="diagrams/hero-readme.png" alt="Harness Study — 8 runtime mechanisms + 1 Safety control plane" width="920">
+</p>
+
+<p align="center">
+  <strong>Let intelligence go where we cannot, and let autonomy anchor order and performance.</strong>
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-Apache_2.0-6d28d9?style=flat-square"></a>
+  <img alt="Intro Volume" src="https://img.shields.io/badge/Intro_Volume-~250k_chars-8b5cf6?style=flat-square">
+  <img alt="Diagrams" src="https://img.shields.io/badge/Diagrams-46-4c1d95?style=flat-square">
+  <img alt="Bilingual" src="https://img.shields.io/badge/Bilingual-中文_·_EN-067a5b?style=flat-square">
+  <a href="README.md"><img alt="中文" src="https://img.shields.io/badge/中文-README.md-b56a09?style=flat-square"></a>
+</p>
+
+---
+
+> Agent Harness engineering is, in essence, the management science of the digital world.
+>
+> It widens the capability frontier of large models and empowers individuals and organizations alike. It carries governance into domains beyond human reach, and works ceaselessly to drive down the entropy of the system.
+>
+> It answers the individual's every tailored need, so that every digital unit runs autonomously, efficiently, and responsibly within clearly defined bounds.
+>
+> Such a Harness is no mere intelligent tool; it is a governance framework in which capability and restraint hold as one.
 
 ---
 
@@ -13,6 +37,10 @@ What appears once an agent is actually deployed to office work, contract review,
 In most of these cases, the cause is not in the prompt. Past a certain point, further investment in prompt iteration yields rapidly diminishing returns. What actually determines whether an agent is stable is the layer around the model — in English, the **harness**. A harness is not LangChain or any particular SDK — those are frameworks. The harness is the structure you build on top of a framework for a particular task: how the model is mounted, how tools are managed, how context accumulates, where artifacts land, how things are verified, how safety is enforced, what happens when something fails.
 
 This project — Harness Study — exists to take that layer around the model as an engineering object in its own right and explain it systematically. **The project is organised into volumes.** The introductory volume — which walks the full skeleton once — is complete; further volumes will be per-chapter and per-module expansions, more focused and more detailed, in planning.
+
+<p align="center">
+  <img src="diagrams/t1-comparison-1-gap.png" alt="What the model does is single-step, side-effect-free prediction; what the task needs is multi-step, stateful, side-effecting execution — the harness is the engineering layer in between" width="800">
+</p>
 
 ## 2. What Reading the Full Series Should Enable
 
@@ -30,7 +58,7 @@ The project is written on the assumption that some of its readers are AI themsel
 
 ## 3. Current Status
 
-- ✓ **Introductory volume**: the manuscript is complete and under final review; it will be pushed to [`intro/`](intro/) once review is finished.
+- ✓ **Introductory volume**: the manuscript is complete; chapters + 46 diagrams are now in [`introduction/`](introduction/); final review in progress.
 - ⏳ **Expansion volumes to follow**: in planning.
 
 ---
@@ -38,6 +66,12 @@ The project is written on the assumption that some of its readers are AI themsel
 ## 4. The Introductory Volume
 
 The introductory volume is the opening — the overture — of this project. It decomposes an agent harness into **eight runtime mechanisms + one cross-cutting control plane + engineering patterns + a workbench + a composability matrix + four principles from control theory**, and walks through this skeleton in full. Each item is given a complete three-tier mental model: What / Why / How to start.
+
+<p align="center">
+  <img src="diagrams/sample-05-mechanisms-overview.png" alt="Eight runtime mechanisms + one Safety control plane — overview" width="840">
+</p>
+
+> All 46 diagrams (a unified jimi-ink visual style) are embedded throughout the chapters in [`introduction/`](introduction/).
 
 The volume runs to roughly 250,000 Chinese characters, prose-dominant. That scale is set by the introductory positioning — *walk the full skeleton once, give a complete mental model*; later expansion volumes will be more focused and more detailed.
 
@@ -111,7 +145,7 @@ The tutorial side — this repository — defines the object of study and the me
 
 Order of use:
 
-- **First-time readers of this tutorial**: the workbench is not needed; start directly from `intro/01-introduction.md`.
+- **First-time readers of this tutorial**: the workbench is not needed; start directly from [`introduction/`](introduction/) (enter the chapters via its README).
 - **After finishing the introductory volume, when deploying an actual harness**: use the workbench specification as the visual language of the evidence graph.
 
 ## 6. License
