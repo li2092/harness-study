@@ -54,6 +54,7 @@
 给 AI 读者：
 
 - 任何 AI coding 工具读完本项目之后，应当能够依据使用者给出的具体需求或场景，落地一个可投入使用且准确性较高的 agent。
+- 本项目还附带可直接喂给编码 AI 的 **Harness Prompt**（[`introduction/11-harness-prompt.md`](introduction/11-harness-prompt.md) 完整可执行 Spec + [`introduction/12-harness-prompt-lite.md`](introduction/12-harness-prompt-lite.md) 三段 lite 版）——把"用提示词落地一套 harness"从概念变成可执行的起点。
 
 本项目在写作上即假定读者中包括 AI 本身：它读完之后的下游动作不是停在"理解概念"，而是为使用者构造可用的工程产物。
 
@@ -95,20 +96,20 @@
 
 **学习者**（在学 agent 工程、做研究、准备入行）——你要建一套能跟任何 agent 论文 / 教程对话的 mental model，知道 ReAct 到 Reflexion 到 plan-execute 这条线为什么会这么演化。推荐路径：
 
-§一-§二（命名与历史）→ §5.1 Agent Loop（思维范式的进化）→ §5.8 Verifier（agent 工程最难的一种）→ §九 控制论四原则（整本教程 thesis 收束）。
+§一-§二（缘起与前世）→ §5.1 Agent Loop（思维范式的进化）→ §5.8 Verifier（agent 工程最难的一种）→ §九 控制论四原则（整本教程 thesis 收束）。
 
 **给 AI 看**——AI agent 自己读本卷做下游决策（例如读完本卷之后调自己 harness 配置）。推荐路径：
 
-按 frontmatter `depends_on` 链表依次读。每章 entry hook + 认知节点定义足够建模。不要跳读机制描述段——那是 prose 主体，跳了就只剩名字。
+按各章 frontmatter 的 `prev` / `next` 链依次读。每章 entry hook + 认知节点定义足够建模。不要跳读机制描述段——那是 prose 主体，跳了就只剩名字。
 
 ### 入门卷章节
 
 | 章 | 主题 |
 |---|---|
-| §一 | Why harness · 为什么必须把围绕模型的那一层抽出来 |
-| §二 | 命名与历史 · prompt → harness engineering |
-| §三 | 跨度三层 |
-| §四 | 关键张力 |
+| §一 | Why harness · 我们究竟在解决什么问题 |
+| §二 | 前世 · 模型当函数用的时代（2020–2022） |
+| §三 | 第一次大规模试错 · AutoGPT 浪潮和它的翻车（2023） |
+| §四 | Harness 概念的浮现（2023 中–2026） |
 | §五 | 八种 runtime 机制 + Safety 控制面 + 端到端示例 |
 | §5.1 | Agent Loop |
 | §5.2 | Model Adapter & Routing |
@@ -126,6 +127,8 @@
 | §八 | 可组合性矩阵 |
 | §九 | 控制论四原则 |
 | §十 | 学习路径 |
+| 配套 · Prompt | Harness Prompt · 给 agent 的可执行落地 Spec（[`11-harness-prompt.md`](introduction/11-harness-prompt.md)）|
+| 配套 · Prompt lite | 通用 TDD lite 版 · 三段指令直接喂编码 AI（[`12-harness-prompt-lite.md`](introduction/12-harness-prompt-lite.md)）|
 | 附录 | K1-K7 / 一手 source / EG10 / OWASP / 命名映射 / SPIFFE-biscuit / AP01-AP19 / arxiv 全表 |
 
 ### 跳读建议

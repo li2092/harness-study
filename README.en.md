@@ -53,6 +53,7 @@ For human readers:
 For AI readers:
 
 - any AI coding assistant that reads this project should be able to take a user's specific requirement or scenario and produce a deployable agent of reasonably high accuracy.
+- the project also ships **Harness Prompts** you can feed directly to a coding AI ([`introduction/11-harness-prompt.md`](introduction/11-harness-prompt.md), the full executable spec, plus [`introduction/12-harness-prompt-lite.md`](introduction/12-harness-prompt-lite.md), a three-part lite version) — turning "land a harness via a prompt" from an idea into a runnable starting point.
 
 The project is written on the assumption that some of its readers are AI themselves; for those readers, the downstream action is not to *understand the concepts*, but to *construct a usable engineering artifact* on behalf of the user.
 
@@ -94,20 +95,20 @@ The introductory volume does not require linear reading. Three reader types have
 
 **Learners** — students of agent engineering, researchers, those preparing to enter the field. The point is to build a mental model that converses with any agent paper or tutorial — to understand why the line from ReAct to Reflexion to plan-execute has evolved the way it has. Path:
 
-§I-§II (naming and history) → §5.1 Agent Loop (evolution of reasoning paradigms) → §5.8 Verifier (the hardest piece of agent engineering) → §IX Four Principles of Control Theory (where the volume's thesis comes together).
+§I-§II (origins and prehistory) → §5.1 Agent Loop (evolution of reasoning paradigms) → §5.8 Verifier (the hardest piece of agent engineering) → §IX Four Principles of Control Theory (where the volume's thesis comes together).
 
 **For AI to read** — an agent reading this volume itself, in order to make downstream decisions (for example, an agent tuning its own harness configuration after reading). Path:
 
-Follow the `depends_on` chain in each chapter's frontmatter. The entry hook and cognitive-node definitions in each chapter are sufficient for modelling. Do not skip the mechanism-description sections — that is the prose body; skipping leaves only the names behind.
+Follow the `prev` / `next` chain in each chapter's frontmatter. The entry hook and cognitive-node definitions in each chapter are sufficient for modelling. Do not skip the mechanism-description sections — that is the prose body; skipping leaves only the names behind.
 
 ### Chapters
 
 | Section | Subject |
 |---|---|
-| §I | Why harness — why the layer around the model must be extracted |
-| §II | Naming and history — from prompt to harness engineering |
-| §III | Three layers of span |
-| §IV | Key tensions |
+| §I | Why harness — what problem we are actually solving |
+| §II | Prehistory — when models were used as functions (2020–2022) |
+| §III | The first large-scale trial and error — the AutoGPT wave and its failure (2023) |
+| §IV | The emergence of the harness concept (mid-2023 – 2026) |
 | §V | Eight runtime mechanisms + Safety control plane + end-to-end examples |
 | §5.1 | Agent Loop |
 | §5.2 | Model Adapter & Routing |
@@ -125,6 +126,8 @@ Follow the `depends_on` chain in each chapter's frontmatter. The entry hook and 
 | §VIII | Composability matrix |
 | §IX | Four principles of control theory |
 | §X | Learning paths |
+| Companion · Prompt | Harness Prompt — the executable build spec for an agent ([`11-harness-prompt.md`](introduction/11-harness-prompt.md)) |
+| Companion · Prompt lite | Generic TDD lite version — three instructions to feed a coding AI ([`12-harness-prompt-lite.md`](introduction/12-harness-prompt-lite.md)) |
 | Appendix | K1-K7 / primary sources / EG10 / OWASP / naming map / SPIFFE-biscuit / AP01-AP19 / arxiv index |
 
 ### What May Be Skipped
