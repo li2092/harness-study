@@ -1,11 +1,3 @@
----
-title: "二、前世：模型当函数用的时代（2020–2022）"
-section: "二"
-collection: introduction
-prev: "01-why-harness.md"
-next: "03-autogpt.md"
-source: "01-introduction.md L79-132"
----
 # 二、前世：模型当函数用的时代（2020–2022）
 
 > **本节首次出现的术语** —— **trajectory**（agent 跑一次任务时每一轮动作、决策、结果、状态变化的完整事件流记录 · 通常是 JSONL 或类似格式的物理文件 · 字段定义稳定、可 replay、可 diff · 是 harness 跟早期 framework 最大的工程差别之一）。**ablation**（消融实验 · "保持其他配置不变只改一件机制看任务通过率怎么变" · 用来量化每件 harness 机制的实际贡献 · 没有 trajectory 就做不了 ablation）。**replayability**（可重放性 · 能精确按原样跑一次过去发生过的某次 run · 是 harness 跟"跑完就丢的脚本"的关键差别）。

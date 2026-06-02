@@ -1,11 +1,3 @@
----
-title: "5.5 Prompt Assets · Instruction Layer · P0"
-section: "5.5"
-collection: introduction
-prev: "05-04-context-memory-artifact.md"
-next: "05-06-observation-surface.md"
-source: "01-introduction-part4.md L21-136"
----
 # 5.5 Prompt Assets · Instruction Layer · **P0**
 
 第五件机制是 agent 拿到的"指令性内容"——也就是模型从 prompt 里读到的一切非用户消息内容：角色定位、任务约束、工具说明书、输出规范、业务规则、错误处理提示、agent 当前所在项目的 context、能调用的 Skill 列表、即将触发的 hook 等等。前面讨论 Tool Registry 时点过一条规律——工具 description 是单点 ROI 最高的优化。这条规律往外扩一格就到了这一节的根本论点：整个 harness 给 agent 的所有指令性内容（system prompt、tool description、hook 注入、Skill 加载、错误返回的解释、工作区 README 等等）都需要按工程资产管理——拥有版本号、可被回滚、可被 A/B test、可被精确审计。Prompt Assets 这一机制命名的内在来由就在这里：把指令性内容从源代码里的字符串字面值升格为独立工程对象，这件升格本身就是 prompt 工程治理的起点。

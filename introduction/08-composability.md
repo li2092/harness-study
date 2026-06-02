@@ -1,11 +1,3 @@
----
-title: "八、可组合性矩阵 · 封装 × 拓扑 × 交互边界"
-section: "八"
-collection: introduction
-prev: "07-harness-lab.md"
-next: "09-cybernetics.md"
-source: "01-introduction-part5.md L405-508"
----
 # 八、可组合性矩阵 · 封装 × 拓扑 × 交互边界
 
 前面 §五-§七 把 agent harness 一次 run 跑起来的所有件都讲完了——8 件 runtime + 1 件 Safety 控制面 + 工程模式 + Harness Lab 工作台。但还有一个工程问题没回答 —— 一个跑得起来的 harness 怎么"打包发给别人"·怎么"在另一个 harness 里被调用"·怎么"跟其他 harness 拼出更复杂的系统"。这件事在业界 2026 没有共识答案——MCP / A2A / handoff 三个 protocol 各家都在推 · Anthropic Skill / OpenAI GPTs / Zapier zap / n8n workflow 几个封装格式各有各的死忠用户 · CrewAI / AutoGen / Letta 几个多 agent 框架在 topology 层各自做不同选择。读者读完前面七章建起的 harness mental model · 到这一档应该清楚——这件 fragmentation 不是临时现象 · 是 agent harness 工程跨过 single-run 边界后进入 cross-harness composition 的内在结构问题。本章把这件结构拆成三轴。

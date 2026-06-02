@@ -1,11 +1,3 @@
----
-title: "5.4 Context / Memory / Artifact · P0 (Context) / P1 (Memory) / P2 (Artifact)"
-section: "5.4"
-collection: introduction
-prev: "05-03-tool-registry.md"
-next: "05-05-prompt-assets.md"
-source: "01-introduction-part3.md L22-545"
----
 # 5.4 Context / Memory / Artifact · **P0 (Context) / P1 (Memory) / P2 (Artifact)**
 
 第四件机制是 agent 的"状态管理"。但跟传统软件不一样，agent 的状态不能塞在一个袋子里管——必须按**时间尺度**拆成三块独立维护：**Context** 是当前 turn 内活跃的上下文（一次推理用完就过 · 受 token 窗口约束）、**Memory** 是跨 turn 但不跨 run 的工作记忆（session 内持久 · run 结束清掉）、**Artifact** 是跨 run 永久保留的产物（任务结束后仍在 · 直到显式删才消失）。这三块在 v0.3 原稿里被混在"context 管理"一个袋子里讲，v0.4 显式拆开是因为业界踩过的坑很清楚——三种状态混在一起治理，最后同时出现"该清的没清 / 该留的留不下 / 三层互相污染"三种故障。**这一节是设计 harness 时容错率最低的一件**——状态机制设计错了，agent 行为出现的诡异 bug 跟模型 hallucination 表现一模一样，根因追查极难。

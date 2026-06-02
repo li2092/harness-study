@@ -1,11 +1,3 @@
----
-title: "5.6 Observation Surface · 三层定位 · self-evolution 基础 P0 + runtime feedback P1 + moda-rl 进阶层"
-section: "5.6"
-collection: introduction
-prev: "05-05-prompt-assets.md"
-next: "05-07-trajectory.md"
-source: "01-introduction-part4.md L137-270"
----
 # 5.6 Observation Surface · **三层定位 · self-evolution 基础 P0 + runtime feedback P1 + moda-rl 进阶层**
 
 第六件机制是 agent 调用工具之后拿到的"环境反馈" —— 工具执行的输出、读到的文件内容、抓取的网页正文、运行测试的结果、看到的图片、生成的报告。这些反馈合起来组成 observation surface 这一层。前面 §5.5 末尾点过一句"指令该挂在最容易生效的载体上"——这句话往反方向延伸就到了 §5.6 的根本论点：**agent 看见环境的方式 · 跟人看 log 的方式根本不是一件事**。一个能跑的 production agent 跟一个能跑得稳、能跨 run 进化的 production agent 之间 · observation surface 这一层的成熟度往往是决定差别。

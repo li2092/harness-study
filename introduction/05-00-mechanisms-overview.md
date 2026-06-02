@@ -1,11 +1,3 @@
----
-title: "五、Harness 必备机制 · 8 件 runtime 加 1 件 Safety 控制面"
-section: "五"
-collection: introduction
-prev: "04-harness-emerges.md"
-next: "05-01-agent-loop.md"
-source: "01-introduction-part2.md L22-47"
----
 # 五、Harness 必备机制 · 8 件 runtime 加 1 件 Safety 控制面
 
 #### ★ 两个贯穿全书的基础词：run 与 turn ★

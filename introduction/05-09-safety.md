@@ -1,11 +1,3 @@
----
-title: "5.9 Safety 控制面 · cross-cutting · 不是第 9 件 runtime 件"
-section: "5.9"
-collection: introduction
-prev: "05-08-verifier.md"
-next: "05-10-turn-walkthrough.md"
-source: "01-introduction-part4.md L513-650"
----
 # 5.9 Safety 控制面 · **cross-cutting · 不是第 9 件 runtime 件**
 
 前面 §5.1-§5.8 讲的是 harness 的八件 runtime 件——Agent Loop / Model Adapter / Tool Registry / Context-Memory-Artifact / Prompt Assets / Observation Surface / Trajectory · Event Stream / Verifier 三层。这八件每一件都是 agent 在跑一个 turn / 一次 run 时实打实参与的 runtime 组件——agent 推理要走 Agent Loop · 调工具要查 Tool Registry · 读写状态要进 Context-Memory-Artifact · 输出要进 Trajectory · 完成要过 Verifier。Safety 跟这八件根本不同——Safety 不是第 9 件 runtime 件 · 是**横切前面八件的控制面**。本节展开 Safety 控制面的工程构成 · 跟为什么它不能平铺到前面 runtime 件列表里。

@@ -1,11 +1,3 @@
----
-title: "六、工程模式 · 跨件复用的工程组合 pattern"
-section: "六"
-collection: introduction
-prev: "05-11-end-to-end.md"
-next: "07-harness-lab.md"
-source: "01-introduction-part5.md L21-170"
----
 # 六、工程模式 · 跨件复用的工程组合 pattern
 
 前面 §五 讲 8 件 runtime + 1 件 Safety 控制面——单件单件讲的是机制。但生产 agent harness 不是机制堆出来的——是机制 + 工程模式两层叠起来跑的。工程模式比机制小一档——不构成完整组件 · 是组件之间的组合 pattern · 跨多件 runtime 复用。这一章把 agent harness 工程里跑出来的几件高复用 pattern 单独抽出来讲。

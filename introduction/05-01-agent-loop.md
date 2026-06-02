@@ -1,11 +1,3 @@
----
-title: "5.1 Agent Loop · Inner Loop · agent 的思考结构 · P0"
-section: "5.1"
-collection: introduction
-prev: "05-00-mechanisms-overview.md"
-next: "05-02-model-adapter.md"
-source: "01-introduction-part2.md L48-225"
----
 # 5.1 Agent Loop · Inner Loop · agent 的思考结构 · **P0**
 
 第一件机制 Agent Loop 是 harness 的执行内核——它决定一个 agent 跑起来之后是按什么顺序、按什么状态机、按什么终止条件循环往复地推理和行动。其他八件机制都是围绕这个 inner loop 各自负责一件事，Agent Loop 是把它们串起来跑的那条主线。所以理解 harness 必须先理解 Agent Loop——理解错了 Agent Loop，剩下八件机制再设计精巧也接不到一起。

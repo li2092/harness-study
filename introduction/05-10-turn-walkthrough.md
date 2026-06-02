@@ -1,11 +1,3 @@
----
-title: "5.10 一次 turn 的微型流程 · 8 件 runtime + Safety 横切"
-section: "5.10"
-collection: introduction
-prev: "05-09-safety.md"
-next: "05-11-end-to-end.md"
-source: "01-introduction-part4.md L651-745"
----
 # 5.10 一次 turn 的微型流程 · 8 件 runtime + Safety 横切
 
 前面 §5.1-§5.9 把 8 件 runtime + 1 件 Safety 控制面分别讲完——单看每件读者已经知道它是什么、为什么这么设计、怎么起步。但单独看每件读者不容易看到这些件**怎么在一次具体 agent turn 里协作**——这是本节要补的视角。

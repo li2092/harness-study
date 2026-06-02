@@ -1,10 +1,3 @@
----
-title: Harness Prompt · Agent Harness 落地 Spec（给 agent 的可执行版）
-audience: 编码 agent（Claude / GPT / DeepSeek 等）执行用 · 人类工程师可对照
-companion_to: 01-introduction（《Harness Study · 智能体的工程实践 · 入门版》正文）
-version: v0.4
----
-
 # Harness Prompt · Agent Harness 落地 Spec（给 agent 的可执行版）
 
 这份文件是正文《Harness Study》的**可执行配套件**。正文讲"有哪些件、为什么这样设计"，这份讲"按什么顺序动手、每步怎么验证做对了"。

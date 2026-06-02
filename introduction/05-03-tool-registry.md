@@ -1,11 +1,3 @@
----
-title: "5.3 Tool Registry & ACI · P0"
-section: "5.3"
-collection: introduction
-prev: "05-02-model-adapter.md"
-next: "05-04-context-memory-artifact.md"
-source: "01-introduction-part2.md L328-487"
----
 # 5.3 Tool Registry & ACI · **P0**
 
 第三件机制 Tool Registry 是 harness 跟工具世界之间的契约层——它把每件可被 agent 调用的"工具"封装成一个统一形态的可调用对象，让 agent 能用、harness 能管、policy 能控、audit 能查。ACI（Agent-Computer Interface）是这一机制的设计学维度——它强调**工具是给 agent 用的不是给人用的**，所以工具的命名、参数、返回、错误形态都要按 agent 的认知方式而不是人的认知方式来设计。这两件合起来回答一个工程问题：**怎么让概率性的模型在面对一组工具时尽量调对、调对的时候不闯祸、闯祸了能被工程系统兜住**。这件事看起来跟 5.2 Adapter 一样是"工程细节"，但实际上是 To B agent 落地最容易出问题的一件——agent 80% 的失败案例都跟工具调用相关（不存在的工具、错的参数、不该调的时候调、该调时不调）。

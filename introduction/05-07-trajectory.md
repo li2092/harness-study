@@ -1,11 +1,3 @@
----
-title: "5.7 Trajectory · Event Stream · P0 业界共识 · runtime + cross-run 两面 surface"
-section: "5.7"
-collection: introduction
-prev: "05-06-observation-surface.md"
-next: "05-08-verifier.md"
-source: "01-introduction-part4.md L271-378"
----
 # 5.7 Trajectory · Event Stream · **P0 业界共识 · runtime + cross-run 两面 surface**
 
 第七件机制是 agent 一次 run 跑完之后留下的执行历史——所有 turn 的 thought / action / observation 三元组 · 加上工具调用细节 · 加上 policy 判定 · 加上 compaction 触发 · 加上 verifier 结果——这些数据合起来组成 trajectory 这一层。前面 §5.6 末尾已经点过 observation 跟 trajectory 协同存储 · §5.7 主线就是 trajectory 本身的工程治理。

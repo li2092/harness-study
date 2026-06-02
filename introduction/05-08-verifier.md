@@ -1,11 +1,3 @@
----
-title: "5.8 Verifier 三层 · P0 业界共识 · 防 agent 自欺骗的工程化基础"
-section: "5.8"
-collection: introduction
-prev: "05-07-trajectory.md"
-next: "05-09-safety.md"
-source: "01-introduction-part4.md L379-512"
----
 # 5.8 Verifier 三层 · **P0 业界共识 · 防 agent 自欺骗的工程化基础**
 
 第八件机制是 agent 跑完一步动作之后判断这步算不算合格的独立判定机制——也就是 verifier。前面 §5.7 末尾讲过 trajectory 是 ablation / replay / regression / self-evolution 四件能力的物理载体——但 trajectory 本身只是数据 · 数据要变成"agent 做对了还是做错了"的工程结论 · 必须经过 verifier 这一层。verifier 是 agent harness 工程治理里一个特殊的件——它不直接帮 agent 完成任务 · 它只回答一个问题："agent 自己说做完了 · 它到底做完没有"。

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="diagrams/hero-readme.png" alt="Harness Study — 8 runtime mechanisms + 1 Safety control plane" width="920">
+  <img src="diagrams/hero-readme-en.png" alt="Harness Study — 8 runtime mechanisms + 1 Safety control plane" width="920">
 </p>
 
 # Harness Study · The Engineering Practice for AI Agents
@@ -99,7 +99,7 @@ The introductory volume does not require linear reading. Three reader types have
 
 **For AI to read** — an agent reading this volume itself, in order to make downstream decisions (for example, an agent tuning its own harness configuration after reading). Path:
 
-Follow the `prev` / `next` chain in each chapter's frontmatter. The entry hook and cognitive-node definitions in each chapter are sufficient for modelling. Do not skip the mechanism-description sections — that is the prose body; skipping leaves only the names behind.
+Read the chapters in the order listed above (file names 01 → 99). The entry hook and cognitive-node definitions in each chapter are sufficient for modelling. Do not skip the mechanism-description sections — that is the prose body; skipping leaves only the names behind.
 
 ### Chapters
 

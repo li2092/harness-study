@@ -1,12 +1,3 @@
----
-title: Harness Study · 智能体的工程实践 · 附录
-title_en: Harness Study · The Engineering Practice for AI Agents · Appendix
-chapter: 99-appendix
-status: draft-v0.4
-last_updated: 2026-06-02
-purpose: 查阅型速查附录 · 不替代正稿讲解 · 8 件速查表 + 引源汇总
----
-
 # 附录 · Harness Study v0.4 速查
 
 > 本附录是查阅型速查工具——8 件速查表 · 不替代正稿讲解。每件配 1-2 句 framing 锚 + 表内 1 行 1 件 · 不展开机制讨论。机制讨论在 §一-§十 正稿。

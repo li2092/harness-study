@@ -1,11 +1,3 @@
----
-title: "5.2 Model Adapter & Routing · P0 (adapter 边界) / P1 (多 provider 抽象 + Routing)"
-section: "5.2"
-collection: introduction
-prev: "05-01-agent-loop.md"
-next: "05-03-tool-registry.md"
-source: "01-introduction-part2.md L226-327"
----
 # 5.2 Model Adapter & Routing · **P0 (adapter 边界) / P1 (多 provider 抽象 + Routing)**
 
 第二件机制 Model Adapter 是 harness 跟外部模型 API 之间的隔离层——它把"模型怎么调"这件事封装成一个内部接口，让 harness 上层代码不需要直接接触模型供应商的 SDK 细节。Routing 是 Adapter 之上的调度层，决定每次推理调哪一个 provider、哪一个具体模型、用什么参数。这两件合起来回答一个工程问题：**怎么让 harness 在模型 API 升级、模型供应商更换、模型能力提升时不需要大规模改业务代码**。这件事看起来不起眼，但是 harness 长期可维护性的根基——做得对一年内模型生态怎么变 harness 几乎不动，做得错一次 API 升级就要全员重写。

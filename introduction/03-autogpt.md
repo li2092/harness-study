@@ -1,11 +1,3 @@
----
-title: "三、第一次大规模试错：AutoGPT 浪潮和它的翻车（2023）"
-section: "三"
-collection: introduction
-prev: "02-prehistory.md"
-next: "04-harness-emerges.md"
-source: "01-introduction.md L133-223"
----
 # 三、第一次大规模试错：AutoGPT 浪潮和它的翻车（2023）
 
 > **本节首次出现的术语** —— **schema**（数据结构的形式化定义 · 约定字段名、类型、必填性、嵌套结构 · 既能给人读、也能给程序自动 validate · JSON Schema 是网上最常见的 schema 表达形式 · agent 工程里 schema 是工具契约、observation 格式、completion 返回值的统一通用语言）。**verifier**（判定 agent 一次任务输出对错的客观判定器 · 是 agent 工程里最难也最重要的一件 · SWE-bench 这种能跑测试的环境里 verifier 是单元测试 · 合同审核这种开放任务里 verifier 设计本身就是难题 · 配合 reward 才能让 agent 从"靠手感调 prompt"走向"用数据训"）。**policy**（控制 agent 行为的策略规则集 · 决定一个 tool call 能不能执行 / 要不要人工审批 / 哪些路径可读哪些不可写等 · agent 没有 policy 就是个失控的小型 root user · 后续 Safety 控制面那一节整章在拆这一机制）。

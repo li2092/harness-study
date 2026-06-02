@@ -1,11 +1,3 @@
----
-title: "5.11 中型端到端流程示例 · 17 turn 修 logging bug"
-section: "5.11"
-collection: introduction
-prev: "05-10-turn-walkthrough.md"
-next: "06-engineering-patterns.md"
-source: "01-introduction-part4.md L746-962"
----
 # 5.11 中型端到端流程示例 · 17 turn 修 logging bug
 
 要把 8 件 runtime + Safety 控制面在跨 turn / 跨 run 层面的协作讲清楚 · 单 turn 微型流程不够——需要一个有真实复杂度的任务展开。下面示例任务是 "修一个 Python 项目的并发 logging bug 并提交 PR" —— bug 描述 "logger.emit() 在多线程下偶尔丢消息" · agent 要 定位 → 写测试复现 → 修 → 跑测试 → 跑 lint → commit → push → 创建 PR。任务长度约 17 turn —— 这是 single-agent 任务长度的典型生产区间（前面 Safety 常见误区 AP12 段讲过 30 turn 内单 agent 单进程足够 · 这个示例落在该区间）。

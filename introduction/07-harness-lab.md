@@ -1,11 +1,3 @@
----
-title: "七、Harness Lab · Outer Loop · 系统化优化 harness 自身的元工程实践"
-section: "七"
-collection: introduction
-prev: "06-engineering-patterns.md"
-next: "08-composability.md"
-source: "01-introduction-part5.md L171-404"
----
 # 七、Harness Lab · Outer Loop · 系统化优化 harness 自身的元工程实践
 
 前面 §五 讲了 8 件 runtime + 1 件 Safety 控制面 · §六 讲了 6 件跨件复用的工程模式——读到这里读者大概能想象一个生产 agent harness 长什么样了。但实际跑生产 harness 半年下来 · 工程师会发现一件更难的事——**harness 自身怎么改进**。机制都装好了 / 工程模式都上了 · 但跑同样任务 · 这一周 success rate 65% / 下一周 58% / 再下一周 70%——为什么浮动 · 哪个机制贡献了 · 调哪个参数能让稳定上 70% · 不知道。这一章讲的就是怎么把"凭感觉调 harness"升级成"系统化优化 harness"。

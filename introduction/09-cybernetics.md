@@ -1,11 +1,3 @@
----
-title: "九、控制论四原则 · 整本教程的元规则收束"
-section: "九"
-collection: introduction
-prev: "08-composability.md"
-next: "10-learning-path.md"
-source: "01-introduction-part5.md L509-610"
----
 # 九、控制论四原则 · 整本教程的元规则收束
 
 读到这一章 · agent harness 工程的具体件都讲完了——§五 八件 runtime + 一件 Safety 控制面 · §六 工程模式 · §七 Harness Lab 工作台 · §八 可组合性矩阵。每一章读完读者都建起一组具体 mental model · 但跨章节再退一步看 · 这些 mental model 背后是不是有一组共同的 **元规则** 在收束？这就是控制论四原则在本教程中的位置——四原则不是新机制 · 不是再加一件 runtime——是把整本教程跨章节的工程纪律抽象到一个统一的 framing 下。
