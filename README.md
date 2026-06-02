@@ -120,7 +120,7 @@
 | §5.7 | Trajectory |
 | §5.8 | Verifier |
 | §5.9 | Safety |
-| §5.10 | 微型流程 |
+| §5.10 | 一次 turn 的微型流程（单 turn 走查）|
 | §5.11 | 端到端 17 turn |
 | §六 | 工程模式 |
 | §七 | Harness Lab · 调优外循环 |

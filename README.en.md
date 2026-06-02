@@ -119,7 +119,7 @@ Follow the `prev` / `next` chain in each chapter's frontmatter. The entry hook a
 | §5.7 | Trajectory |
 | §5.8 | Verifier |
 | §5.9 | Safety |
-| §5.10 | Micro-flows |
+| §5.10 | A single turn, walked through step by step |
 | §5.11 | End-to-end 17 turns |
 | §VI | Engineering patterns |
 | §VII | Harness Lab — the outer optimisation loop |
