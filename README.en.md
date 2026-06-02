@@ -39,7 +39,7 @@ In most of these cases, the cause is not in the prompt. Past a certain point, fu
 This project — Harness Study — exists to take that layer around the model as an engineering object in its own right and explain it systematically. **The project is organised into volumes.** The introductory volume — which walks the full skeleton once — is complete; further volumes will be per-chapter and per-module expansions, more focused and more detailed, in planning.
 
 <p align="center">
-  <img src="diagrams/t1-comparison-1-gap.png" alt="What the model does is single-step, side-effect-free prediction; what the task needs is multi-step, stateful, side-effecting execution — the harness is the engineering layer in between" width="800">
+  <img src="diagrams/t1-comparison-1-gap-en.png" alt="What the model does is single-step, side-effect-free prediction; what the task needs is multi-step, stateful, side-effecting execution — the harness is the engineering layer in between" width="800">
 </p>
 
 ## 2. What Reading the Full Series Should Enable
@@ -69,7 +69,7 @@ The project is written on the assumption that some of its readers are AI themsel
 The introductory volume is the opening — the overture — of this project. It decomposes an agent harness into **eight runtime mechanisms + one cross-cutting control plane + engineering patterns + a workbench + a composability matrix + four principles from control theory**, and walks through this skeleton in full. Each item is given a complete three-tier mental model: What / Why / How to start.
 
 <p align="center">
-  <img src="diagrams/sample-05-mechanisms-overview.png" alt="Eight runtime mechanisms + one Safety control plane — overview" width="840">
+  <img src="diagrams/sample-05-mechanisms-overview-en.png" alt="Eight runtime mechanisms + one Safety control plane — overview" width="840">
 </p>
 
 > All 46 diagrams (a unified jimi-ink visual style) are embedded throughout the chapters in [`introduction/`](introduction/).
