@@ -1,8 +1,8 @@
-# Harness Study · 智能体的工程实践
-
 <p align="center">
   <img src="diagrams/hero-readme.png" alt="Harness Study · 智能体的工程实践 — 8 件 runtime + 1 Safety 控制面" width="920">
 </p>
+
+# Harness Study · 智能体的工程实践
 
 <p align="center">
   <em>The Engineering Practice for AI Agents</em><br>
@@ -161,3 +161,4 @@
 - Issues 与 Discussions 欢迎
 - 邮箱：li2092@qq.com
 - GitHub：[@li2092](https://github.com/li2092)
+- 个人网站：[jimi.ink](https://jimi.ink/)

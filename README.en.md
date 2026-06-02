@@ -1,8 +1,8 @@
-# Harness Study · The Engineering Practice for AI Agents
-
 <p align="center">
   <img src="diagrams/hero-readme.png" alt="Harness Study — 8 runtime mechanisms + 1 Safety control plane" width="920">
 </p>
+
+# Harness Study · The Engineering Practice for AI Agents
 
 <p align="center">
   <strong>Let intelligence go where we cannot, and let autonomy anchor order and performance.</strong>
@@ -160,3 +160,4 @@ Order of use:
 - Issues and Discussions welcome.
 - Email: li2092@qq.com
 - GitHub: [@li2092](https://github.com/li2092)
+- Personal site: [jimi.ink](https://jimi.ink/)
