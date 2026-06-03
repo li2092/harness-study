@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-Apache_2.0-6d28d9?style=flat-square"></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-CC_BY_4.0-6d28d9?style=flat-square"></a>
   <img alt="Intro Volume" src="https://img.shields.io/badge/Intro_Volume-~250k_chars-8b5cf6?style=flat-square">
   <img alt="Diagrams" src="https://img.shields.io/badge/Diagrams-46-4c1d95?style=flat-square">
   <img alt="Bilingual" src="https://img.shields.io/badge/Bilingual-中文_·_EN-067a5b?style=flat-square">
@@ -170,7 +170,9 @@ Order of use:
 
 ## 6. License
 
-[Apache License 2.0](LICENSE) © 2026 Jinming Li
+[CC BY 4.0](LICENSE) — Creative Commons Attribution 4.0 International © 2026 Jinming Li
+
+You are free to read, share, quote, and adapt this work, as long as you give appropriate credit.
 
 ## 7. Contact
 

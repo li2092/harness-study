@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-Apache_2.0-6d28d9?style=flat-square"></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-CC_BY_4.0-6d28d9?style=flat-square"></a>
   <img alt="入门卷" src="https://img.shields.io/badge/入门卷-约25万字-8b5cf6?style=flat-square">
   <img alt="配图" src="https://img.shields.io/badge/配图-46张-4c1d95?style=flat-square">
   <img alt="语言" src="https://img.shields.io/badge/语言-中英双语-067a5b?style=flat-square">
@@ -171,7 +171,9 @@
 
 ## 六、协议
 
-[Apache License 2.0](LICENSE) © 2026 Jinming Li
+本书依 [CC BY 4.0](LICENSE)（知识共享 · 署名 4.0 国际）授权 © 2026 Jinming Li
+
+你可以自由阅读、分享、引用与再创作，只需保留署名。
 
 ## 七、联系
 
