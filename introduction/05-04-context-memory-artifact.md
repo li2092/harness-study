@@ -158,7 +158,7 @@ Memory 不是 Context 的延展，是 agent 工程里独立的一层 working sto
 
 Memory 这一机制在 2026 业界被推为 "first-class architectural component"（Mem0 / Letta / Zep 等业界综述统一口径）—— 但这条口号会误导读者以为"任何 agent 都要做 Memory"。实际工程图景远更复杂：大量垂直 agent 是合法的 stateless 架构 · 不做 Memory 反而更经济。
 
-值得指出的是 Mem0 团队自己的立场也很克制。Mem0[^mem0-2025] 在 LongMemEval 长期记忆 benchmark 上取得 SOTA · 是 production-ready 长期记忆系统的代表 · 但它把长期记忆定位成**按需启用的 feature 而不是默认必备** —— 这是反"memory-first 口号"很有分量的内部声音。把 memory 当 first-class architectural component 跟把 memory 当 default 是两件不同的事 · "任何 agent 都要做 Memory"跟"90% agent 不需要长期记忆"是同一件事的两个方向 · 业界共识更接近后者而不是前者。
+值得指出的是 Mem0 团队自己的立场也很克制。Mem0[^mem0-2025] 在 LongMemEval 长期记忆 benchmark 上测试分数较高 · 是 production-ready 长期记忆系统的代表 · 但它把长期记忆定位成**按需启用的 feature 而不是默认必备** —— 这是反"memory-first 口号"很有分量的内部声音。把 memory 当 first-class architectural component 跟把 memory 当 default 是两件不同的事 · "任何 agent 都要做 Memory"跟"90% agent 不需要长期记忆"是同一件事的两个方向 · 业界共识更接近后者而不是前者。
 
 **stateless agent 的典型场景**——这些场景里 Memory 整章可以跳过。**单次分类 / 评分**（垃圾邮件过滤、内容打标签、风险评级、合规扫描、文档分类 · 每条独立 · 输入输出一一对应）。**单次转换**（翻译 agent、格式转换、代码 lint、ETL 数据清洗 · 函数式：input → output）。**单次问答**（FAQ bot / 客服查知识库 / RAG 兜底 · 用 RAG 替代 Memory · 每条独立查 KB）。**单次工具触发**（设 timer / 播音乐 / 查天气 · 命令式工具调用无状态）。**批处理任务**（凌晨批量审核 / 数据清洗 / 月度报告生成 · 每个 record 独立处理）。**单次产物生成**（行业研报 / API 文档 / 代码 review 这种 PR 独立任务）。
 
@@ -518,7 +518,7 @@ Artifact 是 §5.4 三层里**P2 等级但工程量最大**的一层——P2 是
 | **Enterprise Decision Platform（Palantir Foundry Ontology）** | §5.4.3 Artifact 重型工程层级 |
 | **Auto Dream / `/dream`** | §5.4.2 Memory consolidation lifecycle 实现 |
 
-这几件都在落地"agent 怎么保存跟检索状态"——属于 §5.4 三段的**实现技术层**。**RAG 是横切模式不是件**——这是业界最常见的归类错误。Memory 件跟 Artifact 件本身的工程职能（lifecycle 治理 / TTL / invalidation / consolidation / data governance / cold-hot 分层 / PII vault / GDPR deletion）**不是 RAG 能涵盖**——RAG 只管检索一步 · 其他都是件本身的职能。完整反向查表见 §99 附录 §E。
+这几件都在落地"agent 怎么保存跟检索状态"——属于 §5.4 三段的**实现技术层**。**RAG 是横切模式不是件**——这是业界最常见的归类错误。Memory 件跟 Artifact 件本身的工程职能（lifecycle 治理 / TTL / invalidation / consolidation / data governance / cold-hot 分层 / PII vault / GDPR deletion）**不是 RAG 能涵盖**——RAG 只管检索一步 · 其他都是件本身的职能。完整反向查表见 §99 附录 §D。
 
 ---
 

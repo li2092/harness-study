@@ -2,7 +2,7 @@
 
 *Harness Study · The Engineering Practice for AI Agents · Intro*
 
-> **本卷定位**：learn-harness 项目的**导论级 / 入门版** explainer · 回答"什么是智能体的 harness 以及它由哪几件组成"。**平台无关的工程实践方法论**主轴 · Agent-Z 作为工程案例点缀。
+> **本卷定位**：Harness Study 项目的**导论级 / 入门版** explainer · 回答"什么是智能体的 harness 以及它由哪几件组成"。**平台无关的工程实践方法论**主轴 · 配套实现项目作为工程案例点缀。
 >
 > **在 Harness Study 全集中的位置**：本卷是开篇导论卷——把 8 件 runtime + Safety 控制面 + 工程模式 + Harness Lab + 可组合性矩阵 + 控制论四原则**全骨架走一遍** · 每件件给出 What / Why / How to start 三档完整 mental model。**后续会有逐章 / 逐模块展开版**——每件 runtime 件 / 每件工程模式 / Harness Lab 五层等都会有独立深度卷 · 覆盖更细的工程纪律 / 业界 case / 落地踩坑。
 

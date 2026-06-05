@@ -4,7 +4,7 @@
 
 控制论作为 framing 不是装饰。Norbert Wiener 1948 年 *Cybernetics: Or Control and Communication in the Animal and the Machine* 把"反馈系统"作为跨学科（生物 / 机械 / 社会）的元理论——任何能保持稳态的系统 · 不管底层物理实现是什么 · 都共享四件结构属性。**钱学森 1954 年 *Engineering Cybernetics* 把这套元理论从数学 / 哲学推到工程系统**——给出了"对设计控制系统有直接工程应用"的原则集 · 这件工程视角让控制论从抽象理论变成可工程化的设计骨架。本教程把这套设计骨架直接用在 agent harness 上——70 年前的工程控制论框架 + LLM 时代特有的"系统行为不完全可知"约束 · 配出来的是 agent harness 工程的元方法论。
 
-前面 §一-§八 讲的所有件都能映射到四原则之一。Trajectory + RunEvent + Observation Pack 三件都是**可观测**原则在 runtime 层的实例化。Verifier + Repair + Escalation + Budget Guard 都是**可控**原则。Compression + Bounded Sub-agent + Cache-safe forking 是**稳定性**原则。Ablation + Harness Lab + 跨 run nonce 是**闭环反馈**原则。读者读完这一章应该建一个跨章索引——拿到具体工程问题（"这件 bug 是什么类型"）· 能识别根因属于四原则中的哪一档失守——这件索引让 agent harness 工程从"一堆 case 经验"升到"四原则下的工程纪律"。
+前面 §一-§八 讲的所有件都能映射到四原则之一。Trajectory + RunEvent + Observation Pack 三件都是**可观测**原则在 runtime 层的实例化。Verifier + Repair + Escalation + Budget Guard 都是**可控**原则。Compression + Bounded Sub-agent + Cache-safe forking + 跨 run nonce 是**稳定性**原则。Ablation + Harness Lab 是**闭环反馈**原则。读者读完这一章应该建一个跨章索引——拿到具体工程问题（"这件 bug 是什么类型"）· 能识别根因属于四原则中的哪一档失守——这件索引让 agent harness 工程从"一堆 case 经验"升到"四原则下的工程纪律"。
 
 #### 9.0 本节首次出现的术语
 
@@ -34,7 +34,7 @@
 
 把整本教程的常见误区逐一映射回四原则——读者读完应该能拿到任何一件 agent harness bug 直接判断它属于四原则的哪一档失守。这件映射不是穷举——是建一个跨章节诊断 framework。
 
-**可观测性失守** —— silent failure（前面 §5.7 AP10 · try/catch swallow exception · 错误没产生 event）。AP04 artifact claim mismatch（agent declared 改了 artifact 但 verifier 没拿到对应改动 · 前面 §5.8 讲）。declared_vs_executed gap 持续偏高（反馈系统前哨指标——declared 跟 executed 差距持续 >10% 是可观测性失守的信号 · 即使没具体 bug 表现）。Hidden state（agent 内部状态没有对应 event · 前面 §5.4 讲 context state 必须 trajectory 化）。
+**可观测性失守** —— silent failure（前面 §5.7 AP10 · try/catch swallow exception · 错误没产生 event）。AP04 artifact claim mismatch（agent declared 改了 artifact 但 verifier 没拿到对应改动 · 前面 §5.8 讲）。declared_vs_executed gap 持续偏高（反馈系统前哨指标——declared 跟 executed 差距持续 ≥10% 是可观测性失守的信号 · 即使没具体 bug 表现）。Hidden state（agent 内部状态没有对应 event · 前面 §5.4 讲 context state 必须 trajectory 化）。
 
 **可控性失守** —— AP07 tool over-design（工具粒度过细 LLM 选不准 · 前面 §5.3 讲）。AP13 hook / allowlist bypass（控制点存在但被绕过 · 比如 `cargo checkpoint` 被 `cargo check` 放行 · OWASP LLM01 prompt injection · 前面 §5.9 讲）。AP15 excessive agency（agent 拿到的权限超过实际需要 · OWASP LLM06 + LLM10 · 前面 §5.9 讲）。AP06 假落地机制（机制协议在仓库但生产路径 noop · 前面 §5.9 讲 · 看起来有控制实际没控制 · 是最隐蔽的可控性失守）。
 
@@ -42,7 +42,7 @@
 
 **闭环反馈失守** —— AP17 premature optimization（凭感觉调机制 · 没 ablation data · 前面 §7.8 / §10 讲）。AP05 fixture / path classifier bug（数据基础设施有 bug · 让闭环反馈数据本身不可信 · 前面 §7.8 讲）。AP18 stage inflation（每个件都标 production ready 但实际工程未落地 · 闭环反馈的"标完成"动作没有真实门槛 · 前面 §7.8 讲）。AP12 sub-agent depth explosion（fork-join 不限深度 · 闭环反馈的预算控制失守 · 前面 §5.9 / §6.6 讲）。
 
-declared_vs_executed gap 作为跨四原则的**前哨指标**值得特别一段讲。这件指标的定义是——agent 在 trajectory 里 declared 自己做了什么（"I created file X" / "I modified config Y"）vs verifier / tool 实际 observed 的动作。两件 gap 持续偏高（业界经验阈值 ≥10% turn 比例）说明三件事中至少一件失守。**第一**——可观测性失守：declared 的 event 没产生对应 executed event · trajectory schema 漏了；**第二**——可控性失守：agent 在做某些动作时没经过工具/verifier · 控制层有 bypass；**第三**——稳定性失守：agent reward hacking 让 declared 变得不真实（agent 学到"declared 就够 · 不用真做"）。Declared_vs_executed gap 作为单一指标能预警三件不同失守 · 是 trajectory 工程里 ROI 最高的监控指标——不依赖业务逻辑 · 不需要标注数据 · 跨所有 task 类型都适用。Agent-Z 内部把这件指标列为一线工程纪律 · 工业生产 agent 也应该把它放在 dashboard 一级位置。
+declared_vs_executed gap 作为跨四原则的**前哨指标**值得特别一段讲。这件指标的定义是——agent 在 trajectory 里 declared 自己做了什么（"I created file X" / "I modified config Y"）vs verifier / tool 实际 observed 的动作。两件 gap 持续偏高（业界经验阈值 ≥10% turn 比例）说明三件事中至少一件失守。**第一**——可观测性失守：declared 的 event 没产生对应 executed event · trajectory schema 漏了；**第二**——可控性失守：agent 在做某些动作时没经过工具/verifier · 控制层有 bypass；**第三**——稳定性失守：agent reward hacking 让 declared 变得不真实（agent 学到"declared 就够 · 不用真做"）。Declared_vs_executed gap 作为单一指标能预警三件不同失守 · 是 trajectory 工程里 ROI 最高的监控指标——不依赖业务逻辑 · 不需要标注数据 · 跨所有 task 类型都适用。本教程配套实现项目把这件指标列为一线工程纪律 · 工业生产 agent 也应该把它放在 dashboard 一级位置。
 
 #### 9.3 钱学森《工程控制论》1954 工程视角扩段
 
@@ -70,7 +70,7 @@ HWMSE 跟西方三件主流方法论的关键差异要点透。**RAND Delphi met
 
 **第一件 · verifier 三层局限** —— hard gate 易被作弊式通过 · LLM-as-judge 自相关（*One Token to Fool LLM-as-a-Judge*[^one-token-fool-2025] 显示 ":" 或 "Thought process:" 这类 master key 注入就能骗 LLM judge 给假阳 · 不需要任何实质推理）· PRM 过拟合（只对训练分布有效）—— meta-synthesis 给的对策是研讨厅式 verifier——多个独立 verifier、定性 reasoning 显式、iterate 到收敛 · 不靠任何单层兜底。
 
-**第二件 · Harness Lab 常见误区** —— cache 共谋 / leakage / reward hacking 三件都是单一定量信号被 game · pass rate 高不等于真做对——必须配 trajectory 抽查、反事实 perturbation、跨 run 对照——这件就是钱学森"定性定量综合集成"在 agent harness 工程里的实例化——前面 Harness Lab 那一章讲的把脉是这件实例化的一个更具体落点 · 把脉的行为分类是定性 · 消融验证预测命中率是定量 · 预测落空就回头修探针是 iterate · 三件齐全正好把 meta-synthesis 的"定性 → 定量 → 收敛"闭环复用到模型诊断上。
+**第二件 · 评测信号被 game 的三类常见误区** —— cache 共谋（§7.4）/ leakage（§5.8）/ reward hacking（§7.4）三件都是单一定量信号被 game · pass rate 高不等于真做对——必须配 trajectory 抽查、反事实 perturbation、跨 run 对照——这件就是钱学森"定性定量综合集成"在 agent harness 工程里的实例化——前面 Harness Lab 那一章讲的把脉是这件实例化的一个更具体落点 · 把脉的行为分类是定性 · 消融验证预测命中率是定量 · 预测落空就回头修探针是 iterate · 三件齐全正好把 meta-synthesis 的"定性 → 定量 → 收敛"闭环复用到模型诊断上。
 
 **第三件 · 跨 agent 冲突仲裁** —— multi-agent 系统里 sub-agent 给出冲突结论用 majority vote 退化成 Delphi 平均损失 reasoning —— HWMSE 给的对策是研讨厅式仲裁 · 把冲突显式化、让各方给定性论证、main agent 作 facilitator iterate 到收敛或显式 escalate 给人审。
 

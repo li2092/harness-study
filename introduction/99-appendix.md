@@ -13,7 +13,7 @@
 | OpenAI · Harness Engineering | 2026-02-13 | [openai.com/index/harness-engineering](https://openai.com/index/harness-engineering/) | Codex agent-first 设计 |
 | Lopopolo · Extreme Harness Engineering | 2026-02 | [latent.space/p/harness-eng](https://www.latent.space/p/harness-eng) | OpenAI Frontier & Symphony · token billionaire framing |
 | Mitchell Hashimoto · My AI Adoption Journey | 2026-02-05 | [mitchellh.com/writing/my-ai-adoption-journey](https://mitchellh.com/writing/my-ai-adoption-journey) | HashiCorp 创始人视角（非 Stanford NLP 的 Tatsu Hashimoto） |
-| Trivedy · The Anatomy of an Agent Harness | 2026-03-10 | [blog.langchain.com/the-anatomy-of-an-agent-harness](https://blog.langchain.com/the-anatomy-of-an-agent-harness/) | 11 组件 · "Agent = Model + Harness" 公式 |
+| Trivedy · The Anatomy of an Agent Harness | 2026-03-10 | [blog.langchain.com/the-anatomy-of-an-agent-harness](https://blog.langchain.com/the-anatomy-of-an-agent-harness/) | 5 项组件 · "Agent = Model + Harness" 公式 |
 
 ---
 
@@ -42,7 +42,7 @@
 
 | ID | 名称 | 对应章节 |
 |---|---|---|
-| LLM01 | Prompt Injection | §5.9 AP13 |
+| LLM01 | Prompt Injection | §5.9.4 |
 | LLM02 | Sensitive Information Disclosure | §5.7 PII 脱敏 |
 | LLM03 | Supply Chain | （附录 only · 不展开）|
 | LLM04 | Data and Model Poisoning | §5.4 AP14 |
@@ -66,7 +66,7 @@
 | **MCP（Model Context Protocol）** | §5.3 Tool | 工具调用协议 · 跨厂商互操作 | §5.4 部分（MCP server 可 expose 检索接口） |
 | **OpenAI function calling** | §5.3 Tool | 工具调用协议 · 厂商内 | — |
 | **Anthropic tool use** | §5.3 Tool | 工具调用协议 · 厂商内 | — |
-| **Anthropic Agent Skills open standard（SKILL.md）** | §5.5 Prompt | 两层加载模式 · metadata + body | §5.3 部分（Skill 可内嵌 tool definition） |
+| **Anthropic Agent Skills open standard（SKILL.md）** | §5.5 Prompt | 三层加载模式 · metadata + body + 支持文件按需 | §5.3 部分（Skill 可内嵌 tool definition） |
 | **CLAUDE.md / .cursorrules / AGENTS.md** | §5.5 Prompt | 项目级 startup load | — |
 | **hook（Claude Code / OpenCode / settings.json）** | §5.5 Prompt + §5.9 Safety | 调用时机注入 + safety check | §5.6 partial |
 | **system prompt（厂商内置）** | §5.5 Prompt | 启动注入 · 永不裁剪 | — |
@@ -132,7 +132,7 @@
 | AP02 | Leakage 四类 | §5.8 | 形状泄漏 / 答案明示 / 暗示性问句 / preference leakage |
 | AP03 | Reward Hacking 7 模式 | §7.4 | declared_vs_executed gap 前哨 |
 | AP04 | Artifact Claim Mismatch | §5.8 | agent declared vs verifier observed 不一致 |
-| AP05 | Fixture / Path Classifier Bug | §7.1 | 通过率反转的数据基础设施 bug |
+| AP05 | Fixture / Path Classifier Bug | §7.8 | 通过率反转的数据基础设施 bug |
 | AP06 | 假落地机制 | §5.9 | 协议在仓库但生产路径 noop |
 | AP07 | Tool Over-Design | §5.3 | 工具粒度过细 LLM 选不准 |
 | AP08 | Context Bloat | §5.4 | lost in the middle · context 累积 unbounded |
@@ -144,8 +144,8 @@
 | AP14 | Memory Pollution | §5.4c | long-term memory 累积污染 |
 | AP15 | Excessive Agency / Unbounded Consumption | §5.9 | OWASP LLM06 + LLM10 |
 | AP16 | Schema Coupling | §5.5 | prompt schema 跟实际数据强耦合 |
-| AP17 | Premature Optimization | §7.1 / §7.4 / §10 | 没基础数据就调优 |
-| AP18 | Stage Inflation | §7.2 | 每件机制标 production ready 但工程未落地 |
+| AP17 | Premature Optimization | §7.8 / §7.4 / §10 | 没基础数据就调优 |
+| AP18 | Stage Inflation | §7.8 | 每件机制标 production ready 但工程未落地 |
 | AP19 | OTel Naming Drift | §5.7 | 内部 event name 漂移跟 OTel GenAI semconv |
 
 ---
@@ -162,7 +162,7 @@
 
 **2502-2511.\*（2025）**：plan-and-act-2025 / reflact-2025（EMNLP 2025）/ gigpo-2025 / preference-leakage-2025（2502.01534 · ICLR 2026）/ mnimi-2025 / agent-prm-2025（2511.08325）/ stop-overvaluing-mad-2025（2502.08788）
 
-**2510-2511.\* / 2603-2605.\*（2026）**：hal-2026（2510.11977）/ reward-hacking-equilibrium-2026（2603.28063）/ meta-harness-2026（2603.28052）/ nl-agent-harness-2026（2603.25723）/ claw-eval-2026（2604.06132）/ pcs-2026（2604.11003）/ reward-hacking-era-2026（2604.13602）/ llm-gaming-verifiers-2026（2604.15149）/ skill-ra-2026（2604.24594）/ ahe-2026（2604.25850）/ rhb-2026（2605.02964）/ continual-harness-2026（2605.09998）/ ahe-runtime-substrate-2026（2605.13357）/ tool-prm-bench-2026（2601.12294）/ code-as-agent-harness-survey-2026（2605.18747）/ faulty-memory-2026（2605.12978）/ fate-2026（2605.11882）/ skillopt-2026（2605.23904）
+**2510-2511.\* / 2601.\* / 2603-2605.\*（2026）**：hal-2026（2510.11977）/ reward-hacking-equilibrium-2026（2603.28063）/ meta-harness-2026（2603.28052）/ nl-agent-harness-2026（2603.25723）/ claw-eval-2026（2604.06132）/ pcs-2026（2604.11003）/ reward-hacking-era-2026（2604.13602）/ llm-gaming-verifiers-2026（2604.15149）/ skill-ra-2026（2604.24594）/ ahe-2026（2604.25850）/ rhb-2026（2605.02964）/ continual-harness-2026（2605.09998）/ ahe-runtime-substrate-2026（2605.13357）/ tool-prm-bench-2026（2601.12294）/ code-as-agent-harness-survey-2026（2605.18747）/ faulty-memory-2026（2605.12978）/ fate-2026（2605.11882）/ skillopt-2026（2605.23904）
 
 **非 arxiv 一手源**：deepseek-v4-tr · owasp-llm-top10-2025 · openai-harness-engineering-2026 · langgraph-docs
 

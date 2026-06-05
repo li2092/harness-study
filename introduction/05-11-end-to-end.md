@@ -4,7 +4,7 @@
 
 ![](../diagrams/t1-timeline-5.11-17turn.png)
 
-*图 5.24 · 17 个 turn 端到端修 logging bug 并提 PR*
+*图 5.28 · 17 个 turn 端到端修 logging bug 并提 PR*
 
 示例是作者构造的教学示例 · 不是某次真实运行 trajectory · 数值用于展示机制协作关系。
 
@@ -181,7 +181,7 @@ End of run.
 ═══════════════════════════════════════════════════════════
 ```
 
-**单 run 总结**：17 turn · 约 65 行 trajectory 事件 · 1 次 context auto-compact（Turn 11）· 1 次 verifier Hard Gate 失败后 retry（Turn 10）· 1 次 Safety 4 层完整介入 + HITL approval（Turn 16）· Outcome Judge 在 final turn 启动 · PRM 累加全程 step score。
+**单 run 总结**：17 turn · 约 50 行 trajectory 事件 · 1 次 context auto-compact（Turn 11）· 1 次 verifier Hard Gate 失败后 retry（Turn 10）· 1 次 Safety 4 层完整介入 + HITL approval（Turn 16）· Outcome Judge 在 final turn 启动 · PRM 累加全程 step score。
 
 这个示例把 8 件 runtime + Safety 控制面在跨 turn 协作的几个关键观察点显式画出。
 
@@ -191,15 +191,15 @@ End of run.
 
 **Context-Memory-Artifact 三件协作隐身在 stub + body 拆分里** —— 每次 tool 调用产物自动拆 stub（进 context）+ body（进 ArtifactStore）。agent 看到 stub 知道做了什么 · 用 artifact_id 引用 body 不挤 context。Turn 11 auto-compact 把 7 轮历史压成 250 字摘要 + 保留 artifact_id 引用——agent 仍能查 body · 只是不在 context 里。这件 stub + body + compact + retrieval 协作是 Context-Memory-Artifact 三件运作的核心 pattern。
 
-**Observation Surface + Trajectory 跨 turn 累积 evidence** —— 每个 stub 进 context + 每个 event 进 trajectory · 17 turn 累计 65+ 事件。这些事件支持 trajectory replay（用同样 prompt assets 跑 agent 看是否同结果 · 验证 determinism）· 也支持 self-evolution（evolver loop 读 trajectory 找出 "哪些 turn 是浪费 / 哪些决策是错的 / 哪些工具调用本可以合并"）。
+**Observation Surface + Trajectory 跨 turn 累积 evidence** —— 每个 stub 进 context + 每个 event 进 trajectory · 17 turn 累计约 50 个事件。这些事件支持 trajectory replay（用同样 prompt assets 跑 agent 看是否同结果 · 验证 determinism）· 也支持 self-evolution（evolver loop 读 trajectory 找出 "哪些 turn 是浪费 / 哪些决策是错的 / 哪些工具调用本可以合并"）。
 
 **Verifier 三层按 turn 类型选择性启动** —— Hard Gate 每个工具调用 turn 都跑（文件存在 / 命令 exit code 等）· Outcome Judge 只在 task 结束 turn 启动一次（Turn 17）· PRM 全程累加 step score（每个 model call 都打分）。三层按场景配 · 不是每 turn 三层都跑。
 
-**Safety 控制面 4 层每 turn 都穿过但通常隐身** —— Turn 2/3/4/5/7/9/13/15 等 workspace-write 操作都过 4 层但都 pass · 读者看不到 Safety 显式存在；Turn 16 git push 触发 network egress + ask rule + Hook 同时 require user approval 三件叠加 · Safety 4 层完整介入显式可见。这种"通常隐身 · 关键 case 显式" 的 pattern 是 Safety 控制面工程化的核心 — Safety 不应该让 user 每个工具调用都被打断 · 但关键 high-impact 操作必须可见。
+**Safety 控制面 4 层每 turn 都穿过但通常隐身** —— Turn 2/3/4/5/7/9/13/15 等常规工具调用（workspace-write 模式下）都过 4 层但都 pass · 读者看不到 Safety 显式存在；Turn 16 git push 触发 network egress + ask rule + Hook 同时 require user approval 三件叠加 · Safety 4 层完整介入显式可见。这种"通常隐身 · 关键 case 显式" 的 pattern 是 Safety 控制面工程化的核心 — Safety 不应该让 user 每个工具调用都被打断 · 但关键 high-impact 操作必须可见。
 
 ![](../diagrams/t1-sequence-5.11-turn16.png)
 
-*图 5.25 · git push 时 Safety 四层逐层穿过*
+*图 5.29 · git push 时 Safety 四层逐层穿过*
 
 跨 run 的 ablation 视角（前面 Observation Surface / Trajectory 两章讲的 self-evolution 基础设施 · 在后面 Harness Lab 章节系统展开）展示同一任务在不同 harness 配置下的成功率差异（hypothetical ablation matrix · 作者构造的教学示例 · 不是实证数据 · 仅用于说明机制贡献逻辑）：
 

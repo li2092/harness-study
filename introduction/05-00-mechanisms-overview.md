@@ -29,7 +29,7 @@
 
 #### ★ 件 vs 实现 · 读 §五 之前先建好这层 mental model ★
 
-下面 §5.1 到 §5.11 讲的 8 件 runtime + 1 件 Safety 控制面 · **全部是抽象功能不是具体技术**。读者在网上能听到的所有流行名字——MCP / function calling / RAG / GraphRAG / vector DB / 图数据库 / Memory / Artifact / Skill / CLAUDE.md / hook / Agent Skills open standard / LangGraph nodes / OpenAI Assistants——**都是某件抽象功能的具体实现**。
+下面 §5.1 到 §5.9 讲的 8 件 runtime + 1 件 Safety 控制面 · **全部是抽象功能不是具体技术**。读者在网上能听到的所有流行名字——MCP / function calling / RAG / GraphRAG / vector DB / 图数据库 / Memory / Artifact / Skill / CLAUDE.md / hook / Agent Skills open standard / LangGraph nodes / OpenAI Assistants——**都是某件抽象功能的具体实现**。
 
 ![](../diagrams/t1-layered-5.0-abstraction.png)
 
@@ -39,4 +39,4 @@
 
 举一个最常见的混淆——业界多家口径把 RAG 跟 Memory 拉成"互补不互替"的二件并列。这种说法在实现层成立（RAG 是 stateless retrieval pipeline · Memory 是 stateful persistence 治理）· 但在件层错位——**RAG 根本不是件 · 是横切多件的"检索-注入"工程模式** · backend 换 vector / graph / FTS / SQL / MCP server 都成立。同理 MCP 不是 Tool 件本身 · 是 Tool 的协议层实现；Skill 不是 Prompt Asset 件本身 · 是 Prompt Asset 的组织模式。
 
-入门版接下来 §5.1-§5.11 全部讲抽象功能层 · 具体业界产品的归位放在每件章末"业界归位卡片" + §99 附录 §E "件 × 业界产品归位总图"。读者读完整 §五 之后 · 应该能拿到任何新框架（LangGraph / CrewAI / Anthropic Agent Skills / OpenAI Assistants 等）秒抓它覆盖了 8 件中的哪几件 · 漏了哪几件——这是入门版应该让读者掌握的核心识别能力。
+入门版接下来 §5.1-§5.11 全部讲抽象功能层 · 具体业界产品的归位放在每件章末"业界归位卡片" + §99 附录 §D "件 × 业界产品归位总图"。读者读完整 §五 之后 · 应该能拿到任何新框架（LangGraph / CrewAI / Anthropic Agent Skills / OpenAI Assistants 等）秒抓它覆盖了 8 件中的哪几件 · 漏了哪几件——这是入门版应该让读者掌握的核心识别能力。

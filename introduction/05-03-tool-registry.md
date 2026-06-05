@@ -52,7 +52,7 @@ Tool Registry 在 agent 每次发起 tool_call 时做三件事，按顺序串行
 
 *图 5.8 · 每次 tool_call 串行做的三件事*
 
-这套五字段是教学版的最小集——生产级实现里 Tool 接口会比这多。业界对 Claude Code 的源码调研显示，CC 的 Tool type 有九个字段：name、description、prompt（工具的"使用说明书"会被注入到 system prompt 让模型了解什么时候该用它）、inputSchema（zod 类型校验）、outputSchema（可选）、call（实际执行函数）、shouldDefer（标记工具是否可以延迟加载——配合一个 ToolSearchTool 在工具数多时按需加载 schema 节省约 8K token）、isEnabled（运行时启用判断）、isConcurrencySafe（决定这个工具能不能跟其他工具并发执行）。多出来的三个字段全部不是工具自己跑起来要的——它们是 Tool Registry 层做调度时要的：prompt 让 Registry 把工具说明书注入 system prompt、shouldDefer 让 Registry 做工具延迟加载、isConcurrencySafe 让 Registry 决定并发批次。意思是说——一个工具的元数据职责远比"我叫什么、我吃什么参数、我吐什么"要宽，工具元数据是 Registry 调度的依据。
+这套五字段是教学版的最小集——生产级实现里 Tool 接口会比这多。业界对 Claude Code 的源码调研显示，CC 的 Tool type 有九个字段：name、description、prompt（工具的"使用说明书"会被注入到 system prompt 让模型了解什么时候该用它）、inputSchema（zod 类型校验）、outputSchema（可选）、call（实际执行函数）、shouldDefer（标记工具是否可以延迟加载——配合一个 ToolSearchTool 在工具数多时按需加载 schema 节省约 8K token）、isEnabled（运行时启用判断）、isConcurrencySafe（决定这个工具能不能跟其他工具并发执行）。多出来的字段里，prompt、shouldDefer、isConcurrencySafe 这三个全都不是工具自己跑起来要的——它们是 Tool Registry 层做调度时要的：prompt 让 Registry 把工具说明书注入 system prompt、shouldDefer 让 Registry 做工具延迟加载、isConcurrencySafe 让 Registry 决定并发批次。意思是说——一个工具的元数据职责远比"我叫什么、我吃什么参数、我吐什么"要宽，工具元数据是 Registry 调度的依据。
 
 Registry 这一层做调度时还有一个具体的设计模型可以直接用——Tool Batch 四模式。第一种是 parallel_read：只读、无副作用、无路径冲突的工具默认走并发批，read_file、grep、glob、list_dir、web_search、web_fetch 都在这一档。第二种是 sequential_write：写文件、修改工作区、变更状态的工具默认串行，write_file、edit_file、shell_exec、git_* 还有任何标 DANGEROUS 的都属于这一档——不是因为不能并发，是因为并发的不可预测性远大于工程收益。第三种是 barrier：权限确认、危险操作、批次切换、模型需要基于上一批观察重新决策这四种场景需要明确停下来做一次"切换点"决策。第四种是 background_sidecar：交给一个轻量旁路 agent 跑的任务，跟主线程独立。这个模型背后有一个工具调度主线翻转——"sub-agent 当作复杂任务第一手段"这条直觉是错的，正确的主线是"单 agent 批量工具执行 → ObservationPack 回注 → 必要时才启用轻量 sidecar"。三个理由：只读工具并发比起启动 sub-agent 更便宜更快更可控；很多任务根本不是"需要另一个 agent"是"需要同时读多个东西"；sub-agent 会带来安全边界、上下文隔离、结果汇总三层复杂度，多数任务承担不起这三层成本。
 
@@ -154,12 +154,12 @@ Tool 这件抽象功能在 2026 业界主流被这几个技术覆盖——
 | **Pydantic AI tools** | Python harness 内部工具抽象 · 类型完整 · 编译期 capability 检查 |
 | **ReAct 原生格式** | 早期工具调用文本协议 · 2026 主要用于教学跟早期模型 |
 
-这几件都在解决"工具怎么 expose 给 agent"——属于 §5.3 Tool 这件的**协议层实现**。选哪种取决于跟什么模型族锁定 / 是否需要跨厂商互操作 / 是否需要从已有 REST API 自动派生工具。**它们不是 8 件中独立的件 · 是 §5.3 这一件的不同物理形态**。完整反向查表见 §99 附录 §E。
+这几件都在解决"工具怎么 expose 给 agent"——属于 §5.3 Tool 这件的**协议层实现**。选哪种取决于跟什么模型族锁定 / 是否需要跨厂商互操作 / 是否需要从已有 REST API 自动派生工具。**它们不是 8 件中独立的件 · 是 §5.3 这一件的不同物理形态**。完整反向查表见 §99 附录 §D。
 
 ---
 
-> **第一章下篇上半结束** · §5.1-§5.3 三件单件 runtime 机制（Agent Loop / Model Adapter & Routing / Tool Registry & ACI）已完成。
+> **§五 机制章上半结束** · §5.1-§5.3 三件单件 runtime 机制（Agent Loop / Model Adapter & Routing / Tool Registry & ACI）已完成。
 >
-> 后半段从 §5.4 Context / Memory / Artifact 状态管理三层 开始，继续覆盖 §5.5 Prompt Assets · §5.6 Observation Surface · §5.7 Trajectory · §5.8 Verifier · §5.9 Safety 控制面 · §5.10 一次 turn 6 步流程 · §5.11 端到端示例 · §六 同模型不同 harness 表现差异 · §七 设计决策点 · Verify · Citation 索引。
+> 后半段从 §5.4 Context / Memory / Artifact 状态管理三层 开始，继续覆盖 §5.5 Prompt Assets · §5.6 Observation Surface · §5.7 Trajectory · §5.8 Verifier · §5.9 Safety 控制面 · §5.10 一次 turn Step 0→7 微型流程 · §5.11 端到端 17 turns 示例；其后是 §六 工程模式 · §七 Harness Lab 外层优化环 · §八 可组合性矩阵 · §九 控制论四原则。
 >
 > 继续阅读：[05-04-context-memory-artifact.md](./05-04-context-memory-artifact.md)

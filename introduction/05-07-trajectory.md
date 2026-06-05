@@ -10,7 +10,7 @@ trajectory 跟 observation 的关系是一对多协同。trajectory 是 event st
 
 业界对 trajectory 工程治理已经形成强共识 · 主流 5 家路径在 §5.6.6 已经对照过——SWE-agent 走单 JSON 文件 / Claude Code 走 JSONL 一行一事件 / Codex CLI 走 Rollout 格式 / LangSmith 走云端 trajectory + UI / OpenInference 走 OTel 兼容 schema。§5.7 这里聚焦的是 trajectory 自身的工程治理——event taxonomy / 存储格式 / replayability / 跟 OTel 的衔接 / 常见误区——不重复 §5.6 已讲过的 observation/trajectory 协同部分。
 
-后面八子节按"trajectory 跟 log 的根本区别 → event taxonomy 11 类 → 单 JSON vs JSONL 两种存储路径 → OTel GenAI semconv 跟 W3C trace context 锚 → replayability 设计 → 常见误区（trajectory 缺失 / 冗余 / 不可 diff）→ trajectory 作为 self-evolution 训练数据 → 起步建议"展开。前五子节是业界共识的 trajectory 工程治理基础 · 第六子节专门讲常见误区 · 第七子节呼应 §5.6.7 的 self-evolution 基础设施层从 trajectory 角度展开 · 第八子节给四维度起步建议。
+后面八子节按"trajectory 跟 log 的根本区别 → event taxonomy 核心 9 类 → 单 JSON vs JSONL 两种存储路径 → OTel GenAI semconv 跟 W3C trace context 锚 → replayability 设计 → 常见误区（trajectory 缺失 / 冗余 / 不可 diff）→ trajectory 作为 self-evolution 训练数据 → 起步建议"展开。前五子节是业界共识的 trajectory 工程治理基础 · 第六子节专门讲常见误区 · 第七子节呼应 §5.6.7 的 self-evolution 基础设施层从 trajectory 角度展开 · 第八子节给四维度起步建议。
 
 #### 5.7.0 本节首次出现的术语
 
@@ -92,7 +92,7 @@ trajectory 在 cross-run 视角下扮演的角色跟 §5.6.7 observation surface
 
 trajectory 作为训练数据这件事对 trajectory 工程治理的额外要求有几条。第一条是 schema 稳定性必须保证跨 run 跨版本可比——如果 trajectory 字段在某次 harness 升级后字段名变了 · 旧 trajectory 就不能再喂新版 evolver。这件 schema migration 工程纪律业界还在演进。第二条是 outcome attribution 必须显式——trajectory 末尾必须明确标"这 run 是 pass 还是 fail · 哪几个 turn 是关键决策点" · 否则 evolver 不知道哪几条 trajectory 是正例哪几条是负例。第三条是 trajectory 跟 ground truth 的关联存储——self-evolution 需要 trajectory 跟任务 ground truth 配对 · 没有 ground truth 配对的 trajectory 只能做 unsupervised 探索 · 不能做 supervised 优化。
 
-承载这件训练数据角色的本地工程抽象，就是前一节那组 harness 内部件（MechanismEvent 四态 / absence-of-event / decision-point / ObservationPack）——trajectory schema 既喂当前推理 · 也给 harness 跨 run 的 self-evolution loop 喂数据。跟 observation 那节一样 · 这是 harness 自身的能力 · 上面那层 meta-工作台（MODA-RL / Harness Lab）只是消费 trajectory 的进阶选项 · 不是前提。
+承载这件训练数据角色的本地工程抽象，就是前一节那组 harness 内部件（MechanismEvent 四态 / absence-of-event / decision-point / ObservationPack）——trajectory schema 既喂当前推理 · 也给 harness 跨 run 的 self-evolution loop 喂数据。跟 observation 那节一样 · 这是 harness 自身的能力 · 上面那层 meta-工作台（Harness Lab）只是消费 trajectory 的进阶选项 · 不是前提。
 
 #### 5.7.8 起步建议 · 四维度
 

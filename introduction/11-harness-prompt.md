@@ -58,7 +58,7 @@
 
 `↪ 正文：Agent Loop（§5.1，P0）/ Model Adapter & Routing（§5.2，P0 边界）`
 
-### 1.2 三条会让请求直接 400 的协议红线
+### 1.2 三条协议 / 运行时红线
 
 - **assistant 消息协议**：`tool_calls` 后面必须**紧跟** `tool_result`，中间别插别的，否则下一轮请求直接 400。
 - **strict schema 归一化**（如果 Phase 0 的 A 族探针显示模型对 strict schema 敏感）：注册工具前把 schema 规范化，含嵌套对象 / 数组的要处理到模型能接受。
