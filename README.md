@@ -1,133 +1,132 @@
 <p align="center">
-  <img src="diagrams/hero-readme.png" alt="Harness Study · 智能体的工程实践 — 8 件 runtime + 1 Safety 控制面" width="920">
+  <img src="diagrams/hero-readme-en.png" alt="Harness Study — 8 runtime mechanisms + 1 Safety control plane" width="920">
 </p>
 
-# Harness Study · 智能体的工程实践
+# Harness Study · The Engineering Practice for AI Agents
 
 <p align="center">
-  <em>The Engineering Practice for AI Agents</em><br>
-  <strong>让智能抵达人力未及之处，让自治成为条理与高效的根基。</strong>
+  <strong>Let intelligence go where we cannot, and let autonomy anchor order and performance.</strong>
 </p>
 
 <p align="center">
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-CC_BY_4.0-6d28d9?style=flat-square"></a>
-  <img alt="入门卷" src="https://img.shields.io/badge/入门卷-约25万字-8b5cf6?style=flat-square">
-  <img alt="配图" src="https://img.shields.io/badge/配图-46张-4c1d95?style=flat-square">
-  <img alt="语言" src="https://img.shields.io/badge/语言-中英双语-067a5b?style=flat-square">
-  <a href="README.en.md"><img alt="English" src="https://img.shields.io/badge/English-README.en.md-b56a09?style=flat-square"></a>
+  <img alt="Intro Volume" src="https://img.shields.io/badge/Intro_Volume-~250k_chars-8b5cf6?style=flat-square">
+  <img alt="Diagrams" src="https://img.shields.io/badge/Diagrams-50-4c1d95?style=flat-square">
+  <img alt="Bilingual" src="https://img.shields.io/badge/Bilingual-中文_·_EN-067a5b?style=flat-square">
+  <a href="README.zh.md"><img alt="中文" src="https://img.shields.io/badge/中文-README.zh.md-b56a09?style=flat-square"></a>
 </p>
 
 ---
 
-> 一个好的 Agent Harness 工程，本质上是数字世界的管理学。
+> Agent Harness engineering is, in essence, the management science of the digital world.
 >
-> 它拓展大模型的能力边界，赋能个体与组织。将治理延伸至人力未及之处，持续为系统带来熵减。
+> It widens the capability frontier of large models and empowers individuals and organizations alike. It carries governance into domains beyond human reach, and works ceaselessly to drive down the entropy of the system.
 >
-> 它回应个体的每一个定制化需求，让一切数字单元都在清晰边界内自主、高效、负责地运行。
+> It answers the individual's every tailored need, so that every digital unit runs autonomously, efficiently, and responsibly within clearly defined bounds.
 >
-> 这样的 Harness 不是简单的智能工具，而是让能力与克制并存的治理框架。
+> Such a Harness is no mere intelligent tool; it is a governance framework in which capability and restraint hold as one.
 
 ---
 
-## 一、项目想做的事
+## 1. What This Project Is For
 
-2025 年 12 月，我开始用 Claude Code 尝试开发 harness——那时候还没这个词，我管手上的项目叫"Agent 驱动的 XX 产品"。第一个项目是 Cyber-Mantic：给 LLM 配上工具，让它能准确算出各种术数理论的结果再做分析，当时的 agent runtime 直接把 OpenCode 塞了进去。项目效果不及预期，却给了我一个很强烈的信号——LLM 的工具调用能力一旦增强，再配上 agent runtime，会是未来几年最重要的一类 AI 工具。于是我从 0 开始搭智能体，不借现成 framework，把所有可能的形态都试一遍：利用每天娃睡了的时间，乐此不疲地踩各种 harness 的坑、vibe coding 到凌晨，持续了快 4 个月。
+In December 2025 I started trying to build a harness with Claude Code — back then the word didn't exist yet, and I called whatever I was making "an agent-driven balabala product." My first one was Cyber-Mantic: I gave an LLM tools so it could compute the results of various Chinese metaphysics systems accurately and reason over them, and for the agent runtime I simply bolted OpenCode straight in. The project fell short of what I'd hoped, but it sent one very strong signal — once an LLM is given stronger tool-calling, pairing it with an agent runtime is going to be one of the most important kinds of AI tooling for the next few years. So I set out to build agents from scratch, without leaning on any existing framework, and to try every shape the thing could possibly take. For the better part of four months I did this in the hours after my kid was asleep, cheerfully stepping on every harness landmine there was, vibe-coding into the small hours.
 
-后来在小红书发帖小小地火了一下，跟许多主包交流 harness 经验时，发现我攒的一些小技巧对他们挺有帮助，就萌生了系统写一份教程的想法。写的过程里，有的朋友拿到了实习 Offer、有的萌生了创业的念头，最有行动力的一位老哥已经做出产品、融到了第一笔资金；我自己也没闲着，落地了几个企业级的垂域 agent 产品，从多个角度验证了自己对 harness 的理解——不学术，但很工程。
+After a post of mine on Xiaohongshu (RED) caught a little traction, I began swapping harness notes with a lot of other builders, and found that some of the small tricks I'd accumulated were genuinely useful to them — which is where the idea of writing a systematic tutorial came from. Along the way some of those friends landed internship offers, some caught the startup bug, and the most driven of the lot has already started building a product and raised his first round of funding. I wasn't idle either: I shipped several enterprise vertical-domain agent products of my own, which let me validate my understanding of harnesses from many angles. Light on academia, heavy on engineering.
 
-我希望《Harness Study》能帮大家更系统、更深入地理解什么是 harness，也希望 AI coding 工具拿到它，就能照着用户的需求描述生成一个够用的 Agent 产品。同时我也想推动 harness 的本土化翻译——只有当 harness 的每个细节都有更准确、更统一的定义，这个概念才能被更多人理解，逐步在各行各业落地生根。
+My hope is that Harness Study helps people understand what a harness is more systematically and more deeply — and that an AI coding tool, handed this tutorial, can turn a user's description of what they need into an agent product that is good enough to use. I also hope it can push along the work of translating *harness* into Chinese: only once every detail of the harness is defined more precisely and more uniformly will more people grasp the concept, and only then can it gradually prove its worth across one industry after another.
 
-接下来我会：
-- 进一步校对 Introduction 部分；
-- 完善《Harness-Lab》的工程细节；
-- 结合《Harness Study》和《Harness-Lab》做工程实践，打造一个专门适配 DeepSeek V4 的 Agent；
-- 把工程过程写成《Harness Study》的展开章节。
+Next, I will:
+- keep proofreading the Introduction;
+- flesh out the engineering detail of Harness · Lab;
+- put both Harness Study and Harness · Lab into practice by building an agent purpose-built for DeepSeek V4;
+- and distil that engineering process into the expansion chapters of Harness Study.
 
-好的，我闭环了。
+There. The loop is closed.
 
 
-## 以下有请 Claude Code 为大家介绍《harness study》
+## Over to Claude Code to Introduce Harness Study
 
-大多数关于智能体（agent）的资料停在"怎么搭一个能跑的 agent"——选框架、写提示词、加几件工具、跑通示例。这一层网上够多了。
+Most existing material on agents stops at how to build one that runs — pick a framework, write a prompt, add a few tools, run a demo. That layer is well covered on the public internet.
 
-真正把智能体放到 To B 办公、合同审核、业务流程审批这类任务上反复运行之后，会出现另一类问题：同一份提示词在不同时段产出不同的结果；表面通过率高但用户实际感到时对时错；明明给了文档让它查，仍然伪造细节并宣称完成；只改了一处工具调用的写法，整条主线就不再收敛。
+What appears once an agent is actually deployed to office work, contract review, or business process automation is a different class of problem: the same prompt produces different outputs at different times; the headline pass rate looks high but users report inconsistent behavior in practice; given a document to consult, the agent fabricates details that are not in it and then declares the task complete; a change to a single tool-call convention — leaving the model untouched — causes the entire main loop to stop converging.
 
-这些问题里大多数原因不在提示词。把希望寄托在反复迭代提示词上，到一定阶段之后边际收益迅速衰减。真正决定智能体稳定与否的，是围绕模型的那一层结构——在英文文献里叫 **harness**。harness 不是 LangChain 或某个 SDK——那是 framework。harness 是你在 framework 之上为某个具体任务搭起来的整套结构：模型怎么挂、工具怎么管、上下文怎么累积、产物怎么落地、验证靠什么、安全靠什么、出错怎么兜底。
+In most of these cases, the cause is not in the prompt. Past a certain point, further investment in prompt iteration yields rapidly diminishing returns. What actually determines whether an agent is stable is the layer around the model — in English, the **harness**. A harness is not LangChain or any particular SDK — those are frameworks. The harness is the structure you build on top of a framework for a particular task: how the model is mounted, how tools are managed, how context accumulates, where artifacts land, how things are verified, how safety is enforced, what happens when something fails.
 
-本项目（Harness Study）就是为了把围绕模型的这一层作为独立的工程对象，系统化地讲清楚。**项目分卷展开**：当前已写完**入门卷**，一次性走完全骨架；后续会有逐章 / 逐模块的展开卷，更聚焦、更详细，规划中。
+This project — Harness Study — exists to take that layer around the model as an engineering object in its own right and explain it systematically. **The project is organized into volumes.** The introductory volume — which walks the full skeleton once — is complete; further volumes will be per-chapter and per-module expansions, more focused and more detailed, in planning.
 
 <p align="center">
-  <img src="diagrams/t1-comparison-1-gap.png" alt="模型能做的是单步无副作用预测，任务要的是多步有副作用的状态机驱动——harness 就是中间这套工程系统" width="800">
+  <img src="diagrams/t1-comparison-1-gap-en.png" alt="What the model does is single-step, side-effect-free prediction; what the task needs is multi-step, stateful, side-effecting execution — the harness is the engineering layer in between" width="800">
 </p>
 
-## 二、读完整套之后应该能
+## 2. What Reading the Full Series Should Enable
 
-给读者：
+For human readers:
 
-- 建起完整的 agent harness mental model；
-- 拿到任何 agent 工程问题能定位到具体的机制 + 常见的误区；
-- 独立设计、独立调优一个 agent harness。
+- to build a complete mental model of an agent harness;
+- to locate any agent engineering problem to a specific mechanism and a common pitfall;
+- to independently design and tune an agent harness.
 
-给 AI 读者：
+For AI readers:
 
-- 任何 AI coding 工具读完本项目之后，应当能够依据使用者给出的具体需求或场景，落地一个可投入使用且准确性较高的 agent。
-- 本项目还附带可直接喂给编码 AI 的 **Harness Prompt**（[`introduction/11-harness-prompt.md`](introduction/11-harness-prompt.md) 完整可执行 Spec + [`introduction/12-harness-prompt-lite.md`](introduction/12-harness-prompt-lite.md) 三段 lite 版）——把"用提示词落地一套 harness"从概念变成可执行的起点。
+- any AI coding assistant that reads this project should be able to take a user's specific requirement or scenario and produce a deployable agent of reasonably high accuracy.
+- the project also ships **Harness Prompts** you can feed directly to a coding AI ([`introduction/11-harness-prompt.md`](introduction/11-harness-prompt.md), the full executable spec, plus [`introduction/12-harness-prompt-lite.md`](introduction/12-harness-prompt-lite.md), a three-part lite version) — turning "land a harness via a prompt" from an idea into a runnable starting point.
 
-本项目在写作上即假定读者中包括 AI 本身：它读完之后的下游动作不是停在"理解概念"，而是为使用者构造可用的工程产物。
+The project is written on the assumption that some of its readers are AI themselves; for those readers, the downstream action is not to *understand the concepts*, but to *construct a usable engineering artifact* on behalf of the user.
 
-## 三、当前进度
+## 3. Current Status
 
-- ✓ **入门卷**：稿件已写完，章节正文 + 46 配图已落入 [`introduction/`](introduction/)；终审进行中。
-- ⏳ **后续展开卷**：规划中。
+- ✓ **Introductory volume**: the manuscript is complete; chapters + 46 diagrams are now in [`introduction/`](introduction/); final review in progress.
+- ⏳ **Expansion volumes to follow**: in planning.
 
 ---
 
-## 四、入门卷概览
+## 4. The Introductory Volume
 
-入门卷是本项目的开篇导论卷。它把 agent harness 拆成**八种 runtime 机制 + 一种横切控制面 + 工程模式 + 工作台 + 可组合性矩阵 + 控制论四原则**，把整套骨架走一遍。每一种给出 What / Why / How to start 三档完整 mental model。
+The introductory volume is the opening — the overture — of this project. It decomposes an agent harness into **eight runtime mechanisms + one cross-cutting control plane + engineering patterns + a workbench + a composability matrix + four principles from control theory**, and walks through this skeleton in full. Each item is given a complete three-tier mental model: What / Why / How to start.
 
 <p align="center">
-  <img src="diagrams/sample-05-mechanisms-overview.png" alt="八种 runtime 机制 + 一种 Safety 控制面 总览" width="840">
+  <img src="diagrams/sample-05-mechanisms-overview-en.png" alt="Eight runtime mechanisms + one Safety control plane — overview" width="840">
 </p>
 
-> 全卷 46 张配图（统一 jimi-ink 视觉）已嵌入 [`introduction/`](introduction/) 各章正文，可逐章浏览。
+> All 46 diagrams (a unified jimi-ink visual style) are embedded throughout the chapters in [`introduction/`](introduction/).
 
-入门卷整本约二十五万中文字，prose 主导。这一规模由"一次走完全骨架 + 给完整 mental model"的入门版定位决定；后续展开卷会更聚焦、更详细。
+The volume runs to roughly 250,000 Chinese characters, prose-dominant. That scale is set by the introductory positioning — *walk the full skeleton once, give a complete mental model*; later expansion volumes will be more focused and more detailed.
 
-### 读完入门卷应能回答的六个问题
+### Six Questions Answerable After Reading
 
-1. **我的 agent 不稳定 · 是不是 prompt 写得不好？** 多半不是。prompt 只是 harness 的一种零件，调到极限收益会到顶。
-2. **ReAct 还在用吗？我该升级到 plan-execute 吗？** 看场景。ReAct 八条原始假设里四条已经失效，但失效不等于 ReAct 整体过时。
-3. **我跑 N 次取平均看通过率 · 统计可信吗？** 不一定。DeepSeek 之类的 prefix KV cache 会让 N 次之间不独立——表面 80% 通过率可能其实是同一份缓存复用 N 次。这叫 cache 共谋。
-4. **我的 verifier 总放过看似对实际错的输出 · 怎么办？** 三种典型病：答案泄漏（verifier 见过 ground truth）、reward hacking（模型学会糊弄 verifier）、artifact-claim mismatch（agent 声称做了但产物里没有）。三种各有不同对策。
-5. **我应该怎么系统优化 harness 而不是凭感觉调？** Observe（观察轨迹）→ Score（打分）→ Ablate（消融）→ Tune（调参）→ Iterate（迭代）。这是一个独立于业务循环的外循环，本卷称之为 Harness Lab。
-6. **这教程哪段是给我读的？** 见下文"谁该读哪段"。
+1. **My agent is unstable — is it because the prompt is poorly written?** Most likely not. The prompt is one piece of the harness; tuning it past a certain point yields diminishing returns.
+2. **Is ReAct still relevant? Should I move to plan-execute?** It depends on the setting. Four of ReAct's eight original assumptions no longer hold, but invalidation of assumptions does not mean ReAct is wholesale obsolete.
+3. **I run N trials and take the average pass rate — is the statistic trustworthy?** Not necessarily. Prefix KV caches (as in DeepSeek-class models) can make those N trials non-independent — an apparent 80% pass rate may in fact be the same cached path replayed N times. This is what is called *cache collusion*.
+4. **My verifier keeps passing outputs that look correct but are actually wrong — what do I do?** Three typical pathologies: answer leakage (the verifier has seen the ground truth), reward hacking (the model has learned to game the verifier), and artifact-claim mismatch (the agent claims to have done something the artifacts do not corroborate). Each calls for a different remedy.
+5. **How do I systematically optimize the harness rather than tune by feel?** Observe trajectories, Score them, Ablate mechanisms, Tune parameters, Iterate. This is an outer loop independent of the business loop; the volume calls it the **Harness Lab**.
+6. **Which part of this is for me?** See *Who Should Read What* below.
 
-### 谁该读哪段
+### Who Should Read What
 
-入门卷不要求从头读到尾。三类读者各有推荐路径：
+The introductory volume does not require linear reading. Three reader types have recommended paths.
 
-**AI PM / AI 业务人员**——你要选型、评估外部 agent 厂商、给团队定 harness 方向。最需要"有哪些零件、什么场景该选什么、什么是常见误区"。推荐路径：
+**AI PMs / AI business roles** — for those evaluating vendors, selecting frameworks, setting the harness direction for a team. The most useful question for you is: *what are the parts, what fits which setting, what are the common errors?* Path:
 
-§一 Why harness（5 分钟先建心智）→ §5.3 Tool Registry & ACI（工具是 To B agent 落地的关键）→ §5.5 Prompt Assets（指令层怎么管）→ §七 Harness Lab 三块常见误区（cache 共谋 / leakage / reward hacking）→ §八 可组合性矩阵（看清自己手里在拼哪一组合）。
+§I Why harness (build mental model in five minutes) → §5.3 Tool Registry & ACI (tools are the crucial part of B2B agent deployment) → §5.5 Prompt Assets (how the instruction layer is managed) → §VII Harness Lab common pitfalls (cache collusion / leakage / reward hacking) → §VIII Composability Matrix (see clearly which combination you are actually putting together).
 
-**学习者**（在学 agent 工程、做研究、准备入行）——你要建一套能跟任何 agent 论文 / 教程对话的 mental model，知道 ReAct 到 Reflexion 到 plan-execute 这条线为什么会这么演化。推荐路径：
+**Learners** — students of agent engineering, researchers, those preparing to enter the field. The point is to build a mental model that converses with any agent paper or tutorial — to understand why the line from ReAct to Reflexion to plan-execute has evolved the way it has. Path:
 
-§一-§二（缘起与前世）→ §5.1 Agent Loop（思维范式的进化）→ §5.8 Verifier（agent 工程最难的一种）→ §九 控制论四原则（整本教程 thesis 收束）。
+§I-§II (origins and prehistory) → §5.1 Agent Loop (evolution of reasoning paradigms) → §5.8 Verifier (the hardest piece of agent engineering) → §IX Four Principles of Control Theory (where the volume's thesis comes together).
 
-**给 AI 看**——AI agent 自己读本卷做下游决策（例如读完本卷之后调自己 harness 配置）。推荐路径：
+**For AI to read** — an agent reading this volume itself, in order to make downstream decisions (for example, an agent tuning its own harness configuration after reading). Path:
 
-按上面目录顺序（文件名 01 → 99）依次读。每章 entry hook + 认知节点定义足够建模。不要跳读机制描述段——那是 prose 主体，跳了就只剩名字。
+Read the chapters in the order listed above (file names 01 → 99). The entry hook and cognitive-node definitions in each chapter are sufficient for modeling. Do not skip the mechanism-description sections — that is the prose body; skipping leaves only the names behind.
 
-### 入门卷章节
+### Chapters
 
-| 章 | 主题 |
+| Section | Subject |
 |---|---|
-| §一 | Why harness · 我们究竟在解决什么问题 |
-| §二 | 前世 · 模型当函数用的时代（2020–2022） |
-| §三 | 第一次大规模试错 · AutoGPT 浪潮和它的翻车（2023） |
-| §四 | Harness 概念的浮现（2023 中–2026） |
-| §五 | 八种 runtime 机制 + Safety 控制面 + 端到端示例 |
+| §I | Why harness — what problem we are actually solving |
+| §II | Prehistory — when models were used as functions (2020–2022) |
+| §III | The first large-scale trial and error — the AutoGPT wave and its failure (2023) |
+| §IV | The emergence of the harness concept (mid-2023 – 2026) |
+| §V | Eight runtime mechanisms + Safety control plane + end-to-end examples |
 | §5.1 | Agent Loop |
 | §5.2 | Model Adapter & Routing |
 | §5.3 | Tool Registry & ACI |
@@ -137,47 +136,47 @@
 | §5.7 | Trajectory |
 | §5.8 | Verifier |
 | §5.9 | Safety |
-| §5.10 | 一次 turn 的微型流程（单 turn 走查）|
-| §5.11 | 端到端 17 turn |
-| §六 | 工程模式 |
-| §七 | Harness Lab · 调优外循环 |
-| §八 | 可组合性矩阵 |
-| §九 | 控制论四原则 |
-| §十 | 学习路径 |
-| 配套 · Prompt | Harness Prompt · 给 agent 的可执行落地 Spec（[`11-harness-prompt.md`](introduction/11-harness-prompt.md)）|
-| 配套 · Prompt lite | 通用 TDD lite 版 · 三段指令直接喂编码 AI（[`12-harness-prompt-lite.md`](introduction/12-harness-prompt-lite.md)）|
-| 附录 | K1-K7 / 一手 source / EG10 / OWASP / 命名映射 / SPIFFE-biscuit / AP01-AP19 / arxiv 全表 |
+| §5.10 | A single turn, walked through step by step |
+| §5.11 | End-to-end 17 turns |
+| §VI | Engineering patterns |
+| §VII | Harness Lab — the outer optimization loop |
+| §VIII | Composability matrix |
+| §IX | Four principles of control theory |
+| §X | Learning paths |
+| Companion · Prompt | Harness Prompt — the executable build spec for an agent ([`11-harness-prompt.md`](introduction/11-harness-prompt.md)) |
+| Companion · Prompt lite | Generic TDD lite version — three instructions to feed a coding AI ([`12-harness-prompt-lite.md`](introduction/12-harness-prompt-lite.md)) |
+| Appendix | K1-K7 / primary sources / EG10 / OWASP / naming map / SPIFFE-biscuit / AP01-AP19 / arxiv index |
 
-### 跳读建议
+### What May Be Skipped
 
-- **附录是参考资料不是必读**——查到再读。
-- **沿用章节**（§5.2 Model Adapter / §5.7 Trajectory）讲的是相对成熟的零件，方法论密度低于重头戏章，可跳读。
-- **重头戏章不要跳**：§5.1 Agent Loop / §5.4 Context-Memory-Artifact / §5.5 Prompt Assets / §5.6 Observation Surface / §5.8 Verifier / §七 Harness Lab / §八 可组合性矩阵 / §九 控制论。这八章是入门卷的 thesis 承重墙。
+- **The appendix is reference material, not required reading** — consult on demand.
+- **Continuity sections** (§5.2 Model Adapter / §5.7 Trajectory) cover comparatively mature components and have lower methodological density than the main chapters; may be skimmed.
+- **The main chapters should not be skipped**: §5.1 Agent Loop / §5.4 Context-Memory-Artifact / §5.5 Prompt Assets / §5.6 Observation Surface / §5.8 Verifier / §VII Harness Lab / §VIII Composability Matrix / §IX Control Theory. These eight chapters carry the volume's thesis.
 
-### 入门卷完成判据
+### Introductory Volume — Acceptance Criterion
 
-入门卷读完，上述六个问题读者能答出来。**整套项目的完成判据**比这更高：读者能独立设计 + 独立调优一个 agent harness——这一目标由后续展开卷承担。
+The introductory volume is complete when readers can answer the six questions above. **The full-series acceptance criterion is higher**: readers should be able to independently design and tune an agent harness — that level is carried by the expansion volumes to follow.
 
 ---
 
-## 五、跟工作台项目的关系
+## 5. Relation to the Workbench Project
 
-教程一侧——本仓库——定义研究的对象与方法。工程实现一侧由独立项目 [Harness · Lab](https://github.com/li2092/Harness-Lab) 承担：把这套方法承担在可视化工作台规范上。两个项目共享同一套术语、节点、信号定义。
+The tutorial side — this repository — defines the object of study and the method. The engineering implementation side is carried by an independent project, [Harness · Lab](https://github.com/li2092/Harness-Lab), which puts this method onto a workbench specification. The two projects share the same vocabulary, the same node definitions, the same signal conventions.
 
-使用顺序：
+Order of use:
 
-- **第一次读本教程**：不需要工作台 · 直接读 [`introduction/`](introduction/)（从目录 README 进各章）起。
-- **已读完入门卷、要落地某个具体 harness**：把工作台规范当作 evidence graph 的视觉语言来用。
+- **First-time readers of this tutorial**: the workbench is not needed; start directly from [`introduction/`](introduction/) (enter the chapters via its README).
+- **After finishing the introductory volume, when deploying an actual harness**: use the workbench specification as the visual language of the evidence graph.
 
-## 六、协议
+## 6. License
 
-本书依 [CC BY 4.0](LICENSE)（知识共享 · 署名 4.0 国际）授权 © 2026 Jinming Li
+[CC BY 4.0](LICENSE) — Creative Commons Attribution 4.0 International © 2026 Jinming Li
 
-你可以自由阅读、分享、引用与再创作，只需保留署名。
+You are free to read, share, quote, and adapt this work, as long as you give appropriate credit.
 
-## 七、联系
+## 7. Contact
 
-- Issues 与 Discussions 欢迎
-- 邮箱：li2092@qq.com
-- GitHub：[@li2092](https://github.com/li2092)
-- 个人网站：[jimi.ink](https://jimi.ink/)
+- Issues and Discussions welcome.
+- Email: li2092@qq.com
+- GitHub: [@li2092](https://github.com/li2092)
+- Personal site: [jimi.ink](https://jimi.ink/)
