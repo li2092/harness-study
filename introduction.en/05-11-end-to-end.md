@@ -193,7 +193,7 @@ End of run.
 
 **The single-run summary**: 17 turns, about 50 trajectory events, one context auto-compact (Turn 11), one verifier Hard Gate failure followed by a retry (Turn 10), one full four-layer Safety intervention with HITL approval (Turn 16), the Outcome Judge starting on the final turn, and the PRM accumulating step scores throughout.
 
-The example brings out the key points of cross-turn cooperation.
+The example makes the key cross-turn cooperation points of the eight runtime mechanisms and the Safety control plane explicit.
 
 **The stable prefix of the Prompt Assets (P0 system + P1 task) is reused across turns, while the dynamic parts (P2 memory, the P3 tools subset, the context summary) update per turn as needed.** Prompt assembly is not redone from scratch each turn — but neither is it "one hash, unchanged across turns." What hits the prompt cache is the stable system + task prefix; the moment the memory, the tools, or the summary changes, the system_prompt_hash changes with it (the Context chapter covered this — a compaction that rewrites the middle invalidates the cache). The hash's role, then, is to be this turn's complete prompt fingerprint, entering the trajectory for replay and audit; it is not a cache key held constant across turns.
 

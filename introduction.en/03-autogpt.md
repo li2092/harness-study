@@ -71,7 +71,7 @@ Map this analogy cleanly onto the **8 runtime mechanisms plus 1 Safety control p
 
 **"A rhythm of work" = the Agent Loop · the inner loop.** Each step: think first, then act, then read the feedback, then decide the next step — all the way around until done. Without this rhythm the intern jumps around at random. It is the engineered form of the Thought-Action-Observation triple that ReAct[^react-yao-2022] proposed, and it is what separates an agent from a one-shot LLM call.
 
-**"Power and a time clock" = the Model Adapter & Routing.** Give the intern a stable channel to their brain (the LLM). Every LLM provider's API has a different shape — tool-calling field names, token-billing conventions, stream protocols all differ — and the adapter normalizes that. Use GPT-5.5 today and fail over to Claude tomorrow, and it switches seamlessly without polluting the rest of the flow.
+**"Power and a time clock" = the Model Adapter & Routing.** Give the intern a stable channel to their brain (the LLM). Every LLM provider's API has a different shape — tool-calling field names, token-billing conventions, stream protocols all differ — and the adapter normalizes that. Use GPT-5.5 today and fail over to Claude tomorrow, and it switches over without polluting the rest of the flow.
 
 **"A tool manual" = the Tool Registry & ACI.** Each tool has a structured definition (a JSON schema), usage bounds (permission / allowed_paths / timeout), and a standard feedback format when something goes wrong. It lets the intern know what they can call, how to call it, and what to do when a call fails — this mechanism leans on OpenAI's June 2023 function calling, which settled "a tool is a structured contract" on the model's side.
 

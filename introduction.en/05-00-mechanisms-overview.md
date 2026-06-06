@@ -1,4 +1,4 @@
-# §V · Eight runtime mechanisms + Safety control plane + end-to-end examples
+# §V · Harness essential mechanisms · eight runtime + one Safety control plane
 
 #### ★ Two words that run through the whole book: run and turn ★
 
