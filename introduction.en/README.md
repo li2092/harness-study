@@ -39,7 +39,7 @@ This volume is split by chapter, one file per chapter; Chapter Five (the essenti
 
 ## Figure index
 
-The volume has 46 figures in all, in one unified jimi-ink visual style, with source files in the sibling [`../diagrams/`](../diagrams/). Each figure is embedded in the body of its chapter; the table below indexes them by chapter.
+The volume has 50 figures in all, in one unified jimi-ink visual style, with source files in the sibling [`../diagrams/`](../diagrams/). Each figure is embedded in the body of its chapter; the table below indexes them by chapter.
 
 | Section | Figures |
 |---|---|
@@ -56,7 +56,7 @@ The volume has 46 figures in all, in one unified jimi-ink visual style, with sou
 | §5.6 | observation layering `t1-layered-5.6-observation-en` · observation vs logging `t2-comparison-5.6-obslog-en` · the five self-evolution paths `t3-cardgrid-5.6-selfevo-en` |
 | §5.7 | the trajectory event types `t1-cardgrid-5.7-events-en` |
 | §5.8 | the verifier matrix `t1-matrix-5.8-verifier-en` · the four classes of leakage defense `t2-cardgrid-5.8-leakage-en` |
-| §5.9 | permission layering `t1-layered-5.9-permission-en` |
+| §5.9 | the Safety cross-cut `t2-layered-5.9-controlplane-en` · permission layering `t1-layered-5.9-permission-en` · the two HITL roads `t3-comparison-5.9-hitl-en` · the four OWASP risks that cut the plane `t2-cardgrid-5.9-owasp-en` · the four pitfall classes `t3-cardgrid-5.9-pitfalls-en` |
 | §5.10 | the single-turn flow `t1-flow-5.10-turn-en` |
 | §5.11 | the 17-turn timeline `t1-timeline-5.11-17turn-en` · the Turn 16 sequence `t1-sequence-5.11-turn16-en` |
 | §VI | the engineering-pattern cards `t1-cardgrid-6-patterns-en` · the three isolation tiers `t2-comparison-6-isolation-en` · the six-pattern progression `t3-timeline-6-pattern-order-en` |

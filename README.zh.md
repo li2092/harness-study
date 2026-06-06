@@ -77,7 +77,7 @@
 
 ## 三、当前进度
 
-- ✓ **入门卷**：稿件已写完，章节正文 + 46 配图已落入 [`introduction/`](introduction/)；终审进行中。
+- ✓ **入门卷**：稿件已写完，章节正文 + 50 配图已落入 [`introduction/`](introduction/)；终审进行中。
 - ⏳ **后续展开卷**：规划中。
 
 ---
@@ -90,7 +90,7 @@
   <img src="diagrams/sample-05-mechanisms-overview.png" alt="八种 runtime 机制 + 一种 Safety 控制面 总览" width="840">
 </p>
 
-> 全卷 46 张配图（统一 jimi-ink 视觉）已嵌入 [`introduction/`](introduction/) 各章正文，可逐章浏览。
+> 全卷 50 张配图（统一 jimi-ink 视觉）已嵌入 [`introduction/`](introduction/) 各章正文，可逐章浏览。
 
 入门卷整本约二十五万中文字，prose 主导。这一规模由"一次走完全骨架 + 给完整 mental model"的入门版定位决定；后续展开卷会更聚焦、更详细。
 

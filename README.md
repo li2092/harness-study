@@ -70,13 +70,13 @@ For human readers:
 For AI readers:
 
 - any AI coding assistant that reads this project should be able to take a user's specific requirement or scenario and produce a deployable agent of reasonably high accuracy.
-- the project also ships **Harness Prompts** you can feed directly to a coding AI ([`introduction/11-harness-prompt.md`](introduction/11-harness-prompt.md), the full executable spec, plus [`introduction/12-harness-prompt-lite.md`](introduction/12-harness-prompt-lite.md), a three-part lite version) — turning "land a harness via a prompt" from an idea into a runnable starting point.
+- the project also ships **Harness Prompts** you can feed directly to a coding AI ([`introduction.en/11-harness-prompt.md`](introduction.en/11-harness-prompt.md), the full executable spec, plus [`introduction.en/12-harness-prompt-lite.md`](introduction.en/12-harness-prompt-lite.md), a three-part lite version) — turning "land a harness via a prompt" from an idea into a runnable starting point.
 
 The project is written on the assumption that some of its readers are AI themselves; for those readers, the downstream action is not to *understand the concepts*, but to *construct a usable engineering artifact* on behalf of the user.
 
 ## 3. Current Status
 
-- ✓ **Introductory volume**: the manuscript is complete; chapters + 46 diagrams are now in [`introduction/`](introduction/); final review in progress.
+- ✓ **Introductory volume**: the manuscript is complete; chapters + 50 diagrams are now in [`introduction.en/`](introduction.en/); final review in progress.
 - ⏳ **Expansion volumes to follow**: in planning.
 
 ---
@@ -89,7 +89,7 @@ The introductory volume is the opening — the overture — of this project. It 
   <img src="diagrams/sample-05-mechanisms-overview-en.png" alt="Eight runtime mechanisms + one Safety control plane — overview" width="840">
 </p>
 
-> All 46 diagrams (a unified jimi-ink visual style) are embedded throughout the chapters in [`introduction/`](introduction/).
+> All 50 diagrams (a unified jimi-ink visual style) are embedded throughout the chapters in [`introduction.en/`](introduction.en/).
 
 The volume runs to roughly 250,000 Chinese characters, prose-dominant. That scale is set by the introductory positioning — *walk the full skeleton once, give a complete mental model*; later expansion volumes will be more focused and more detailed.
 
@@ -143,9 +143,9 @@ Read the chapters in the order listed above (file names 01 → 99). The entry ho
 | §VIII | Composability matrix |
 | §IX | Four principles of control theory |
 | §X | Learning paths |
-| Companion · Prompt | Harness Prompt — the executable build spec for an agent ([`11-harness-prompt.md`](introduction/11-harness-prompt.md)) |
-| Companion · Prompt lite | Generic TDD lite version — three instructions to feed a coding AI ([`12-harness-prompt-lite.md`](introduction/12-harness-prompt-lite.md)) |
-| Appendix | K1-K7 / primary sources / EG10 / OWASP / naming map / SPIFFE-biscuit / AP01-AP19 / arxiv index |
+| Companion · Prompt | Harness Prompt — the executable build spec for an agent ([`11-harness-prompt.md`](introduction.en/11-harness-prompt.md)) |
+| Companion · Prompt lite | Generic TDD lite version — three instructions to feed a coding AI ([`12-harness-prompt-lite.md`](introduction.en/12-harness-prompt-lite.md)) |
+| Appendix | primary sources / Evidence Graph 10 edges / OWASP Top 10 / placement map / SPIFFE-biscuit / AP01-AP19 / arxiv index |
 
 ### What May Be Skipped
 
@@ -165,7 +165,7 @@ The tutorial side — this repository — defines the object of study and the me
 
 Order of use:
 
-- **First-time readers of this tutorial**: the workbench is not needed; start directly from [`introduction/`](introduction/) (enter the chapters via its README).
+- **First-time readers of this tutorial**: the workbench is not needed; start directly from [`introduction.en/`](introduction.en/) (enter the chapters via its README).
 - **After finishing the introductory volume, when deploying an actual harness**: use the workbench specification as the visual language of the evidence graph.
 
 ## 6. License

@@ -41,7 +41,7 @@
 
 ## 配图目录
 
-全卷共 46 张配图，统一 jimi-ink 视觉，源文件在同级 [`../diagrams/`](../diagrams/)。各图已嵌入对应章节正文，下表按章索引。
+全卷共 50 张配图，统一 jimi-ink 视觉，源文件在同级 [`../diagrams/`](../diagrams/)。各图已嵌入对应章节正文，下表按章索引。
 
 | 章 | 配图 |
 |---|---|
@@ -58,7 +58,7 @@
 | §5.6 | observation 分层 `t1-layered-5.6-observation` · observation vs logging `t2-comparison-5.6-obslog` · 自进化五路径 `t3-cardgrid-5.6-selfevo` |
 | §5.7 | trajectory 事件类型 `t1-cardgrid-5.7-events` |
 | §5.8 | verifier 矩阵 `t1-matrix-5.8-verifier` · leakage 四类防御 `t2-cardgrid-5.8-leakage` |
-| §5.9 | permission 分层 `t1-layered-5.9-permission` |
+| §5.9 | Safety 横切 `t2-layered-5.9-controlplane` · permission 分层 `t1-layered-5.9-permission` · HITL 两路径 `t3-comparison-5.9-hitl` · OWASP 四项 `t2-cardgrid-5.9-owasp` · 四类误区 `t3-cardgrid-5.9-pitfalls` |
 | §5.10 | 一次 turn 流程 `t1-flow-5.10-turn` |
 | §5.11 | 17 turn 时间线 `t1-timeline-5.11-17turn` · Turn 16 时序 `t1-sequence-5.11-turn16` |
 | §六 | 工程模式卡片 `t1-cardgrid-6-patterns` · Isolation 三档 `t2-comparison-6-isolation` · 六 pattern 渐进 `t3-timeline-6-pattern-order` |
