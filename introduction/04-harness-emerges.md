@@ -57,7 +57,7 @@ AutoGPT 那一波翻车给业界留下了一道清晰的工程命题：单纯依
 
 这一句话的工程含义比表面看起来重得多。在此之前，让 LLM 调工具是这样的流程：在 system prompt 里告诉模型"你可以调用 `search(query)` 或 `calculate(expr)`，输出格式是 `ACTION: 工具名(参数)`"，模型生成一行 text，外面用 regex 解析。这个流程有一堆问题——模型可能漏字段、可能多字段、可能改格式（昨天用 `ACTION:` 今天用 `Action:`）、可能在解释性文本里插入看似 action 的字符串误导 parser。每一项问题都直接打击系统稳定性——而且失败方式还很隐蔽，不是 raise exception 而是"parser 抠出一个看似合法的工具名加参数，但参数其实有问题"。
 
-function calling 把这件事变成了**结构化契约**：你给模型一个 JSON schema（包含 function 名字、参数列表、每个参数的类型和描述），模型返回的不再是"按格式写的 text"，而是**保证符合 schema 的 JSON 对象**。这背后的实现机制是 **constrained decoding**——在 token 生成时只允许那些会让最终输出符合 schema 的 token 被采样出来，违反 schema 的 token 概率被强制压到零。从此 LLM 跟工具之间有了类型安全、有了结构化校验、有了不依赖 regex 的可靠 parsing。
+function calling 把这件事变成了**结构化契约**：你给模型一个 JSON schema（包含 function 名字、参数列表、每个参数的类型和描述），模型返回的不再是"按格式写的 text"，而是一个对着 schema 专门微调过的 JSON 对象。这里要把两级跃迁分开说清楚。2023-06 这一级给的是**契约**不是**保证**——它靠微调实现，OpenAI 自己的公告就提醒模型仍可能生成不合法的 JSON、或幻觉出不存在的参数；真正的硬保证要到 2024-08 的 Structured Outputs（strict mode）才补上，那一级换成了 **constrained decoding** 的实现——在 token 生成时只允许那些会让最终输出符合 schema 的 token 被采样出来，违反 schema 的 token 概率被强制压到零。契约先行、保证补课，中间隔了一年多的工程演进——后面 5.3 讲 strict vs lenient schema 时还会回到这条线上。即便如此，2023-06 这一步已经把工具调用从"prompt 约定 + regex 解析"拉进了 API 一等公民的位置：结构化校验、不依赖 regex 的 parsing 从这里开始，类型安全的最后一块拼图由 strict mode 补齐。
 
 这件事的战略意义在哪？function calling 之前，agent 工程师必须把大量精力花在"让模型按格式说话"这件事上——写 prompt 的诀窍一半都是在教模型怎么生成可解析的文本。function calling 之后，这件事被 OpenAI 在模型侧解决了——工程师可以把精力转向更重要的事：tool registry 该怎么设计、policy 该怎么放、verifier 该怎么写、observation 该怎么序列化。**这次升级直接释放了 agent 工程整个领域的注意力**——业界开始有余力讨论 agent 工程的高阶问题，而不是仍然纠结在"怎么 parse 模型的 text"这件低层级的事情上。
 

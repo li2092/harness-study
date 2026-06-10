@@ -32,6 +32,8 @@
 
 这种"Agent Loop ≠ while 循环"的观点在已发表的生产级实现里有具体证据可看。业界对 Claude Code 的源码调研显示，CC 的 inner loop 不是一个简单的 while 块——它是 async generator 拼成的事件流水线，单轮承载十步以上的小机制：四级压缩串行检查、token blocking 预算、系统 prompt 装配、流式采样、工具边流边执行、错误恢复、stop hooks 评估、token 预算 continuation、attachment 注入。源码层面用一个 State struct 跨迭代携带十个字段，并在主循环里显式标注了七个 continue 站点和十一个 terminal exit 点，每个站点都标了 transition reason。意思是说——"循环何时继续、何时终止"在这套生产代码里是 first-class 设计对象，不是"while True 加一个 break"。这跟前面讲的 thought-action-observation 三元组刚好对得上：三元组是模型层的思考结构，inner loop 是这个结构在工程层的可审化产物。
 
+生产级 loop 还有一条容易被教学示例省略的路径：**中断与插话（steering）是 loop 状态机的一等输入**。agent 跑长任务时用户中途改向不是异常是常态——状态机除了 continue / terminate，还要有一条"吸收外部输入、再继续"的转移路径。工程上中断点只能放在 turn 边界：tool_call 与 tool_result 的配对必须完整（下一小节会讲这条协议级不变量），在半个 turn 处硬切等于亲手制造幻觉的温床。判定线很直接：预期超过几分钟的任务必须支持无损中断——中断后 context、artifact、trajectory 三者状态一致，恢复时 agent 不需要猜刚才发生了什么。Claude Code 的消息队列、Codex 的 CancellationToken 全程可取消，都是这条路径的生产实现。
+
 #### 5.1.2 一次 ReAct 调用的具体形态
 
 讲完 Agent Loop 是思考结构这层抽象之后，要把它落到具体——拆一次实际的 ReAct 调用看每一轮 thought-action-observation 长什么样、prompt 里堆什么、模型每轮看到的是什么。这一段把抽象做到可感知。
@@ -181,6 +183,8 @@ plan-able 的情况下，**Plan-Execute 几乎总优于 vanilla ReAct**。合同
 **第三问：你的失败成本能承受 5-20x 算力开销吗？**
 
 Tree of Thoughts / Language Agent Tree Search 等多分支搜索方法在每个决策点展开多个候选分支、用某种 value function 评分、回溯选优。机制层面能换 10-15% 准确率提升，但代价是 5-20x 算力（每个决策点要并行跑 N 个候选）。To B 业务流程几乎都不合算——你为合同审核多付 8 倍算力？不会。合算的场景：自动股票交易（一次决策失误几百万损失）、医疗诊断辅助 / 药物筛选（错误代价不可逆）、安全攸关决策（电力调度、空管辅助）——这些场景失败成本高到可以换算力，普通 To B 业务不要追这条。
+
+这条问题里还藏着一个中间档：**best-of-N 采样 + hard verifier**。树搜索贵在每个决策点都要展开和评估，但如果任务有靠谱的 hard verifier（测试能跑、schema 能校验），最便宜的买法是并行采 N 条完整轨迹、让 verifier 挑通过的那条——成本是 N 倍而不是每步分叉的 5-20 倍，工程上比树搜索简单一个量级，reasoning model 时代这已经是标准操作。决策线可以记成：没 verifier，多采样只是多花钱；有 hard verifier，采样就是可以直接买的准确率。
 
 **第四问：你有 ≥10 个跨任务复用的高频动作吗？**
 

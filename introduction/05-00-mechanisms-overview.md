@@ -37,6 +37,6 @@
 
 业界两年内大换血 · 实现层会反复推倒重来 · 抽象功能层稳定得多。读者拿到任何流行技术名 · 先问一个问题：**"它属于哪件抽象功能的实现 · 解决的是哪件的什么职能？"** 不要被业界常见的"RAG vs Memory 二选一 / MCP vs function calling / Skill vs CLAUDE.md"这种**实现层并列对照表**带偏——这些对照表不是错 · 但它们站在实现层做对比 · 解决的是"我落地时用哪一套技术栈" · 不是"harness 由哪几件抽象功能构成"。两层混在一起读者就晕。
 
-举一个最常见的混淆——业界多家口径把 RAG 跟 Memory 拉成"互补不互替"的二件并列。这种说法在实现层成立（RAG 是 stateless retrieval pipeline · Memory 是 stateful persistence 治理）· 但在件层错位——**RAG 根本不是件 · 是横切多件的"检索-注入"工程模式** · backend 换 vector / graph / FTS / SQL / MCP server 都成立。同理 MCP 不是 Tool 件本身 · 是 Tool 的协议层实现；Skill 不是 Prompt Asset 件本身 · 是 Prompt Asset 的组织模式。
+举一个最常见的混淆——业界多家口径把 RAG 跟 Memory 拉成"互补不互替"的二件并列。这种说法在实现层成立（RAG 是 stateless retrieval pipeline · Memory 是 stateful persistence 治理）· 但在件层错位——**RAG 根本不是件 · 是横切多件的"检索-注入"工程模式** · backend 换 vector / graph / FTS / SQL / MCP server 都成立。同理 MCP 不是 Tool 件本身 · 是 Tool 的协议层实现；Skill 不是 Prompt Asset 件本身 · 是 Prompt Asset 的组织模式。再补一个读者天天在用的例子——ChatGPT 的 GPT-5（2025-08 起）在 fast / thinking 两档模型之间做实时分流的那个 router · 就是 §5.2 Model Adapter & Routing 这件抽象功能的平台级实现：件早就立在那里 · 实现以各种形态反复出现。
 
 入门版接下来 §5.1-§5.11 全部讲抽象功能层 · 具体业界产品的归位放在每件章末"业界归位卡片" + §99 附录 §D "件 × 业界产品归位总图"。读者读完整 §五 之后 · 应该能拿到任何新框架（LangGraph / CrewAI / Anthropic Agent Skills / OpenAI Assistants 等）秒抓它覆盖了 8 件中的哪几件 · 漏了哪几件——这是入门版应该让读者掌握的核心识别能力。

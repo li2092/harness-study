@@ -36,6 +36,8 @@
 
 **可观测性失守** —— silent failure（前面 §5.7 AP10 · try/catch swallow exception · 错误没产生 event）。AP04 artifact claim mismatch（agent declared 改了 artifact 但 verifier 没拿到对应改动 · 前面 §5.8 讲）。declared_vs_executed gap 持续偏高（反馈系统前哨指标——declared 跟 executed 差距持续 ≥10% 是可观测性失守的信号 · 即使没具体 bug 表现）。Hidden state（agent 内部状态没有对应 event · 前面 §5.4 讲 context state 必须 trajectory 化）。
 
+declared_vs_executed gap 还有一个好处——它可计算 · 不需要新埋点。§8.4 Evidence Graph 的现成边就够：declared = agent 在回复和 plan 里声称完成的产物与动作集合（从结束 turn 的文本抽取 + produces 边的声称侧）· executed = trajectory 里有 artifact_write / tool_result 证据支撑的集合 · gap = 两个集合的差占 declared 的比例。每个 run 结束算一次 · 按周聚合画趋势 · 持续 ≥10% 触发告警——这个前哨指标从口号变成 dashboard 上的一条线 · 中间只隔一个集合差。
+
 **可控性失守** —— AP07 tool over-design（工具粒度过细 LLM 选不准 · 前面 §5.3 讲）。AP13 hook / allowlist bypass（控制点存在但被绕过 · 比如 `cargo checkpoint` 被 `cargo check` 放行 · OWASP LLM01 prompt injection · 前面 §5.9 讲）。AP15 excessive agency（agent 拿到的权限超过实际需要 · OWASP LLM06 + LLM10 · 前面 §5.9 讲）。AP06 假落地机制（机制协议在仓库但生产路径 noop · 前面 §5.9 讲 · 看起来有控制实际没控制 · 是最隐蔽的可控性失守）。
 
 **稳定性失守** —— AP08 context bloat（context 累积 unbounded · lost in the middle · 前面 §5.4 讲）。AP14 memory pollution（long-term memory 污染累积 · 前面 §5.4c 讲）。AP11 loop blind spot（agent 不知道自己在循环 · 前面 §5.6 讲）。AP01 cache 共谋（N>1 复跑非 i.i.d. · 前面 §7.4 讲 · 是稳定性失守的特殊形态——单次稳定但跨 run 不可重现）。AP03 reward hacking 7 模式（agent 在 reward 信号下漂移到非预期行为 · 前面 §7.4 讲 · 是稳定性失守在 reward 层的具体形态）。

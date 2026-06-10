@@ -70,6 +70,8 @@ JSONL session 的工程实现有几个细节要点透。**第一 · Entry 类型
 
 JSONL session 这件 pattern 的工程价值最终落到 **跨 run audit 跟 replay 都依赖它**。前面 Trajectory 那章讲过 trajectory 是 agent harness 的 first-class data · 这件"first-class"性质就是通过 JSONL session 的持久化具体落地的——session 文件不只是 debug 工具 · 是 agent run 的 audit log / training data / self-evolution input 三重身份合一的载体。
 
+JSONL session 之上还能再立一个组合 pattern：**checkpoint / resume**——长任务断点续跑。它需要三件配合：JSONL session 恢复执行状态（读到最后一行完整 event 重建 State）· artifact 版本恢复产物状态（Trajectory 那章讲过的"回退"能力）· 工具幂等防重放副作用（恢复时最后一个 tool_call 可能"已执行未记录" · 重放前先对账执行记录）。三件少一件 · resume 就只是"从头再跑一遍"的体面说法。这里还有一条 append-only 自己的细节坑——**崩溃一致性**：进程在写半行 JSONL 时死掉 · 恢复逻辑要能容忍丢尾行（按最后一个完整 event 截断 · 半行丢弃）· fsync 策略决定你最多丢几个 event。append-only 不等于 crash-safe——这两件经常被当成一件。
+
 #### 6.4 Isolation Modes · sub-agent 执行隔离 pattern
 
 **第四件工程模式** —— sub-agent 跑任务时跟 main agent 工作目录的物理隔离 pattern · 业界主流三档梯度。这件 pattern 跟 Safety 那章讲的 sandbox 物理隔离是同一类工程思路 · 但作用对象不同 —— sandbox 隔离 agent 跟 host system · Isolation Modes 隔离 sub-agent 跟 main agent。

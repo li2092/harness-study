@@ -32,7 +32,7 @@
 
 这段话的工程含义是：模型不只是输出最终答案，它要外化 reasoning（思考轨迹）、它要发起 action（动作）、它要看 observation（反馈）。比起 CoT，ReAct 多了"动作和反馈"两件事——这就把 LLM 从"思考机器"升级成了"会跟外界交互的执行体"。这是第一次明确写出"模型不仅要会答，还要会用工具、看反馈、改决定"。
 
-LangChain 和 ReAct 同时在 2022-10 出现不是巧合是必然。两年的 prompt engineering 实践积累到了那个时点，业界已经感觉到"模型当函数用"的范式不够——无论是工程封装侧（LangChain）还是范式定义侧（ReAct），都在尝试跳出来。但这两件事本身**还没完全跳出来**——LangChain 是 DAG 不是 loop，ReAct 是范式但当时还没有配套的工程基础设施。真正的跳出要再等一年半，等业界被 AutoGPT 撞过头之后，才在反思里把 harness 这个概念磨出来。
+LangChain 和 ReAct 同时在 2022-10 出现不是巧合是必然。两年的 prompt engineering 实践积累到了那个时点，业界已经感觉到"模型当函数用"的范式不够——无论是工程封装侧（LangChain）还是范式定义侧（ReAct），都在尝试跳出来。但这两件事本身**还没完全跳出来**——LangChain 的核心抽象是 DAG 不是 loop（它很快就补了 AgentExecutor 这层 ReAct 的工程封装，循环是有了，但 trajectory、policy、verifier 这些纪律一件都没有），ReAct 是范式但当时还没有配套的工程基础设施。真正的跳出要再等一年半，等业界被 AutoGPT 撞过头之后，才在反思里把 harness 这个概念磨出来。
 
 ### 为什么这一时期仍然是"模型当函数用"
 

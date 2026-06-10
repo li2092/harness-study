@@ -82,6 +82,8 @@ trajectory 工程治理有三类常见误区——trajectory 缺失 / trajectory
 
 **trajectory 不可 diff**是最隐蔽的——trajectory 字段里包含 random id / timestamp 精度太高（纳秒级）/ 浮点数序列化没规范 · 让同一组任务跑两次出来的 trajectory 文件 diff 出来一堆假阳性差异。这件常见误区让 regression test 完全跑不动——因为 ground truth trajectory 跟新版 trajectory 总是 diff 出差异 · 工程师区分不了哪些是真实回归哪些是噪声差异。工程化对策是 trajectory 字段必须分两类——稳定字段（model name / tool name / decision verdict / event_id 因果链等业务事实）跟 volatile 字段（timestamp / random id / latency 等环境状态）· regression test diff 时只 diff 稳定字段忽略 volatile 字段。这条纪律是业界做严肃 trajectory regression test 的基础设施前提。
 
+diff 分类做对之后 · 最后一步是把它接进 CI：选一组金标任务的 trajectory 存进仓库 · 每次 harness 改动用 replay 重跑这组任务 · 只 diff 稳定字段——这就是 harness 自己的回归测试。改了 compaction 策略 · diff 会告诉你哪些 turn 的 context 装配变了；改了 ToolPolicy · diff 会告诉你哪些调用从放行变成了拦截。没有这一步 · 每次 harness 改动的影响面全靠工程师脑补——有这一步 · 影响面是 CI 输出里一行行可读的差异。
+
 trajectory 还有一类隐性常见误区跟 §5.6.5 PII 常见误区同源——trajectory 持久化时没做脱敏 · credential / PII / API key 进 trajectory 文件就跨 run 持久化。OTel GenAI semconv 把 PII tracing 当一件专门工程议题——业界已经形成"trajectory 写出前必须有脱敏 hook"的工程共识。trajectory 入口比 observation 入口更深一层——observation 进 context 是 turn 内 · trajectory 进文件是 run 后跨 turn 持久化 · 脱敏必须在 trajectory 写出前做不是事后清。
 
 #### 5.7.7 trajectory 作为 self-evolution 训练数据
@@ -91,6 +93,8 @@ trajectory 在 cross-run 视角下扮演的角色跟 §5.6.7 observation surface
 业界已经把 trajectory 当训练数据这件事 formalize。AHE（Agentic Harness Engineering）[^ahe-2026]的 evolver loop 直接吃历史 trajectory 输入做 harness 配置优化（Terminal-Bench 2 上的具体增益前面 observation 那节给过）。AgentHER[^agent-her-2026]把这件事推得更具体——Hindsight Experience Replay for LLM Agent Trajectory Relabeling · 四阶段 pipeline（failure classification / outcome extraction / LLM-guided prompt relabeling / data packaging）把历史 trajectory 自动转成可训练的标注数据。AgentEvolver[^agent-evolver-2026]走 self-questioning 自主生成任务 · MemGen[^memgen-2026]走 generative latent memory——都属 agent 用自己生成的经验作自我提升信号这一路径 · 减少对人工标注的依赖。
 
 trajectory 作为训练数据这件事对 trajectory 工程治理的额外要求有几条。第一条是 schema 稳定性必须保证跨 run 跨版本可比——如果 trajectory 字段在某次 harness 升级后字段名变了 · 旧 trajectory 就不能再喂新版 evolver。这件 schema migration 工程纪律业界还在演进。第二条是 outcome attribution 必须显式——trajectory 末尾必须明确标"这 run 是 pass 还是 fail · 哪几个 turn 是关键决策点" · 否则 evolver 不知道哪几条 trajectory 是正例哪几条是负例。第三条是 trajectory 跟 ground truth 的关联存储——self-evolution 需要 trajectory 跟任务 ground truth 配对 · 没有 ground truth 配对的 trajectory 只能做 unsupervised 探索 · 不能做 supervised 优化。
+
+第一条的"schema 稳定性"不能只靠自律 · 要有落地机制：每条 trajectory 带一个 trajectory_schema_version 字段 · schema 演进只加字段不删不改义（新字段给默认值）· 消费端按版本号选 reader——老 reader 读新文件忽略新字段 · 新 reader 读老文件用默认值补位。什么时候允许 breaking change？答案接近"永不"——宁可起一个 v2 事件类型并行写一段时间 · 也不要让半年前的 trajectory 变成读不动的死数据：它们是你攒得最贵的资产。
 
 承载这件训练数据角色的本地工程抽象，就是前一节那组 harness 内部件（MechanismEvent 四态 / absence-of-event / decision-point / ObservationPack）——trajectory schema 既喂当前推理 · 也给 harness 跨 run 的 self-evolution loop 喂数据。跟 observation 那节一样 · 这是 harness 自身的能力 · 上面那层 meta-工作台（Harness Lab）只是消费 trajectory 的进阶选项 · 不是前提。
 

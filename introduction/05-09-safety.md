@@ -138,6 +138,8 @@ Safety 控制面工程治理的核心常见误区有四类——**假落地**（
 
 业界 Safety 工程治理还在快速演进的部分是 **agent identity 跟 capability token 的标准化**——SPIFFE/SVID 标准引到 MCP/agent 场景的 work in progress（[Bringing SPIFFE to OAuth for MCP · Riptides](https://riptides.io/blog/bringing-spiffe-to-oauth-for-mcp-secure-identity-for-agentic-workloads/)）· OAuth 2.0 Token Exchange 跟 Biscuits/Macaroons 等 capability-based token 形态在 agent 场景的应用 · IETF 还有 draft-klrc-aiagent-auth-00 这种 RFC 草案试图标准化 agent identity 语义。这一块 2026 还没有完全收敛的业界标准——生产部署可以暂走 "OAuth scoped token + 手工管 scope" 的现状路径 · 等业界标准收敛后再迁移。
 
+凭证管理还有一个比"落盘前脱敏"更前置的形态：**secrets broker**——agent 全程不接触明文凭证。工具声明"我需要 GITHUB_TOKEN" · 注入发生在工具执行层（broker 从 vault 取值 · 填进请求 · 用完即弃）· 模型看到的永远是引用名不是值。这一层做对之后 · "凭证泄漏进 context / trajectory / 压缩摘要"整类风险从源头消失——不需要在每个出口做脱敏 · 因为秘密根本没进来过。判定线：grep 你的 trajectory 存档 · 出现过一次真实 token 字符串 · 就说明该上 broker 了。它跟 capability token 是同方向的两步——capability token 解决"agent 是谁、能做什么" · secrets broker 解决"做的时候凭证怎么过手"。
+
 #### 5.9.10 起步建议 · 四维度
 
 **注意什么**——Safety 控制面工程治理最大的坑是 **把 Safety 当 nice-to-have 不当 must-have**。从 day 1 就把 Safety 当 cross-cutting 控制面接进 harness · 不要等 production 出事再补——Safety 控制面是 retrofit 极贵的工程（涉及全工具 permission 重审 / hook 体系建立 / sandbox 物理化等系统性工程）· 早期没接 production 上线后补成本 5-10 倍。具体几条警示信号——**第一**agent 跑起来从来没看到 Safety 决策日志（permission deny / hook fire / sandbox block 等事件都 0 次）· 是 AP06 假落地的红线；**第二**agent 跑长任务从来没触发过 budget cap（max turns / max tokens / max wall-clock 都没踩线）· 是 budget cap 配错或没接的红线；**第三**agent fork sub-agent 后总成本超 single agent 5x 以上 · 是 AP12 Depth Explosion 的早期信号；**第四**user 反映 "我让 agent 做 X 它做了 Y" 类报告频繁 · 是 Prompt Injection 防御不到位的早期信号；**第五**user 反映 "approval prompt 太烦我都直接点 allow 了" · 是 approval scope 设计太宽的早期信号（approval 失效）。这五条警示在 Safety 控制面早期建设阶段每天 review · 早发现早改。
