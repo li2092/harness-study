@@ -100,7 +100,7 @@ Tool Registry 第三件事是失败处理——工具执行出错时，错误信
 
 工业级 harness 一般的做法是**按工具来源决定**——内部代码实现的工具（execute 完全可控）走 raw，方便 agent 自修；外部数据源接的工具（execute 结果里有外部数据）走 sanitized，防 prompt injection。两种策略也可以按环境切——开发环境 raw、生产环境 sanitized。这件取舍直接关联 §5.9 Safety 控制面的 prompt injection 防御——错误返回是 prompt injection 最常见的注入点之一，sanitization 是这件事的工程化防御。
 
-错误返回之外，还有一个 2025 年才被业界正视的注入面：**工具的元数据本身是不可信输入**。tool description 每轮都进 prompt——这意味着一个第三方 MCP server 可以在 description 里夹带指令（tool poisoning），甚至先用干净版本通过你的审查、在某次 server 端更新时悄悄换毒（rug-pull），Invariant Labs 2025-04 公开演示过这两类攻击。description 是工具层杠杆最高的一行字——正向用是 ROI 最高的优化位，反向被人用就是风险最高的注入面。对策跟供应链安全同构：第三方工具的 description 做 pinning——注册时取 hash 锁定，server 侧变更不自动生效，diff 过人审才放行；同时按来源给信任分级——自家代码实现的工具、知名 vendor 的 server、社区 server 三档，低信任档默认收紧 policy（更窄的 allowed_paths、更低的预算上限、默认 requires_confirmation）。
+错误返回之外，还有一个 2025 年才被业界正视的注入面：**工具的元数据本身是不可信输入**。tool description 每轮都进 prompt——这意味着一个第三方 MCP server 可以在 description 里夹带指令（tool poisoning），甚至先用干净版本通过你的审查、在某次 server 端更新时悄悄换毒（rug-pull），Invariant Labs 2025-04 [公开演示过这两类攻击](https://invariantlabs.ai/blog/mcp-security-notification-tool-poisoning-attacks)。description 是工具层杠杆最高的一行字——正向用是 ROI 最高的优化位，反向被人用就是风险最高的注入面。对策跟供应链安全同构：第三方工具的 description 做 pinning——注册时取 hash 锁定，server 侧变更不自动生效，diff 过人审才放行；同时按来源给信任分级——自家代码实现的工具、知名 vendor 的 server、社区 server 三档，低信任档默认收紧 policy（更窄的 allowed_paths、更低的预算上限、默认 requires_confirmation）。
 
 #### 5.3.7 关键取舍 4 · requires_confirmation · 哪些工具默认需要人审
 
