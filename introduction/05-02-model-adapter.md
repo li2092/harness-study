@@ -46,7 +46,7 @@ Completion {
 
 理由有三层。第一层是**模型 API 自己会升级**——Anthropic 历史上大版本升级过两次 tool use 接口、字段结构改过几次、prompt caching 加进来时改了一次 usage 字段。如果业务代码直接 import anthropic SDK，每次 API 升级业务代码每个调用点都要跟着改；有 Adapter 边界，升级只改 Adapter 一个文件，业务代码不动。第二层是**模型生态会变化**——你 2026 年 5 月可能很确定只用 Anthropic，但半年后可能发现某个特定任务用国产模型 Qwen 3 Plus 性价比更高，或者发现 Claude Code 主线推某个新能力你想试，或者发现 multi-provider failover 在某个 high-uptime 场景必要。没有 Adapter 边界这些都得回去大改业务代码；有 Adapter 边界加一个新 provider 只是写一个新 Adapter 实现。第三层是**测试和 mock 更容易**——业务代码对的是 Adapter interface，测试时可以 mock Adapter 跑各种边界场景；直接 import SDK 的代码测试时要 mock 整个 SDK，麻烦且容易漏。
 
-Claude Code 绑定的是 Claude 一族模型，看起来是"只用一家"的极端案例——但仅这一族就有三条 provider 通道：Anthropic API 直连、AWS Bedrock、Google Vertex AI，三条通道的鉴权方式、endpoint、模型 ID 全都不同。所以它的 codebase 里 API 调用全部包在自己的 adapter 类后面——业务代码访问的是这个 adapter 类，不是直接 `anthropic.Anthropic().messages.create(...)`。这是"单模型族也要 Adapter 边界"最现成的活例：你以为绑死一家就用不上抽象，企业客户的部署需求会替你把多通道带回来。这种"防御性工程"思想——把外部依赖永远抽到一个内部 interface 之后，不让外部依赖的细节渗透到业务代码——是工业级 harness 跟玩具 harness 最显著的代码层差别。**Adapter 边界是个一次性的投资，长期回报巨大**。
+Claude Code 绑定的是 Claude 一族模型，看起来是"只用一家"的极端案例——但仅这一族就有四条 provider 通道：Anthropic API 直连、AWS Bedrock、Google Vertex AI、Microsoft Foundry，各通道的鉴权方式、endpoint、模型 ID 全都不同。所以它的 codebase 里 API 调用全部包在自己的 adapter 类后面——业务代码访问的是这个 adapter 类，不是直接 `anthropic.Anthropic().messages.create(...)`。这是"单模型族也要 Adapter 边界"最现成的活例：你以为绑死一家就用不上抽象，企业客户的部署需求会替你把多通道带回来。这种"防御性工程"思想——把外部依赖永远抽到一个内部 interface 之后，不让外部依赖的细节渗透到业务代码——是工业级 harness 跟玩具 harness 最显著的代码层差别。**Adapter 边界是个一次性的投资，长期回报巨大**。
 
 #### 5.2.4 关键设计取舍 2 · 多 provider 抽象的两条路
 
