@@ -96,7 +96,9 @@ translation, or data analysis, the method is the same; do the eight steps.
 Step one: build the eval set. Start with 3–5 typical tasks, each with an
 automatable pass/fail decision, an expected tool-call sequence, and a final
 database state. The eval set evolves with the code; do not "build first, test
-later."
+later." The same goes for every step's acceptance: prefer a check that runs
+over written self-assessment — when the executor is an AI, written criteria
+are the easiest thing to "declare done."
 
 Step two: narrow the tools. The generic runtime may carry 40–50 tools, while a
 business scenario usually uses 8–15. Explicitly disable the rest in a

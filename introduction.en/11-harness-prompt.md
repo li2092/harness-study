@@ -9,6 +9,7 @@ This file is the **executable companion** to the main text, *Harness Study*. The
 - Every concrete number in this file (token-usage thresholds, single-tool output caps, tool counts) is a **starting default**, to be tuned against your scenario, not a universal constant.
 - Each Phase marks its corresponding main-text chapter (`↪`); drill down there when you need the underlying reasoning.
 - Build on a **strong model**. A weak model cannot carry multi-turn tool calling and will fail the Phase 1 gate over and over.
+- Wherever possible, give each Phase's completion gate a **runnable check** — a script, an assertion, a comparison that executes — not just a written description. The one executing this spec is an agent, and written criteria are exactly what an agent finds easiest to "declare satisfied" (the incubator of artifact-claim mismatch); a gate that runs leaves no room to fudge. Example: the Phase 1 gate should at minimum include a hard check like "one full ReAct loop completed on a fake provider + a tool_call/tool_result pairing assertion."
 - This spec runs the **middle-coverage tier**: a generic runtime + scenario narrowing + cost structure (the three parts distilled from practice) + the Model Probe + the four-principle self-check + the mechanism admission gate. The two advanced topics — the Harness Lab five layers and the composability three axes — get only their judgment lines here, not a full treatment; go back to the main text when you need them.
 
 ---

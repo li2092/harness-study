@@ -54,6 +54,8 @@ Prompt versioning's discipline is stricter than "use git branches." The first ru
 
 A/B testing prompts carries one methodological discipline that is easy to miss: the comparison must run at the trajectory level, not only the output level. After a prompt change, the agent's outputs may look about the same while the order of tool calls, the parameter choices, and the error-recovery paths all differ — and over a long horizon those trajectory-level differences compound. So a prompt A/B test looks not only at the task pass rate but at the shape of the trajectory: tool-call counts, failure rates, total tokens, cache hits, and the distribution of decision points, compared across all of them.
 
+Versioning is still missing one trigger that gets overlooked: **changes on the model side**. The biggest source of prompt behavior drift is usually not that you edited the prompt — it is that the model got upgraded. The same prompt on a new model can drift in tone, format compliance, and tool-trigger rate, and when a cloud endpoint upgrades silently, nobody even tells you the model changed. So a prompt asset's metadata needs a tested_models field — which model versions this prompt has passed regression on — and a model switch or endpoint upgrade automatically triggers the golden-task regression for the affected prompt family. What versioning really has to pin is the "prompt × model" pair, not the prompt text alone — an untouched prompt does not mean unchanged behavior.
+
 #### 5.5.4 Multi-language and multi-scenario prompt abstraction
 
 Production brings two engineering problems: supporting several languages and switching between scenarios. Their disciplines overlap but are not identical.
