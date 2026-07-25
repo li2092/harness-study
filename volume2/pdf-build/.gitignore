@@ -1,0 +1,9 @@
+fonts/
+book.html
+figures.json
+chapters.json
+_body*.pdf
+_fm_*.pdf
+_pages.json
+_figpages.json
+*.pdf

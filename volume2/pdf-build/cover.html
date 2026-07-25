@@ -1,0 +1,64 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<style>
+@import url('fonts-local.css');
+:root{
+  --bg:#f4f0eb; --purple:#6d28d9; --purple-dark:#4c1d95; --purple-soft:#8b5cf6;
+  --t1:#1a1428; --t2:#2c2538; --t3:#6b6478; --divider:rgba(26,20,40,.13);
+  --f-head:"Inter","Noto Sans SC",sans-serif;
+  --f-label:"Syne","Noto Sans SC",sans-serif;
+  --f-body:"LXGW WenKai",serif;
+}
+@page{ size:A4; margin:0; }
+*{ margin:0; padding:0; box-sizing:border-box; }
+html,body{ width:210mm; height:297mm; }
+.pdf-cover{ width:210mm; height:297mm; background:var(--bg); position:relative; overflow:hidden;
+  display:flex; flex-direction:column; padding:26mm 24mm 22mm; -webkit-font-smoothing:antialiased; }
+.cov-grid{ position:absolute; inset:0; opacity:.5; pointer-events:none;
+  background-image:linear-gradient(rgba(26,20,40,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(26,20,40,.05) 1px,transparent 1px); background-size:18mm 18mm; }
+.cov-band{ position:absolute; top:0; left:0; right:0; height:9mm; background:linear-gradient(90deg,var(--purple),var(--purple-soft)); }
+.pdf-cover > *{ position:relative; z-index:1; }
+.cov-top{ display:flex; justify-content:space-between; align-items:baseline; }
+.cov-series{ font-family:var(--f-label); font-size:12pt; font-weight:700; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--purple); }
+.cov-edition{ font-family:var(--f-label); font-size:10.5pt; font-weight:700; color:var(--t3); letter-spacing:.1em; }
+.cov-rule-top{ height:2.5px; background:var(--purple); margin-top:8pt; opacity:.9; }
+.cov-main{ margin-top:34mm; }
+.cov-title{ font-family:var(--f-head); font-weight:800; font-size:62pt; line-height:1; color:var(--t1);
+  letter-spacing:-.022em; white-space:nowrap; }
+.cov-title .hl{ color:var(--purple); }
+.cov-zh{ font-family:var(--f-head); font-weight:700; font-size:28pt; color:var(--purple-dark); margin-top:16pt; letter-spacing:.02em; }
+.cov-en{ font-family:var(--f-head); font-size:14pt; font-weight:400; color:var(--t3); margin-top:11pt; letter-spacing:.03em; }
+.cov-slogan{ font-family:var(--f-body); font-size:21pt; line-height:1.75; color:var(--t2);
+  margin-top:auto; padding-left:22pt; border-left:5px solid var(--purple); }
+.cov-slogan b{ color:var(--purple-dark); font-weight:700; }
+.cov-foot{ margin-top:34mm; }
+.cov-rule-bot{ height:1px; background:var(--divider); margin-bottom:10pt; }
+.cov-foot-row{ display:flex; justify-content:space-between; align-items:baseline; }
+.cov-author{ font-family:var(--f-head); font-size:14pt; font-weight:700; color:var(--t1); letter-spacing:.01em; }
+.cov-pub{ font-family:var(--f-label); font-size:9.5pt; color:var(--t3); letter-spacing:.03em; }
+</style></head>
+<body>
+<div class="pdf-cover">
+  <div class="cov-grid"></div>
+  <div class="cov-band"></div>
+  <div class="cov-top">
+    <span class="cov-series">Agent Harness · 工程实践</span>
+    <span class="cov-edition">架构与工程卷 · 2026</span>
+  </div>
+  <div class="cov-rule-top"></div>
+  <div class="cov-main">
+    <div class="cov-title">Harness <span class="hl">Study</span></div>
+    <div class="cov-zh">Harness 运行时架构</div>
+    <div class="cov-en">Runtime Architecture for Agent Harness</div>
+  </div>
+  <div class="cov-slogan">架构让智能<b>抵达远方</b>，<br>工程使愿望<b>得以兑现</b>。</div>
+  <div class="cov-foot">
+    <div class="cov-rule-bot"></div>
+    <div class="cov-foot-row">
+      <span class="cov-author">Jinming Li</span>
+      <span class="cov-pub">CC BY 4.0 · GitHub / Gitee：li2092/harness-study</span>
+    </div>
+  </div>
+</div>
+</body></html>

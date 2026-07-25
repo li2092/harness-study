@@ -1,0 +1,103 @@
+<meta charset="utf-8">
+<style>
+@import url('fonts-local.css');
+:root{
+  --purple:#6d28d9; --purple-dark:#4c1d95; --purple-soft:#8b5cf6; --purple-light:#e8e0f4;
+  --t1:#1a1428; --t2:#2b2436; --t3:#6b6478; --divider:rgba(26,20,40,.13);
+  --f-head:"Inter","Noto Sans SC",sans-serif;
+  --f-label:"Syne","Noto Sans SC",sans-serif;
+  --f-body:"LXGW WenKai","Inter",serif;
+}
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+#title-block-header{ display:none; }
+body{ font-family:var(--f-body); color:var(--t2); font-size:14pt; line-height:1.85;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  line-break:strict; text-spacing-trim:trim-start; word-break:normal; overflow-wrap:break-word; }
+
+/* ===== 标题层级 ===== */
+h1,h2,h3,h4{ font-family:var(--f-head); color:var(--t1); line-height:1.3; }
+h1{ font-weight:800; font-size:26pt; page-break-before:always; margin:0 0 4pt; letter-spacing:-.01em; }
+h1::after{ content:""; display:block; width:100%; height:3px; margin-top:10pt;
+  background:linear-gradient(90deg,var(--purple),var(--purple-soft) 55%,transparent); }
+h1 + p, h1 + h2{ margin-top:16pt; }
+h2{ font-weight:800; font-size:18.5pt; color:var(--purple-dark); margin:24pt 0 9pt; page-break-after:avoid; }
+h3{ font-weight:700; font-size:15.5pt; margin:18pt 0 7pt; page-break-after:avoid; }
+h4{ font-weight:700; font-size:13.5pt; color:var(--purple); margin:14pt 0 5pt; page-break-after:avoid; }
+
+/* ===== 正文（中文排版：首行缩进 2 字符 + 两端对齐填满版心）===== */
+p{ margin:0 0 7pt; text-align:justify; text-indent:2em; }
+a{ color:var(--purple-dark); text-decoration:none; border-bottom:1px solid rgba(109,40,217,.25); }
+strong,b{ color:var(--t1); font-weight:700; }
+em{ color:var(--purple-dark); font-style:normal; font-weight:600; }
+ul,ol{ margin:0 0 8pt; padding-left:24pt; }
+li{ margin:3pt 0; text-indent:0; }
+li::marker{ color:var(--purple); }
+
+blockquote{ border-left:3px solid var(--purple); background:rgba(109,40,217,.045);
+  margin:13pt 0; padding:10pt 18pt; border-radius:0 6px 6px 0; color:var(--t1); page-break-inside:avoid; }
+blockquote p{ margin:6pt 0; text-indent:0; }
+blockquote p:first-child{ margin-top:0; } blockquote p:last-child{ margin-bottom:0; }
+
+code{ font-family:"JetBrains Mono","LXGW WenKai","Inter",monospace; font-size:11pt; background:#efeae2;
+  padding:1.5px 5px; border-radius:3px; color:var(--purple-dark); }
+pre{ background:#181225; color:#e8e0f4; padding:13pt 15pt; border-radius:8px; font-size:10.5pt;
+  line-height:1.6; white-space:pre-wrap; word-break:break-word; page-break-inside:avoid; margin:13pt 0; }
+pre code{ background:none; color:inherit; padding:0; font-size:inherit; }
+
+/* ===== 插图：figure + 图注（整宽居中）===== */
+img{ display:block; max-width:100%; margin:18pt auto; page-break-inside:avoid;
+  border:1px solid var(--divider); border-radius:8px; box-shadow:0 2px 8px rgba(26,20,40,.07); }
+p:has(> img){ text-indent:0; text-align:center; }
+figure.fig{ margin:18pt 0 16pt; page-break-inside:avoid; text-align:center; }
+figure.fig img{ margin:0 auto 6pt; }
+figcaption{ font-family:var(--f-head); font-size:10.5pt; color:var(--t3);
+  text-align:center; text-indent:0; line-height:1.5; }
+figcaption .fnum{ color:var(--purple); font-weight:700; }
+
+table{ border-collapse:collapse; width:100%; font-size:11.5pt; margin:14pt 0; page-break-inside:avoid; line-height:1.55; }
+th,td{ border:1px solid var(--divider); padding:6pt 9pt; text-align:left; vertical-align:top; text-indent:0; }
+th{ background:rgba(109,40,217,.09); color:var(--t1); font-family:var(--f-head); font-weight:700; }
+tr:nth-child(even) td{ background:rgba(26,20,40,.018); }
+
+hr{ border:none; border-top:1px solid var(--divider); margin:18pt 0; }
+sup a{ color:var(--purple); font-weight:700; border:none; }
+.footnotes{ font-size:11pt; color:var(--t3); margin-top:14pt; page-break-inside:avoid; }
+.footnotes hr{ display:none; }
+.footnotes::before{ content:"引用脚注"; display:block; font-family:var(--f-head); font-weight:800;
+  font-size:14pt; color:var(--purple-dark); margin-top:20pt; padding-top:11pt;
+  border-top:1.5px solid var(--divider); margin-bottom:10pt; }
+.footnotes ol{ padding-left:22pt; margin:0; }
+.footnotes li{ margin:5pt 0; text-indent:0; }
+.footnotes p{ text-indent:0; margin:0 0 4pt; }
+.footnotes a{ border:none; }
+
+/* ===== 目录（控制在一页） ===== */
+nav#TOC{ page-break-after:always; padding-top:6pt; }
+nav#TOC::before{ content:"目录"; display:block; font-family:var(--f-head); font-weight:800;
+  font-size:21pt; color:var(--t1); margin-bottom:14pt; padding-bottom:9pt;
+  border-bottom:2.5px solid var(--purple); letter-spacing:-.01em; }
+nav#TOC ul{ list-style:none; padding-left:18pt; margin:0; }
+nav#TOC > ul{ padding-left:0; }
+nav#TOC li{ margin:4.5pt 0; line-height:1.35; text-indent:0; }
+nav#TOC a{ display:flex; align-items:flex-end; gap:5pt; color:var(--t1); border:none;
+  text-decoration:none; font-family:var(--f-head); font-weight:700; font-size:12pt; }
+nav#TOC .ti{ flex:0 1 auto; }
+nav#TOC .dots{ flex:1 1 auto; min-width:14pt; margin:0 2pt 3.5pt;
+  border-bottom:1.5px dotted rgba(26,20,40,.28); }
+nav#TOC .pg{ flex:none; font-weight:600; color:var(--purple); font-size:11pt; }
+
+/* ===== 图目录（List of Figures） ===== */
+nav#LOF{ page-break-after:always; padding-top:6pt; }
+nav#LOF::before{ content:"图目录"; display:block; font-family:var(--f-head); font-weight:800;
+  font-size:21pt; color:var(--t1); margin-bottom:13pt; padding-bottom:8pt;
+  border-bottom:2.5px solid var(--purple); letter-spacing:-.01em; }
+nav#LOF ul{ list-style:none; padding-left:0; margin:0; }
+nav#LOF li{ margin:2.4pt 0; line-height:1.28; text-indent:0; }
+nav#LOF a{ display:flex; align-items:flex-end; gap:5pt; color:var(--t1); border:none;
+  text-decoration:none; font-family:var(--f-head); font-weight:500; font-size:9.8pt; }
+nav#LOF .ti{ flex:0 1 auto; }
+nav#LOF .dots{ flex:1 1 auto; min-width:14pt; margin:0 2pt 2.8pt;
+  border-bottom:1px dotted rgba(26,20,40,.26); }
+nav#LOF .pg{ flex:none; font-weight:600; color:var(--purple); font-size:9.3pt; }
+</style>

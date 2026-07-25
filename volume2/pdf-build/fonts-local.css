@@ -1,0 +1,15 @@
+/* 本地 OFL 字体（全部 SIL Open Font License，可自由嵌入分发）。
+   不依赖 CDN；字体文件见 fonts/（gitignore，源见 fonts/SOURCES.md）。
+   url() 相对本文件解析 -> pdf-build/fonts/*.ttf。 */
+@font-face{font-family:"Inter";src:url("fonts/Inter.ttf") format("truetype");
+  font-weight:100 900;font-style:normal;font-display:block;}
+@font-face{font-family:"Noto Sans SC";src:url("fonts/NotoSansSC.ttf") format("truetype");
+  font-weight:100 900;font-style:normal;font-display:block;}
+@font-face{font-family:"Syne";src:url("fonts/Syne.ttf") format("truetype");
+  font-weight:400 800;font-style:normal;font-display:block;}
+@font-face{font-family:"JetBrains Mono";src:url("fonts/JetBrainsMono.ttf") format("truetype");
+  font-weight:100 800;font-style:normal;font-display:block;}
+@font-face{font-family:"LXGW WenKai";src:url("fonts/LXGWWenKai-Regular.ttf") format("truetype");
+  font-weight:400;font-style:normal;font-display:block;}
+@font-face{font-family:"LXGW WenKai";src:url("fonts/LXGWWenKai-Medium.ttf") format("truetype");
+  font-weight:500 900;font-style:normal;font-display:block;}
