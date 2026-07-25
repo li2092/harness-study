@@ -11,7 +11,7 @@ import fitz
 
 HERE = pathlib.Path(__file__).resolve().parent
 PY = sys.executable
-OUT = sys.argv[1] if len(sys.argv) > 1 else str(HERE / "harness-study-运行时架构卷.pdf")
+OUT = sys.argv[1] if len(sys.argv) > 1 else str(HERE / "harness-study-架构与工程卷.pdf")
 BOOK = (HERE / "book.html")
 
 FRONT = [n for n in ("cover.html", "epigraph.html", "notice.html") if (HERE / n).exists()]

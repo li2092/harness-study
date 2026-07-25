@@ -8,7 +8,7 @@
 ~/.venvs/docgen/bin/python build_pdf.py
 ```
 
-输出 `harness-study-运行时架构卷.pdf`。传参可改文件名：`build_pdf.py out.pdf`。
+输出 `harness-study-架构与工程卷.pdf`。传参可改文件名：`build_pdf.py out.pdf`。
 
 **依赖**：`pandoc`（`/opt/homebrew/bin/pandoc`）、`playwright`、`PyMuPDF(fitz)`。本机只有 `~/.venvs/docgen/bin/python` 三样齐全，**不要用系统 python3**。
 
