@@ -48,7 +48,7 @@
 | message | Execution（agent loop 经写路径） | `messages` | id、conversation_id、run_id、turn_no、role、content_ref、schema_version | Interaction、Execution | 随 conversation | 半轮内容归宿 §9.7 裁决；已落库的不回滚 |
 | turn | —（无独立表） | `messages`/`steps` 上的 turn_no | turn_no 单调递增 | — | 随所属对象 | 以最后完整 step 判定 turn 完成度 |
 | step | Execution | `steps` | id、run_id、turn_no、seq、status（不设 kind——模型调用与工具执行是 5a/5b 级子实体，各以 step_id 挂在 step 下，§6.0 实体链） | Control（恢复扫描）、Evidence | 随 run | **恢复粒度锚点**：从最后完成 step 之后继续（§七） |
-| invocation 记录 | Execution（model adapter） | `invocations` | id、step_id、model_id、prompt_asset_ref、context_digest、output_ref、token 计量、schema_version | Execution（重放复用）、第三卷成本 | 随 run；内容脱敏另议（vol3） | 已记录的结果恢复时复用，不重新调用（§七） |
+| invocation 记录 | Execution（model adapter） | `invocations` | id、step_id、model_id、prompt_asset_ref（含版本号或内容哈希，塑形片段按它重建，§10.8）、context_digest、output_ref、token 计量、schema_version | Execution（重放复用）、第三卷成本 | 随 run；内容脱敏另议（vol3） | 已记录的结果恢复时复用，不重新调用（§七） |
 | effect（Effect Ledger 行） | Execution（tool executor） | `effects` | 见本文件 B 节 | Control、Evidence、人工对账 | **原则上不删**——外部世界的账 | intent 无 result → 四类处置（§8.6） |
 | checkpoint | Execution（经 checkpoint 写路径） | `checkpoints` | id、run_id、step_id、包含物清单、compaction_version、state_machine_version | Control（resume） | 随 run；保留策略 vol3 | 不完整 checkpoint 必须可识别并丢弃 |
 | compaction 摘要 | Execution（compaction 事务） | `messages` 特型行（第十章裁决：不独立表，沿特型行；推翻＝需独立版本审计/跨会话复用） | compaction_version、provenance（由哪些消息压成）、边界序号 | Execution（context 组装）、resume | 随 conversation | 压缩事务失败回退，不留半压缩态（§10.4） |
@@ -230,6 +230,8 @@
 |---|---|---|---|---|
 | 消息游标 / 最后完整 step 序号 | 是 | 是 | 否 | 状态 |
 | compaction 版本与摘要引用 | 是 | 是（必须尊重边界，§10.8） | 否 | 状态 |
+| prompt asset · 塑形片段（few-shot／输出格式／流程模板） | 是（记版本号或内容哈希） | 是（按记录的版本重建，§10.8） | 否 | 状态 |
+| prompt asset · 系统约束片段（身份／安全规则） | 否 | 否（恢复时取当前版，不取旧版） | — | 授权 |
 | state_machine_version | 是 | 是 | 版本兼容检查（§5.10） | 执行 |
 | approval（已决审批） | 否（决策证据留 events） | 否 | 需重验（§11.6） | 授权 |
 | delegation token | 否 | 否 | 重新授予 | 授权 |
@@ -534,3 +536,4 @@
 | v2.5 | 2026-07-23 | 新增 T（Principal & Delegation Registry v1）/U（Authority Lifecycle Matrix v1，主线五收口）/V（Common-mode Failure Matrix v1）；D 填充（Runtime Trust Boundary v1，七边界）、F 填充（Intervention Point Map v1，三干预点＋证据列）；A 表 policy decision 行裁决并入 events、补 principal＋enforcement point 字段 | §十一 |
 | v2.6 | 2026-07-24 | 新增 W（Parent-Child Run Contract v1，父子 run 契约表：六契约×单 agent 形态/父子继承规则/失效反例＋收敛判据与输出信任两项协调专属）——subagent=child run、契约沿父链继承的登记形态 | §十二 |
 | v2.7 | 2026-07-24 | C 升 v2：correlation 八级补全（信封加 invocation_id/effect_id/artifact_id，child 事件带父 run_id ＝第十二章跨 agent 因果链兑现）＋新增 detector/certificate 事件（detector.probed/absence.detected/certificate.issued/model.refuted）；新增 X（Evidence Graph v1，对账边＋认识论七边）/Y（Detector Test Record v1，检测器 sabotage 验证）/Z（Model Certificate v1，五类测试＋scope，backtest 绿≠泛化） | §十三 |
+| v2.8 | 2026-07-26 | I 表补 prompt asset 两行——塑形片段随 checkpoint 记版本号或内容哈希、按记录版本重建（状态生命周期），系统约束片段不保存不恢复、恢复时取当前版（授权生命周期）；A 表 invocation 行 prompt_asset_ref 相应补版本要求。兑现 §10.8 新列的第三类时变成分处置 | §十 |
