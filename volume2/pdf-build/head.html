@@ -56,9 +56,16 @@ figcaption{ font-family:var(--f-head); font-size:10.5pt; color:var(--t3);
 figcaption .fnum{ color:var(--purple); font-weight:700; }
 
 table{ border-collapse:collapse; width:100%; font-size:11.5pt; margin:14pt 0; page-break-inside:avoid; line-height:1.55; }
-th,td{ border:1px solid var(--divider); padding:6pt 9pt; text-align:left; vertical-align:top; text-indent:0; }
+/* overflow-wrap:anywhere 收窄单元格的 min-content 宽度——卷二的登记表最宽 7 列，
+   不收就会撑破版心，Chromium 打印时会把整本书等比缩到 2/3（正文 14pt→9.3pt）。 */
+th,td{ border:1px solid var(--divider); padding:6pt 9pt; text-align:left; vertical-align:top;
+  text-indent:0; overflow-wrap:anywhere; }
 th{ background:rgba(109,40,217,.09); color:var(--t1); font-family:var(--f-head); font-weight:700; }
 tr:nth-child(even) td{ background:rgba(26,20,40,.018); }
+
+/* 6 列以上的登记表：收字号与内边距，给长标识符留出整词空间 */
+table:has(tr > th:nth-child(6)){ font-size:9.5pt; }
+table:has(tr > th:nth-child(6)) th, table:has(tr > th:nth-child(6)) td{ padding:4pt 5pt; }
 
 hr{ border:none; border-top:1px solid var(--divider); margin:18pt 0; }
 sup a{ color:var(--purple); font-weight:700; border:none; }
