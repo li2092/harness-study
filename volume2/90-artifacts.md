@@ -33,7 +33,9 @@
 | W | Parent-Child Run Contract（父子 run 契约表） | 六契约 × 单 agent 形态/父子继承规则/失效反例，加收敛判据与输出信任两项协调专属 | 第十二章 12.8 |
 | X | Evidence Graph（证据图） | 对账边（动作/结果/artifact/完成）＋认识论七边（grounds/predicts/certifies/refutes/derived_from/realizes/invalidates） | 第十三章 13.8 |
 | Y | Detector Test Record（检测器测试记录） | 每个检测器的 sabotage 验证：喂什么坏样本/期望触发/实际触发/上次验证时间 | 第十三章 13.6 |
-| Z | Model Certificate（模型证书） | 五类测试（replay/prospective/held-out/invariant/planner-adversarial）＋scope/history cursor/model version/已知反例 | 第十三章 13.8 |
+| Z | Model Certificate（模型证书） | 五类测试（replay/prospective/held-out/invariant/planner-adversarial）＋scope/history cursor/生成 provenance/已知反例 | 第十三章 13.8 |
+
+正文节序不是严格 A→Z：L 之后接 Q、R、S，再回到 M、N、O、P，然后从 T 排到 Z。这是逐章增补的先后；节号不改，各章按字母引用，查节以本表为准。
 
 ## A. State Registry v2（§六 6.0 交付、章末升 v2——大纲 v5.4 自 §一下沉）
 
@@ -45,7 +47,7 @@
 | run | Control（run manager） | `runs` | id、conversation_id（可空）、parent_run_id、triggered_by、status、terminal_reason、state_machine_version | 全平面 | 不可单独删；随 conversation 删除时保留审计副本与否 §6.10 裁决 | status=running 的孤儿由启动扫描收敛（§5.8） |
 | message | Execution（agent loop 经写路径） | `messages` | id、conversation_id、run_id、turn_no、role、content_ref、schema_version | Interaction、Execution | 随 conversation | 半轮内容归宿 §9.7 裁决；已落库的不回滚 |
 | turn | —（无独立表） | `messages`/`steps` 上的 turn_no | turn_no 单调递增 | — | 随所属对象 | 以最后完整 step 判定 turn 完成度 |
-| step | Execution | `steps` | id、run_id、turn_no、seq、kind（invocation/tool_execution）、status | Control（恢复扫描）、Evidence | 随 run | **恢复粒度锚点**：从最后完成 step 之后继续（§七） |
+| step | Execution | `steps` | id、run_id、turn_no、seq、status（不设 kind——模型调用与工具执行是 5a/5b 级子实体，各以 step_id 挂在 step 下，§6.0 实体链） | Control（恢复扫描）、Evidence | 随 run | **恢复粒度锚点**：从最后完成 step 之后继续（§七） |
 | invocation 记录 | Execution（model adapter） | `invocations` | id、step_id、model_id、prompt_asset_ref、context_digest、output_ref、token 计量、schema_version | Execution（重放复用）、第三卷成本 | 随 run；内容脱敏另议（vol3） | 已记录的结果恢复时复用，不重新调用（§七） |
 | effect（Effect Ledger 行） | Execution（tool executor） | `effects` | 见本文件 B 节 | Control、Evidence、人工对账 | **原则上不删**——外部世界的账 | intent 无 result → 四类处置（§8.6） |
 | checkpoint | Execution（经 checkpoint 写路径） | `checkpoints` | id、run_id、step_id、包含物清单、compaction_version、state_machine_version | Control（resume） | 随 run；保留策略 vol3 | 不完整 checkpoint 必须可识别并丢弃 |
@@ -54,7 +56,7 @@
 | artifact | Execution（tool executor 经登记路径） | `artifacts` + 文件/对象存储 | id、lineage（创建/修改它的 effect）、checksum、version | 全平面 | 删除 ≠ 撤销外部动作（§6.10） | 文件在而登记缺、登记在而文件缺——两向对账（工具层展开 §8.10，证据边 §十三） |
 | approval（HITL 待决） | Control | `approvals` | id、run_id、请求内容、requested_at、expires_at、resolved_by、decision | Interaction（呈现）、Execution（等待） | 随 run；过期是显式终态 | **挂起即持久化**：重启后待决审批仍在（§9.8）；但已决 approval 的效力不随 resume/fork 自动延续——authority 不隐式恢复，需持久化的授权显式列入契约并在变化后重验（§11.6） |
 | timer | Control | `timers` | id、run_id、fire_at、purpose、status | Control（扫描） | 随 run | 进程死后由启动/周期扫描接管（§7.7） |
-| event | Evidence（各组件追加） | `events` | 见本文件 C 节 | 全平面（只读） | **永不更新、原则上不删**；保留策略 vol3 | 尾部半行按最后完整行截断（C 节纪律 3） |
+| event | Evidence（各组件追加） | `events` | 见本文件 C 节 | 全平面（只读） | **永不更新、原则上不删**；保留策略 vol3 | 未提交事务整体回滚，不留半行；应用层守事务边界——状态行与事件同事务落地（§6.1、C 节纪律 3） |
 | policy decision | Control | 并入 `events`（type=policy.decided）——§十一裁决不独立表；推翻＝需独立于事件流的合规审计/长期保留 | principal、规则、输入摘要、决定、依据、enforcement point | Evidence、审计 | 同 event | 同 event |
 | belief/world model | Execution（建模路径） | `world_models`（派生工件表，在十一张实体链表之外；未实现前占位，模板见 K 节） | model_version、history_cursor、provenance、certificate_scope、known_counterexamples | Execution（规划）、Evidence | 随所属 conversation/task；版本不可变 | **derived belief artifact，不是真相**：崩溃后取最新已认证版本，不覆盖 observation（§6.12） |
 
@@ -73,7 +75,7 @@
 | effect_id | `eff_` 前缀 ID |
 | run_id / turn_no / step_id | correlation 链 |
 | tool_name / params_ref / params_hash | 调了什么、参数指纹 |
-| idempotency_key | **派生自 run_id + step 序号**，不用内存计数器 |
+| idempotency_key | **派生自 run_id + step 序号 + 该 step 内的 effect 序号**（第三维也可直接用模型返回的 tool_call_id），不用内存计数器——同一 step 挂多笔工具调用时各自唯一，同一笔的多次 attempt 之间不变 |
 | action_class | read_only / idempotent / compensatable / non_replayable——重发语义登记（第八章 8.4；v1 的 risk_class 细化为此四类，Control 决策输入沿用） |
 | derived_from_effect_id | 派生副作用指回原 action；空即自身为原 action（第八章 8.3 纪律二） |
 | committed_under | 提交时校验通过的执行权凭据——单机为进程内租约标识，多实例为 fencing 编号（第八章 8.3） |
@@ -89,7 +91,7 @@
 
 **八条不变量**（1-5 为 v1 原有，6-8 随第八章新增）：
 
-1. 先写 intent 再执行副作用。顺序颠倒即 dual-write：崩溃落在两写之间就永久不一致（guide §3.3）。
+1. 先写 intent 再执行副作用。写账本与改世界分属两个系统，无法一次原子提交——这个结构就是 dual-write，换哪个顺序都躲不掉。intent 先行消不掉两写之间的崩溃窗口，它决定的是崩溃之后还剩不剩线索：先执行后记账，世界变了而账上空白，连"曾经想做"都扫不出来（guide §3.3）。
 2. attempt 可以多次，result 只能记录一次；重试产生新 attempt_no，不覆盖旧 result。
 3. outcome 需要独立证据，不允许从 result 抄写——"tool result 成功 ≠ 外部世界成功"（§8.10）。
 4. `unknown` 是合法状态而非缺失值：超时且远端不可查时，诚实标 unknown 交对账，不假装可自动回滚。
@@ -114,7 +116,7 @@
 | 字段 | 说明 |
 |---|---|
 | event_id | `evt_` 前缀 ID |
-| seq | 数据库自增序号——**顺序的真相**（§3.4，不信 ID 里的时间戳） |
+| seq | 数据库自增序号——**顺序的真相**（§6.0 全局规则一，不信 ID 里的时间戳） |
 | occurred_at | 挂钟时间，仅供人读 |
 | tenant / conversation_id / run_id / turn_no / step_id / invocation_id / effect_id / artifact_id | correlation 八级全量冗余，允许为空的层级显式置空（§十三 补全 invocation/effect/artifact 三级——child 事件带父 run_id 即第十二章跨 agent 因果链的兑现） |
 | type | 见下 |
@@ -138,7 +140,7 @@
 
 1. append-only，永不 UPDATE；记错了追加 `correction.appended` 指向原事件，不改历史。
 2. 事件粒度到 step/消息完成，不逐 token——token delta 走流式投影通道，无恢复价值不入账（§6 持久化粒度纪律）。
-3. 崩溃容忍：进程可能死在写半行时，恢复按最后一个完整事件截断，丢尾行不算数据损坏——append-only ≠ crash-safe，两件事分开保证（入门卷 §6.3）。
+3. 崩溃容忍按载体分。DB 型事件表由事务原子性兜底，不出半行；应用层守的是事务边界——状态行与事件同事务落地（§6.1）。文件型事件日志（入门卷 §6.3 的 JSONL）才有半行问题：进程可能死在写半行时，恢复按最后一个完整事件截断，丢尾行不算数据损坏。append-only ≠ crash-safe，两件事分开保证。
 4. 内部 schema 稳定优先；OTel GenAI semantic conventions 截至 2026-07 仍为 Development 状态【规范/官方文档，见 research/volume2/07 §3】，只做导出映射不做内部依赖（§十三、第三卷 §17.2）。
 
 ## D. Runtime Trust Boundary v1（§十一 11.4 填充——模板自 §一，v1 随第十一章填）
@@ -149,9 +151,9 @@
 |---|---|---|---|---|
 | 进程 ↔ 子进程 | spawn，进程组绑定 | 子进程应收窄权限，不自动继承父全权 | 子进程比 run 活得久、脱离生命周期（§8.8） | 进程组收割＋run 终态事件 |
 | 主进程 ↔ worker | 多实例任务派发 | worker 持临时授权、非持久 | 双 worker 同认领、慢者带旧 fencing 写（§5.8） | fencing 高水位＋认领事件 |
-| agent ↔ subagent | 派生 child run | 权限默认收窄，绝不继承 bypass | Lingering Authority——继承父全权（§11.3） | Principal & Delegation（T）＋policy decision |
+| agent ↔ subagent | 派生 child run | 权限默认收窄，绝不继承 bypass | 继承父全权（§11.3） | Principal & Delegation（T）＋policy decision |
 | runtime ↔ 网络/provider | 对外请求（egress） | 出口即副作用，信息可外流 | "只读"工具藏 web 外发、跑在 policy 前（§11.4） | egress 过 policy 门禁＋policy.decided |
-| runtime ↔ 数据库 | 读写持久状态 | 单写者/租约约束（§六） | dual-write、跨库事务撕裂 | 事务＋事件双轨（§6.3） |
+| runtime ↔ 数据库 | 读写持久状态 | 单写者/租约约束（§六） | dual-write、跨库事务撕裂 | 事务＋事件双轨（§6.1） |
 | runtime ↔ 工具/沙箱 | 工具执行，沙箱隔离 | 沙箱默认拒绝、显式放行 | secret 进沙箱、可写路径过宽 | bubblewrap 分层＋Effect Ledger（B） |
 | runtime ↔ 用户 | 交互面投影 | 投影不回写、外来输入默认不可信 | UI 当真相源（§三/§九）、prompt 注入 | 投影契约（J）＋信任标签 |
 
@@ -218,7 +220,7 @@
 | 16 | interrupted | resume 裁决可续跑（§七） | state_machine_version 兼容且 checkpoint 完整 | queued | — | run.state_changed |
 | 17 | interrupted | resume 裁决不可恢复 | — | failed | unrecoverable | run.finalized |
 
-三条表级规则：终态（completed/failed/cancelled）之间无任何行——终态不许互转，判错追加更正事件；terminal_reason 逐值挂类（§五 5.4）——task_failed→业务失败，infra_failure、unrecoverable→基础设施失败，user_cancelled、preempted→用户取消，policy_rejected、budget_exceeded、queue_expired、hitl_expired→策略拒绝（后两值为时限耗尽子类，终态走 cancelled——拦下的是继续等待，与 run 出错分开）；本表变更即 schema 变更，随 state_machine_version 迁移（§五 5.10）。看门狗（row 8，进程在、run 卡死→直接终态）与启动扫描（row 15，进程没了、run 可能可救→interrupted 交恢复裁决）是两条不同的行，不得合并。
+四条表级规则：终态（completed/failed/cancelled）之间无任何行——终态不许互转，判错追加更正事件；terminal_reason 逐值挂类（§五 5.4）——task_failed→业务失败，infra_failure、unrecoverable→基础设施失败，user_cancelled、preempted→用户取消，policy_rejected、budget_exceeded、queue_expired、hitl_expired→策略拒绝（后两值为时限耗尽子类，终态走 cancelled——拦下的是继续等待，与 run 出错分开）；本表变更即 schema 变更，随 state_machine_version 迁移（§五 5.10）；waiting 崩溃后不回 waiting——它经 row 15 进 interrupted，出边只有 row 16（→queued）与 row 17（→failed），表里不设 interrupted→waiting 回路是有意的：回到 queued 重跑至审批点、再次挂起，等于让审批重来一次，旧授权不跨崩溃延续，恢复即重验（§十一 11.6）。看门狗（row 8，进程在、run 卡死→直接终态）与启动扫描（row 15，进程没了、run 可能可救→interrupted 交恢复裁决）是两条不同的行，不得合并。
 
 ## I. Lifetime Matrix v1（§六 6.11 交付——checkpoint/resume 携带物逐项声明）
 
@@ -227,7 +229,7 @@
 | 携带物 | 随 checkpoint 保存？ | 随 resume 恢复？ | 恢复前重验？ | 所属生命周期 |
 |---|---|---|---|---|
 | 消息游标 / 最后完整 step 序号 | 是 | 是 | 否 | 状态 |
-| compaction 版本与摘要引用 | 是 | 是（必须尊重边界，§10.9） | 否 | 状态 |
+| compaction 版本与摘要引用 | 是 | 是（必须尊重边界，§10.8） | 否 | 状态 |
 | state_machine_version | 是 | 是 | 版本兼容检查（§5.10） | 执行 |
 | approval（已决审批） | 否（决策证据留 events） | 否 | 需重验（§11.6） | 授权 |
 | delegation token | 否 | 否 | 重新授予 | 授权 |
@@ -292,7 +294,7 @@
 | 去重 | 同一事实/工具输出只保留一份，重复项折叠 |
 | 可信度 | 外部检索内容标来源、降权；投影不回写——组装是选材，不改真相（工作制品 J） |
 
-规则：组装是确定性过程，同样的持久态与同样的 policy 组装出同样的视图（resume 可重建，§10.8）。系统约束不进可压缩段（工作制品 R 纪律三）。
+规则：组装是确定性过程，同样的持久态与同样的 policy 组装出同样的视图（resume 可重建，§10.8）。两类时变成分不在这套版本坐标里——带 TTL 的 memory 随时间失效，JIT retrieval 拉进来的外部正文随源头改动。它们不参与 replay 一致性："同一份"承诺的范围，是版本坐标覆盖得到的那部分。系统约束不进可压缩段（工作制品 R 纪律三）。
 
 ## R. Compaction Contract v1（第十章 10.3/10.4 交付）
 
@@ -454,7 +456,7 @@
 | 转移 | run 状态机＋唯一转移表（工作制品 H） | child 状态机独立，父可观测、终态回报父 | child 卡死父不知（无 correlation） |
 | 副作用 | 四段账＋幂等（工作制品 B） | child 的 effect 账挂父链，幂等 key 从父 run_id 派生 | child 副作用无账，重放双份 |
 | 交互 | 交互面是投影（工作制品 J/P） | child 无直接交互面，progress 经父投影 | child 直连 UI，绕过父的收敛 |
-| 权限 | 运行时硬边界＋授权有期限（工作制品 T/U） | 有效权限＝agent ∩ user 取交集，收窄不继承 bypass | 取并集或继承 bypass → Lingering Authority / Cross-Agent 提权 |
+| 权限 | 运行时硬边界＋授权有期限（工作制品 T/U） | 有效权限＝agent ∩ user 取交集，收窄不继承 bypass | 取并集或继承 bypass → 权限蔓延 / Cross-Agent 提权 |
 | 证据 | 只追加＋全量关联（工作制品 C） | child trace 以父 run_id 关联，跨 agent 因果链可重建（第十三章展开） | child trace 与父断链，因果不可重建 |
 
 协调专属两项：
@@ -462,7 +464,7 @@
 | 协调项 | 规则 | 失效反例 |
 |---|---|---|
 | 收敛判据 | 父显式定义（全成功／多数成功／关键子任务成功），并行产出在单点收敛写 | 无单一收敛点 → infinite handoff loop（谁都不 own 任务） |
-| 输出信任 | child 回传默认不可信，经独立校验（校验器与被校验者不共享判断源）方采信 | 内部即可信 → 检查器信任被检查者（MAST 验证类失效 21.3%） |
+| 输出信任 | child 回传默认不可信，经独立校验（校验器与被校验者不共享判断源）方采信 | 内部即可信 → 检查器信任被检查者（MAST 验证类失效 23.5%） |
 
 填法：六契约行任一格答不出"父子怎么继承"，或协调两项缺"单点收敛"与"独立校验"，即多 agent 的破口。双层控制流（节点内自治 loop vs 跨节点编排 graph）是本表的运行前提——编排层确定，父才谈得上"可观测、可收敛、可校验"。
 
@@ -470,7 +472,7 @@
 
 规则：证据面是一张图。对账边回答"动作、结果、artifact、完成声明怎么对上"；认识论七边回答"系统为什么相信当前模型、什么证据推翻了它"——后者补给可执行 Belief/World Model（工作制品 K），不另造平行图谱。评审用法：拿被评系统的完成声明，沿边反查到 outcome 证据；拿它的模型判断，沿边反查到 grounds 与 certifies，问 certifies 有没有 scope。
 
-对账边（承入门卷边定义）：`action --produces--> result`、`result --verified_by--> outcome`、`effect --writes--> artifact`、`claim --substantiated_by--> evidence`。
+对账边（本卷新立，不承入门卷的边定义）：`action --produces--> result`、`result --verified_by--> outcome`、`effect --writes--> artifact`、`claim --substantiated_by--> evidence`。入门卷 §8.4 那十条边（prompts/calls_tool/produces/verifies/scores/blocks/repairs/hands_off/supports/contradicts）登记的是跨件、跨 cell 的可观测关系，与这四条互补；同名的 produces 在本卷收窄为 action→result，端点类型与入门卷的"件→artifact 类型"不同。
 
 认识论七边（可执行信念，Schema Harness/MODA 载体）：
 
@@ -510,7 +512,8 @@
 | held-out transition | 留出的转移／leave-one-episode-out（泛化侧） |
 | invariant / property test | 不变量与属性测试 |
 | planner-adversarial | planner 主动搜模型漏洞的计划，验证不被误当最优解 |
-| scope / history cursor / model version / 已知反例 | 证书边界——不能只写 backtest=green |
+| scope / history cursor / 生成 provenance（模型/提示/工具版本）/ 已知反例 | 证书边界——兑现 §6.12 的四件随身证据，不能只写 backtest=green |
+| 被认证的 model_version | 本证书覆盖哪个信念版本（工作制品 K 对应行） |
 
 素材：一个公开 model-based harness 项目（实名待第六章终稿裁决）的公开 retained trajectories 里有大 final world model＋多份 level-specific 候选程序，说明"代码化"带来 inspectability、却不自动带来最小描述或泛化。引用纪律照 research/volume2/10（不引自述分数、不写 runtime 已开源、无 license 不复制代码）。
 

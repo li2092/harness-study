@@ -172,7 +172,7 @@ Howpot Bug 2 作为事故主线：导航跳走 → 未完成轮次未落盘 → 
 - 1.5 区分症状修复、局部修复和系统契约修复。
 - 1.6 对账六类契约（§一已立，本章不重新定义）：事故中每样缺失的东西都能在契约表上找到名字。
 
-- 1.7 从一次事故到一类现象（23.8pp 与 MAST 数字首现 §一，本章对账引用、不重列）：同一批模型换 harness，成功率差 23.8pp（Harness-Bench，6 harness × 8 模型后端 × 106 任务）【预印】；1600+ 条多 agent 故障轨迹标注中，规范缺陷 41.77%、协调失败 36.94%、验证缺失 21.30%——三类全在系统层；不换模型，只加语义验证 +15.6pp、只改角色规范 +9.4pp（MAST，NeurIPS 2025，检索范围内唯一评审级）【评审】。
+- 1.7 从一次事故到一类现象（23.8pp 与 MAST 数字首现 §一，本章对账引用、不重列）：同一批模型换 harness，0-100 复合分差 23.8 分（Harness-Bench，6 harness × 8 模型后端 × 106 任务；是复合分不是通过率）【预印】；MAST v3 的 1642 条多 agent 故障轨迹中，规范缺陷 44.2%、协调失败 32.3%、验证缺失 23.5%——三类全在系统层；不换模型，给 ChatDev 加一道高层任务目标验证，任务成功率回来 15.6 个百分点，是该文全部干预里最大的一档（MAST，NeurIPS 2025，检索范围内唯一评审级；三占比取自 v3 图 1，v2 旧数已弃用）【评审】。
 - 1.8 改进不可叠加（主场在本章）：三个组件单独共 +11.1pp，组合只 +7.3pp；预测"改动修好什么"精度 33.7%，预测"弄坏什么"仅 11.8%【预印】——局部正确不可外推，这是需要契约体系而非逐点修补的定量理由。
 - 1.9 越强的模型对 harness 差异越不敏感，弱模型受伤害更大（Harness-Bench）——runtime 质量对中小模型与私有化部署价值更高（此推论首现 §一 开场，本章不重复展开）。
 
@@ -193,7 +193,7 @@ Howpot Bug 2 作为事故主线：导航跳走 → 未完成轮次未落盘 → 
 - 2.5 保证、best effort、推断、未知四档确定性。
 - 2.6 六契约承诺逐条配真实反例（只演示违约形态，不重列定义）。
 - 2.7 runtime contract 与生产 policy 的边界。
-- 2.8 为什么两个主体都会把"看起来对"当"真的对"：四层结构——症状层归因、自洽幻觉、局部对整体错、知行鸿沟。agent 侧对应物：execution alignment failure（自洽推理与工具反馈、工作区状态脱钩，Harness-Bench 故障分类占 36.4%）【预印】与 False Success 一簇【预印】；工程师侧对应物："写了错误处理"（2.2）、"有 checkpoint"（2.3）、"已经考虑过"。契约体系是对两个主体同一种认知缺陷的同一种解法：把检验从注意力、记忆和意志力下沉为结构。2.5 的四档确定性即第二层"确定性均匀化"的工程解。
+- 2.8 为什么两个主体都会把"看起来对"当"真的对"：四层结构——症状层归因、自洽幻觉、局部对整体错、知行鸿沟。agent 侧对应物：execution-alignment failure（自洽推理与工具反馈、工作区状态脱钩；论文未给这个伞形概念占比，36.4% 是失败轨迹里"契约／格式违规"这一档症状的出现率，五档非互斥）【预印】与 False Success 一簇【预印】；工程师侧对应物："写了错误处理"（2.2）、"有 checkpoint"（2.3）、"已经考虑过"。契约体系是对两个主体同一种认知缺陷的同一种解法：把检验从注意力、记忆和意志力下沉为结构。2.5 的四档确定性即第二层"确定性均匀化"的工程解。
 - 2.9 文献坐标：六元组 ℋ=⟨ℐ_obs,𝒞,ℒ,ℐ_act,𝒮,𝒱⟩（arXiv:2606.20683）按组件切分，本卷六契约按保证切分，一个契约横跨多个组件——真相≈𝒮+𝒞（context 是投影）、转移≈ℒ、副作用≈ℐ_act、交互≈ℐ_obs、权限与证据≈𝒱 的治理/验证两半；T1-T4 四要件（arXiv:2606.10106）中 T4"控制机制独立于模型是否配合"即本章硬软之辨的文献表述。给映射是为了可对话，不是服从文献切法。
 
 练习：把“不会重复调用”“可以继续上次会话”“用户会确认”改写为可验证契约。
@@ -464,11 +464,11 @@ prompt 里写“你不许做 X”不是安全边界。本章建立运行时权�
 - 13.9 sabotage validation：检测器必须证明能触发。
 - 13.10 completion claim 必须连接 outcome evidence。
 - 13.11 为可执行信念增加认识论边：`observation --grounds--> model_version`、`model_version --predicts--> transition`、`history_set --certifies--> model_version`、`counterexample --refutes--> model_version`、`plan --derived_from--> model_version`、`commit --realizes--> plan`、`mismatch --invalidates--> remaining_plan`；这些边扩展现有 Evidence Graph，不另建平行图谱。
-- 13.12 Model Certificate 必须限定 scope：完整历史 backtest 只证明 retrodictive consistency，不证明未见状态上的 generalization；certificate 记录 model version、history cursor、测试集合/覆盖、失败反例和签发时版本，不能只写 `backtest=green`。
+- 13.12 Model Certificate 必须限定 scope：完整历史 backtest 只证明 retrodictive consistency，不证明未见状态上的 generalization；certificate 记录 scope、history cursor、生成 provenance（模型／提示／工具版本）、测试集合/覆盖、失败反例和签发时版本，不能只写 `backtest=green`。
 
 破坏实验：吞掉一个错误、关闭一个检测器、制造“成功但无 artifact”；注入历史外的新转移和一个会被 planner 利用的模型漏洞，验证 certificate 不会被误当成全局正确性，counterexample 会吊销模型与剩余计划。
 
-交付物：Event Schema、Evidence Graph（继承入门卷 §八十边定义，见 §一附录对照表）、Detector Test Record、Model Certificate、Counterexample Event Schema。
+交付物：Event Schema、Evidence Graph（四条对账边＋认识论七边均本卷新立，与入门卷 §八那十条可观测关系边互补而非继承，见 §一附录对照表）、Detector Test Record、Model Certificate、Counterexample Event Schema。
 
 素材：research/volume2/02（沉默失败一簇：60 天静默/67 空检查/70% 靠人工发现）、07 §2（rollout-trace 与 "tracing is not telemetry"）、10（Schema trajectories、证据边与 backtest 保证边界）。
 
@@ -508,7 +508,7 @@ prompt 里写“你不许做 X”不是安全边界。本章建立运行时权�
 1. **Component Register**（§四 交付，v5.5 补列）：八组件卡逐张对位被评系统自画的组件图，对不上即标红——评审的开场标尺。
 2. **State Registry**：状态、owner、存储、版本、读写者。
 3. **Effect Ledger**：意图、权限、执行、幂等、outcome、调和。
-4. **Boundary Map**：进程、网络、身份、工具、信任边界。
+4. **Runtime Trust Boundary**（运行时信任边界，工作制品 D）：进程、网络、身份、工具、信任边界。
 5. **Runtime Contract Matrix**：六类契约 × 正确性/可靠性/安全/用户反馈/可测试性。
 
 原 13×13 机制矩阵保留为“热点交叉发现表”，不要求填满。三元交叉、用户行为和时间漂移用场景卡另列。
@@ -534,7 +534,7 @@ prompt 里写“你不许做 X”不是安全边界。本章建立运行时权�
 附录承载正文不便展开的可复用材料：模板供评审直接取用，对照表和场景卡供写作与检查遗漏，勘误表保证与既有 guide 的一致性。
 
 - 附录 A：术语、实体、事件和 terminal reason。
-- 附录 B：State Registry、Belief/World Model Registry、Effect Ledger、Plan Lease、Boundary Map 模板。
+- 附录 B：State Registry、Belief/World Model Registry、Effect Ledger、Plan Lease、Runtime Trust Boundary 模板。
 - 附录 C：热点交叉发现表与约 30 张场景卡。
 - 附录 D：标准 runtime 故障包（含 stale plan、prediction mismatch、planner exploit）。
 - 附录 E：Claude Code/Agent SDK、Codex、OpenAI Agents SDK、LangGraph、Temporal、Restate、MCP Tasks（2026-07-28）对照。

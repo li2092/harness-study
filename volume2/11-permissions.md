@@ -11,13 +11,13 @@
 
 问"谁有权"之前，先得说清"谁"。一次动作背后的行使者（principal）不止一个：**user**（真正的权力源头）、**agent**（替用户干活的）、**subagent**（agent 派出去的分身）、**tool/service**（被调用的外部服务）、**operator**（运维/管理员）。搞混他们，权限就无从谈起——一个 subagent 以 user 的全权去动手，和它以被收窄过的分身身份去动手，是两回事。
 
-权力在这些 principal 之间传递，靠的是委托链（delegation chain）。每一次委托要记清四件事：谁授的、授了什么范围（scope）、到什么时候（期限）、能不能再往下转授（再委托）、怎么收回（撤销）。这里藏着一个基本判断——agent 到底是"用户的代理"还是"独立的身份"？答案决定权力的边界：作为用户代理，它的权力是用户权力的一个子集，不能超过用户;作为独立身份，它有自己的账号和授权边界，越权就是它自己的越权。principal 清单与委托记录，交付为工作制品 T（Principal & Delegation Registry，主体与委托登记）。
+权力在这些 principal 之间传递，靠的是委托链（delegation chain）。每一次委托要记清五件事：谁授的、授了什么范围（scope）、到什么时候（期限）、能不能再往下转授（再委托）、怎么收回（撤销）。这里藏着一个基本判断——agent 到底是"用户的代理"还是"独立的身份"？答案决定权力的边界：作为用户代理，它的权力是用户权力的一个子集，不能超过用户;作为独立身份，它有自己的账号和授权边界，越权就是它自己的越权。principal 清单与委托记录，交付为工作制品 T（Principal & Delegation Registry，主体与委托登记）。
 
 ## 11.2 硬边界与软提示
 
 权限控制分好几层，它们的"硬度"天差地别，混为一谈是这一章最要防的错。分两类：**硬边界**在模型之外强制执行，模型想不想绕都绕不过——文件系统权限、沙箱、permission 的 deny 规则;**软提示**是尽力而为、可被绕过的——prompt 里的话、best-effort 的过滤 hook。
 
-业界的实现把这条线画得很清楚。Anthropic 的权限体系有一个六步求值序，deny 规则命中即阻断、连"全放行"模式也拦不住它——deny 是硬边界;而 hook 官方明说是 best-effort，一个用 shell 条件过滤的 hook 解析不了输入就 fail-open 照放。所以官方直接告诫：要硬 allow/deny，请用 permission 系统、别用 hook【规范/官方文档】。
+业界的实现把这条线画得很清楚。Anthropic 的权限体系有一个六步求值序，deny 规则命中即阻断、连"全放行"模式也拦不住它——deny 是硬边界;而 hook 是软的：它执行失败——退出码非 0 非 2、HTTP 非 2xx、连接失败或超时——官方一律记为 non-blocking error，动作照常继续;连 `if` 匹配器都只算 best-effort，Bash 命令解析不了就不按模式过滤、照跑不误。所以官方直接告诫：要硬 allow/deny，请用 permission 系统、别用 hook【规范/官方文档】。
 
 OpenAI Codex 的 execpolicy 把命令分三档——allow / prompt / forbidden，规则自带 match/not_match 并在加载期自测;它的 shell 提权走 Run / Escalate / Deny 三态协议，升级是显式动作、留痕【厂商实践】。这些实例的共同形态，就是本章开篇那句主张的落地：把强制点放在模型够不着的地方。
 
@@ -27,7 +27,7 @@ OpenAI Codex 的 execpolicy 把命令分三档——allow / prompt / forbidden�
 
 权力的默认值应该是"最少"。两条相关的最小化：**最小权限**（least privilege，能完成任务的最小权限集）和**最小自主**（least agency，完成任务所需的最低自主度）——一个只需要读三个文件的任务，不该拿到整盘写权;一个只需要建议的步骤，不该拿到直接执行权。默认收窄、需要时显式升级、每次升级留痕，是权限工程的基本姿态，Codex 那个"整盘默认只读、可写根显式打开"的沙箱就是这条的实现（11.4 节展开）。
 
-分身尤其要收窄。subagent 的权限默认必须比父窄，且绝不自动继承父的"全放行"。这里有一个典型陷阱：subagent 继承父进程的 bypass 权限、又无法逐个覆盖，等于给分身发了全系统的钥匙——这个"继承且无法逐个覆盖"的细节由 Anthropic 官方文档明标为风险点【规范/官方文档】;一篇预印本把这类残留授权命名为 Lingering Authority（残留授权，arXiv:2606.22504）并作一般性分析【预印】。配套中继服务里有个同族的实物：一个 skill 的激活状态，注释声称是会话级作用域，实际却按项目路径缓存、跨会话共享——声明的 scope 和真实的 scope 对不上，权限就在没人察觉的地方蔓延了【经验】。作用域是声明出来的，更得是可验证的：注释说了不算，得能查。收窄也有代价：收过头，subagent 每做一步都得回父进程要权限，任务被升级请求切成碎片;要卡的刻度是"完成这个子任务所需的最小集"，一味求窄反而添乱。
+分身尤其要收窄。subagent 的权限默认必须比父窄，且绝不自动继承父的"全放行"。这里有一个典型陷阱：subagent 继承父进程的 bypass 权限、又无法逐个覆盖，等于给分身发了全系统的钥匙——这个"继承且无法逐个覆盖"的细节由 Anthropic 官方文档明标为风险点【规范/官方文档】。与它相邻、方向却相反的另一种失效是授权用完不回收——一篇预印本把这种毛病命名为 Lingering Authority（残留授权）：为某个子目标临时开出的资源/副作用能力，在那个子目标关闭之后仍挂在 planner 的接口上（arXiv:2606.22504）【预印】。两者都是权力比需要的多，一个错在委派时没收窄，一个错在用完没收回。配套中继服务里有个同族的实物：一个 skill 的激活状态，注释声称是会话级作用域，实际却按项目路径缓存、跨会话共享——声明的 scope 和真实的 scope 对不上，权限就在没人察觉的地方蔓延了【经验】。作用域是声明出来的，更得是可验证的：注释说了不算，得能查。收窄也有代价：收过头，subagent 每做一步都得回父进程要权限，任务被升级请求切成碎片;要卡的刻度是"完成这个子任务所需的最小集"，一味求窄反而添乱。
 
 ## 11.4 隔离的四个面
 
@@ -118,8 +118,8 @@ assessor 版本：问被评团队一个问题——"高风险操作批准之后�
 
 > （编辑工作区：本节出版前整体删除。）
 
-- 【规范/官方文档】Anthropic — Configure permissions（六步求值序、deny 恒胜、bypass 拦不住 deny、subagent 继承 bypassPermissions）＋ Hooks reference（32 事件、exit 2 阻断、hook best-effort/permission 硬边界、fail-open 告诫）（11.2/11.3；终稿前回核）。指针 research/volume2/03。
+- 【规范/官方文档】Anthropic — Configure permissions（六步求值序、deny 恒胜、bypass 拦不住 deny、subagent 继承 bypassPermissions）＋ Hooks reference（32 事件、exit 2 阻断、其余非 0 退出码与 HTTP 非 2xx/连接失败/超时一律 non-blocking error 且执行继续、`if` 匹配器 best-effort 且解析失败时 fail open、"硬 allow/deny 请用 permission 系统"告诫）（11.2/11.3；终稿前回核）。指针 research/volume2/03。
 - 【厂商实践】OpenAI Codex — execpolicy 三档 allow/prompt/forbidden＋规则加载期自测、shell-escalation Run/Escalate/Deny 三态、bubblewrap 默认整盘只读＋分层覆盖＋.git/.codex 只读绑定、macOS Seatbelt（11.2/11.3/11.4；终稿前回核）。指针 research/volume2/07。
-- 【预印】Lingering Authority（arXiv:2606.22504）——subagent 继承父 bypass 的残留授权/权限蔓延（11.3）。终稿前回核论文结论与编号。
+- 【预印】Lingering Authority（arXiv:2606.22504，单作者，2026-06）——子目标关闭后未回收的临时资源/副作用能力，是时间维的残留；与 subagent 继承父 bypass（委派维未收窄）是两类失效，论文全文不涉 subagent/继承（11.3）。终稿前回核论文结论与编号。
 - 【经验】配套中继服务与桌面案例项目审计：hook 静默 fail-open（11.2/common-mode）、skill 激活状态跨会话按 projectPath 泄漏（11.3）、"只读"工具集藏 web 外发跑在 policy 前（11.4）、PII vault 跨请求共享可变映射（11.4）——admission 顺序 run lease→不可变 RunContext→policy→外呼。指针 research/volume2/11 条 24/25/26/27。
 - 回指素材：第一章 1.2 节（权限契约那格"谁以谁的身份、在什么边界内行动"）、硬控制走模型外总纲（第二章 T4 落点）;第四章 4.8 节（五平面/干预点下沉标位）;第五章（租约）;第六章 6.11 节（三生命周期分离）、工作制品 I Lifetime Matrix（approval/lease/token/credential 行）;第七章 7.8 节（state continuity 推不出 authority continuity）;第八章 8.3 节（committed_under、提交点验执行权）、工作制品 B policy_decision_ref;第九章 9.8 节（挂起恢复授权重验）;第十章（压缩/memory/删除的授权接口）;工作制品 C（policy.decided 事件）、D（Runtime Trust Boundary）、F（Intervention Point Map）。

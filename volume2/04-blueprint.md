@@ -66,18 +66,18 @@
 
 蓝图立完，摆进业界坐标里对位。§一 1.4 的三家对照是轮廓级（谁的哪块格子厚）；本章升格为逐组件映射——每张卡在三家各叫什么、空位在哪【厂商实践，依据各家公开文档整理，终稿前逐格回核】：
 
-| 本卷组件 | Temporal | LangGraph | Claude Code |
+| 本卷组件 | Temporal | LangGraph（OSS 图库） | Claude Code |
 |---|---|---|---|
 | 状态层 | workflow state（重放重建） | checkpointer 持久化的 state dict | session jsonl（同一份，状态即回放） |
 | 事件流 | event history（核心资产） | checkpoint 序列（近似） | transcript 事件行（与左格同一制品） |
 | 证据存储 | —（history 兼职，无验证归档位） | —（无独立证据层，checkpoint 不含验证结论） | transcript 兼职，无独立对账层 |
-| run manager | Temporal Server（准入/重试/定时） | —（invoke 由调用方自管） | 单进程内隐式（session 级） |
+| run manager | Temporal Server（准入/重试/定时） | —（OSS 库：invoke 由调用方自管；托管的 Agent Server 有 Runs API、cron jobs 与 double-texting 四裁决，这格由平台盖住） | 单进程内隐式（session 级） |
 | agent loop | workflow 代码（须确定性） | graph 的节点执行 | 内置 agent loop |
 | model adapter | activity（记录复用不重调） | 节点内自调（无调用级留档，崩在节点半途即重调） | 内置（transcript 留档） |
 | tool executor | activity（同上） | tool node（副作用语义自管） | tool_use 块＋hook/permission 门 |
 | 入口层 | client SDK | 调用方应用 | CLI/IDE 前端 |
 
-空位的读法沿 §三 3.9 的结论：空格不是缺陷指控，是"引入之后照样得自建"的清单。三家各有成片的厚区——Temporal 的事件流与恢复、LangGraph 的图编排、Claude Code 的交互与权限门。证据存储一列，本表三家都没有给它独立位置：Temporal 由 history 兼职、Claude Code 由 transcript 兼职、LangGraph 无对应层，都得靠别的组件代偿。这与 §一 1.3 检验的合同没人签也没人验的诊断，在这三家身上对上了；是不是整个工业界的普遍空位，样本只有三家，本卷不外推。选型的正确姿势因此不变：先画满自己的八张卡，再看候选方案盖住几张，盖不住的格子提前进排期。
+空位的读法沿 §三 3.9 的结论：空格不是缺陷指控，是"引入之后照样得自建"的清单。表里填的是各家最常被引入的形态——Temporal 那列是 Server，LangGraph 那列是 OSS 图库；同一家的托管平台若已经盖住某格（Agent Server 的 run 管理就是一例），选型时得按平台版重填这一行。三家各有成片的厚区——Temporal 的事件流与恢复、LangGraph 的图编排、Claude Code 的交互与权限门。证据存储一列，本表三家都没有给它独立位置：Temporal 由 history 兼职、Claude Code 由 transcript 兼职、LangGraph 无对应层，都得靠别的组件代偿。这与 §一 1.3 检验的合同没人签也没人验的诊断，在这三家身上对上了；是不是整个工业界的普遍空位，样本只有三家，本卷不外推。选型的正确姿势因此不变：先画满自己的八张卡，再看候选方案盖住几张，盖不住的格子提前进排期。
 
 ## 4.7 部署形态一页
 

@@ -27,9 +27,9 @@
 
 ## 7.4 journal 路线：账本重放，动作出账
 
-第二条路线不存状态快照，存事件账本。代表是 workflow 引擎 Temporal 与 Restate：workflow 代码要求确定性，全部执行历史进 event history；崩溃后把代码从头重放一遍，已完成步骤的结果从账本按原样返回、不重新执行，走到第一个没有记录的步骤，恢复完成【规范/官方文档，Temporal/Restate 文档】。一切不确定的、有副作用的操作——模型调用、工具执行、取时间、取随机数——必须收进 Activity（Restate 以 ctx.run 一类 durable 原语承载），在账本上占一行：决策靠重放重建，动作靠账本免重做。
+第二条路线不存状态快照，存事件账本。代表是 workflow 引擎 Temporal 与 Restate：workflow 代码要求确定性，全部执行历史进 event history；崩溃后把代码从头重放一遍，已完成步骤的结果从账本按原样返回、不重新执行，走到第一个没有记录的步骤，恢复完成【规范/官方文档，Temporal/Restate 文档】。有副作用的外部操作——模型调用、工具执行——必须收进 Activity（Restate 以 ctx.run 承载），在账本上占一行。取时间、取随机数不进 Activity，走的是 SDK 备好的确定性 API：Temporal 各 SDK 的 replay-safe 时钟与随机数接口，结果一样进 event history；Restate 的 ctx.date 与 ctx.rand 另走一路，后者按 invocation ID 播种，重放时算出同一个值。纪律是同一条——凡不确定，皆留痕；区别只在外部副作用要跨进程出账，时间与随机数定住一个值就够。决策靠重放重建，动作靠账本免重做。
 
-这条路线与 agent 的契合度，有一个工业实例可以量出来：Temporal 与 OpenAI Agents SDK 的集成把 Runner 改成抽象基类、由 Temporal 提供实现，agent 侧代码几乎不动，每次模型调用与工具调用被隐式包成 Activity【厂商实践，Temporal 官方博客】。agentic loop 在 workflow 里就是普通的 while 循环——"把 agent loop 变 durable 的最小改动面"大约就是这个量级。本卷第一章 1.4 节引 Temporal 当 model adapter 的工业先例，出处即此。
+这条路线与 agent 的契合度，有一个工业实例可以量出来：Temporal 与 OpenAI Agents SDK 的集成把 Runner 改成抽象基类、由 Temporal 提供实现，agent 定义与编排代码基本不动，每次 agent 调用被隐式包成 Activity（当前文档口径是模型调用）【厂商实践，Temporal 官方博客】。工具不在隐式之列：要走 Activity 必须逐个显式包装（Python 的 activity_as_tool、TypeScript 的 activityAsTool），留在 workflow 内的内联工具受确定性约束、不得做 I/O【规范/官方文档，Temporal OpenAI Agents SDK 集成文档】。agentic loop 在 workflow 里就是普通的 while 循环——编排一侧"把 agent loop 变 durable 的最小改动面"就是这个量级；工具那一侧要逐个重写，才是迁移成本里最大的一块。本卷第一章 1.4 节引 Temporal 当 model adapter 的工业先例，出处即此。
 
 两条路线摆在一起，差异一句话：checkpoint 存"走到哪了"，journal 存"每步拿到了什么"。
 
@@ -150,7 +150,8 @@ assessor 版本：不用动手，问一个问题——"上一次生产环境进�
 
 - 【规范/官方文档】LangGraph durable execution／durability 三档（exit/async/sync）、checkpoint 分叉 time travel（7.3、7.8；终稿前回核当前文档，注意 LangGraph 1.0 后参数名变动）。指针 research/volume2/05。
 - 【规范/官方文档】Temporal（event history、确定性约束、Activity、heartbeat/超时分层）、Restate（journal、durable step、单派发）（7.4、7.6、7.9；终稿前回核）。指针 research/volume2/05、07。
-- 【厂商实践】Temporal 官方博客——OpenAI Agents SDK 集成（Runner 抽象基类、每次调用隐式 Activity 化）（7.4；终稿前回核）。指针 research/volume2/07 §1。
+- 【厂商实践】Temporal 官方博客——OpenAI Agents SDK 集成（Runner 抽象基类、每次 agent 调用隐式 Activity 化）（7.4；终稿前回核）。指针 research/volume2/07 §1。
+- 【规范/官方文档】Temporal OpenAI Agents SDK 集成文档（AI cookbook 与 TypeScript 集成页）——模型调用走 Activity、工具需显式包装（activity_as_tool／activityAsTool）、内联工具不得做 I/O（7.4；终稿前回核）。
 - 【厂商实践，利益相关】Diagrid——"checkpoints are not durable execution"批评（失败检测/恢复触发/跨实例协调三问）（7.3、7.9；竞争方立场已在正文标注，终稿前回核原文）。指针 research/volume2/05。
 - 【规范/官方文档】Agent SDK session fork（7.8，回指第六章）；OpenAI Responses TTL（Response 默认 30 天、挂 Conversation 无 TTL）（7.8；终稿前回核）。指针 research/volume2/03、04。
 - 【经验】桌面案例项目：\[已中断\] 恢复裁决实测（回指第三章）；内部审计的 durable intent/result 增量铺开路线（破坏实验实证分层；指针 research/volume2/11 条 10/30）。

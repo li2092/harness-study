@@ -53,13 +53,13 @@
 
 证据面记得越全，越撞上另一条线：里面的内容本身是隐私。
 
-证据里的 content——对话、工具的输入输出、抓回来的网页——默认都要按敏感数据处理。这一点有厂商实践作参照：Anthropic 多 agent 生产 tracing 监控的是决策模式与交互结构，对话内容本身要单独授权才采集；Codex rollout-trace 把它概括成一句"tracing is not telemetry"——追溯用的证据和遥测统计用的数据分两条线管，采集深度各自授权（两家都是厂商实践、非中立基准，本章借其口径不借其背书）。失效根因是：证据面为了可诊断，最顺手的做法就是把所有 content 原样全收，收全了就是一处隐私隐患。所以这里划一条界，采集与保留的完整治理移交第三卷，本章只立接口。代价是隐私换可观测的深度——想留细粒度的 content 去深挖，就得显式授权、按敏感数据的规矩管，不能默认全收。
+证据里的 content——对话、工具的输入输出、抓回来的网页——默认都要按敏感数据处理。这一点有厂商实践作参照。Anthropic 多 agent 生产 tracing 监控的是决策模式与交互结构，单次对话的内容一概不监控，理由就是保用户隐私。Codex rollout-trace 走的是另一条路：不设 CODEX_ROLLOUT_TRACE_ROOT 就不写，写也只落本地 bundle、从不上传，bundle 里的 prompt、响应、工具输入输出一律按敏感数据处置——一句"tracing is not telemetry"把追溯用的证据和遥测统计用的数据分成两条线（两家都是厂商实践、非中立基准，本章借其口径不借其背书）。失效根因是：证据面为了可诊断，最顺手的做法就是把所有 content 原样全收，收全了就是一处隐私隐患。所以这里划一条界，采集与保留的完整治理移交第三卷，本章只立接口。代价是隐私换可观测的深度——想留细粒度的 content 去深挖，就得显式授权、按敏感数据的规矩管，不能默认全收。
 
 ## 13.8 为什么信这个模型：可执行信念的证据边
 
 前面七节管的是"发生过什么"的证据。还有一类系统，它的核心是一个会变的判断——可执行的 Belief/World Model（第六章 6.12 立的：agent 把当前对世界的理解写成一段可执行代码）。对这类系统，证据面要多回答一个问题：系统凭什么相信当前这个模型，又是什么证据推翻了它？
 
-这靠给入门卷已立的 Evidence Graph（工作制品 X 继承其对账边定义）补七条认识论边、不另造一张平行图谱：observation 为 model 提供依据（grounds）、model 预测某个 transition（predicts）、完整历史为 model 背书（certifies）、反例推翻 model（refutes）、plan 从某个 model 版本派生（derived_from）、commit 兑现 plan（realizes）、预测与观察不符则废止剩余计划（invalidates）。入门卷的 Evidence Graph 回答"动作、结果、artifact、完成声明怎么对账"，这七条边补上"信念的来路与去路"。
+这靠给工作制品 X 的四条对账边补七条认识论边、不另造一张平行图谱：observation 为 model 提供依据（grounds）、model 预测某个 transition（predicts）、完整历史为 model 背书（certifies）、反例推翻 model（refutes）、plan 从某个 model 版本派生（derived_from）、commit 兑现 plan（realizes）、预测与观察不符则废止剩余计划（invalidates）。四条对账边回答"动作、结果、artifact、完成声明怎么对上"，这七条边补上"信念的来路与去路"。入门卷 §8.4 那十条边登记的是跨件、跨 cell 的可观测关系，与本卷这两组互补，不是同一张图。
 
 其中最经不起含糊的一条是 certifies 必须带 scope。用完整历史 backtest 一个模型，只证明它解释了已经见过的样本（retrodictive consistency），绝不证明它在没见过的状态上还成立（generalization）。所以 Model Certificate（工作制品 Z）不能只写一句 backtest=green，至少要并列记五类测试——full-history replay、prospective 下一步预测、held-out 转移、invariant 属性测试、planner-adversarial（让 planner 主动去找模型漏洞）——外加 scope、history cursor、生成 provenance（模型／提示／工具版本）和已知反例，正好补齐第六章 6.12 给信念工件规定的那四件随身证据。一个公开的 model-based harness 项目的保留轨迹佐证这套机制确有其事：逐行统计里，9 次误预测均触发了重新建模与提交流程（1:1 先后对应属推断，终稿回核）【厂商实践／项目自述，只引轨迹统计、不引其自述分数】——"预测错即计划失效"可从公开工件复算、非独立受控消融。这一节把观察→建模→认证→规划→提交这条链，加上反例回填这条返回边，合成一个可验证的反馈环。代价是建一份像样的 certificate 是笔实打实的额外工程，且只在"可显式建模"的域才划算——状态紧凑、转移大体确定、真实动作昂贵而内部仿真便宜；域选错了，这份工程就白花在一个"仿真并不比真跑省"的地方，所以不要求每个任务都去建一个 simulator。
 
@@ -85,9 +85,9 @@
 ## 交付物
 
 1. **Event Schema v2**（工作制品 C 升级，13.1-13.5 主场）——correlation 八级补全、补 detector 与 certificate 相关事件类型；
-2. **Evidence Graph**（工作制品 X 新增，13.8 节）——对账边（动作/结果/artifact/完成声明）＋认识论七边（grounds/predicts/certifies/refutes/derived_from/realizes/invalidates），继承入门卷的边定义；
+2. **Evidence Graph**（工作制品 X 新增，13.8 节）——对账边（动作/结果/artifact/完成声明）＋认识论七边（grounds/predicts/certifies/refutes/derived_from/realizes/invalidates），两组均本卷新立，与入门卷十边互补；
 3. **Detector Test Record**（工作制品 Y 新增，13.6 节）——每个检测器的 sabotage 测试记录：喂什么坏样本、期望触发、实际触发、上次验证时间；
-4. **Model Certificate**（工作制品 Z 新增，13.8 节）——五类测试＋scope／history cursor／model version／已知反例，不接受只写 backtest=green；
+4. **Model Certificate**（工作制品 Z 新增，13.8 节）——五类测试＋scope／history cursor／生成 provenance（模型／提示／工具版本）／已知反例，不接受只写 backtest=green；
 5. **Counterexample Event**（回指工作制品 N，第八章交付）；detector/certificate fixture（第十四章工单）。
 
 近道读者可单取工作制品 Y（Detector Test Record）作评审尺——问被评系统一句"你们每个报警器，最后一次被验证'确实会响'是什么时候？"答不上来的，那层监控就是账面上的、未经自证的。
