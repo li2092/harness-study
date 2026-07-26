@@ -20,7 +20,7 @@ FOOTER = ('<div style="font-family:\'Inter\',\'Noto Sans SC\',sans-serif;font-si
           'color:#9a93a6;width:100%;padding:0 14mm;text-align:center;"><span class="pageNumber"></span></div>')
 HEADER = "<span></span>"  # 页眉全部改由 fitz 逐页绘制，避免双渲染器错位
 BODY_MARGIN = {"top": "20mm", "bottom": "16mm", "left": "14mm", "right": "14mm"}
-META = {"title": "Harness Study · Harness 运行时架构（架构与工程卷）", "author": "Jinming Li",
+META = {"title": "Harness Study · 架构与工程卷", "author": "Jinming Li",
         "subject": "语义正确、可中断、可恢复、可验证的 Agent Harness runtime 怎么造",
         "creator": "Harness Study build pipeline",
         "keywords": "harness, agent, LLM, 智能体, runtime, 运行时架构, durable execution, agent harness"}
@@ -124,7 +124,7 @@ for src in range(b2.page_count):
 NOTOSC = str(HERE / "fonts" / "NotoSansSC.ttf")  # OFL 中文无衬线
 YFONT = fitz.Font(fontfile=NOTOSC)
 HDR_RGB = (0x6b / 255, 0x64 / 255, 0x78 / 255)   # --t3 灰
-BOOK_TITLE = "Harness Study · 运行时架构"
+BOOK_TITLE = "Harness Study · 架构与工程卷"
 GRAD_A = (0x6d / 255, 0x28 / 255, 0xd9 / 255)     # --purple
 GRAD_B = (0x8b / 255, 0x5c / 255, 0xf6 / 255)     # --purple-soft
 HX0, HX1, HSIZE = 40.0, 555.0, 7.5                # 页眉左右边界 + 字号

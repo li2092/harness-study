@@ -1,4 +1,4 @@
-# Harness Study · 第二卷《Harness 运行时架构》· 正文
+# Harness Study · 第二卷《架构与工程卷》· 正文
 
 > **本卷定位**：怎样构造一个语义正确、可中断、可恢复、可验证的 Agent Harness runtime。入门卷（`../introduction/`）讲部件学；本卷讲这些部件怎样组成一个正确的运行时。生产工程（数据库运维、安全治理、发布、SRE、成本）在第三卷。
 >

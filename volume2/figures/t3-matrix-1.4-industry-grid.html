@@ -1,0 +1,127 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="_base.css">
+<style>
+  .wrap{margin-top:24px}
+  .mtx{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;
+    border-radius:var(--radius);overflow:hidden;border:1px solid var(--divider);box-shadow:var(--shadow)}
+  .mtx th{background:var(--purple);color:#fff;font-family:var(--f-head);font-weight:700;
+    padding:11px 10px 10px;text-align:left;font-size:15px;line-height:1.3;vertical-align:top}
+  .mtx th.axis{background:var(--purple-dark);font-size:14.5px}
+  .mtx th .pl{display:block;font-family:var(--f-label);font-size:14px;font-weight:700;
+    letter-spacing:.02em;opacity:.78;margin-top:4px;line-height:1.35}
+  .mtx td{padding:11px 10px;border-top:1px solid var(--divider);font-size:14px;
+    color:var(--t2);line-height:1.45;vertical-align:top;background:var(--card)}
+  .mtx tr td:first-child{font-family:var(--f-head);font-weight:700;color:var(--t1);
+    font-size:15px;background:var(--purple-muted)}
+  .mtx tr td:first-child .q{display:block;font-weight:400;color:var(--t3);font-size:13.5px;margin-top:3px;line-height:1.4}
+  .full{background:rgba(6,122,91,.07) !important;color:var(--t1)}
+  .full .n{display:inline-block;font-family:var(--f-label);font-size:13px;font-weight:700;color:#fff;
+    background:var(--green);border-radius:4px;padding:1px 7px;margin-bottom:4px}
+  .half{background:rgba(181,106,9,.07) !important;color:var(--t1)}
+  .half .n{display:inline-block;font-family:var(--f-label);font-size:13px;font-weight:700;color:#fff;
+    background:var(--amber);border-radius:4px;padding:1px 7px;margin-bottom:4px}
+  .gap{background:#fff !important;color:var(--t1);box-shadow:inset 0 0 0 2px var(--red)}
+  .gap .n{display:inline-block;font-family:var(--f-label);font-size:13px;font-weight:700;color:#fff;
+    background:var(--red);border-radius:4px;padding:1px 7px;margin-bottom:4px}
+
+  .lgd{display:flex;gap:22px;align-items:center;margin-top:13px;font-size:14.5px;color:var(--t3);flex-wrap:wrap}
+  .lgd i{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:7px}
+  .i-full{background:rgba(6,122,91,.18);border:1px solid var(--green)}
+  .i-half{background:rgba(181,106,9,.18);border:1px solid var(--amber)}
+  .i-gap{background:#fff;border:2px solid var(--red)}
+  .i-na{background:var(--card);border:1px solid var(--divider)}
+
+  .find{margin-top:18px;border:1px solid var(--divider);border-left:4px solid var(--purple-dark);
+    border-radius:8px;background:var(--card);padding:14px 18px;box-shadow:var(--shadow)}
+  .find h4{font-family:var(--f-head);font-size:19px;font-weight:800;color:var(--t1);margin-bottom:7px}
+  .find p{font-family:var(--f-body);font-size:16.5px;color:var(--t2);line-height:1.6}
+  .find b{color:var(--t1)}
+
+  .notes{display:flex;gap:18px;margin-top:16px}
+  .nc{flex:1;border:1px solid var(--divider);border-left:4px solid var(--purple);
+    border-radius:8px;background:var(--card);padding:13px 17px;box-shadow:var(--shadow)}
+  .nc.warn{border-left-color:var(--amber)}
+  .nc h4{font-family:var(--f-head);font-size:18px;font-weight:700;color:var(--t1);margin-bottom:6px}
+  .nc p{font-family:var(--f-body);font-size:16.5px;color:var(--t2);line-height:1.6}
+  .nc b{color:var(--t1)} .nc .k{font-family:var(--f-head);font-weight:700;color:var(--purple-dark)}
+  .nc.warn .k{color:var(--amber)}
+</style></head>
+<body><div class="canvas"><div class="grid-bg"></div><div class="inner">
+  <span class="label-type">Harness Study · 第二卷 1.4</span>
+  <h1>业界三家摆进同一张矩阵：<span class="em">厚区、明码的代价、点名的空格</span></h1>
+  <div class="sub">坐标系的第二个用途：把业界方案摆进同一张矩阵，看清各家把力气花在哪些格子。横轴与检验矩阵<b>逐列相同</b>。轮廓级对照——<b>只画正文点名的格</b>，空白不是判空，是本卷未表态。</div>
+  <hr class="rule">
+
+  <div class="wrap">
+  <table class="mtx">
+    <colgroup>
+      <col style="width:12%"><col style="width:14.6%"><col style="width:14.6%">
+      <col style="width:14.6%"><col style="width:14.6%"><col style="width:14.6%"><col style="width:15%">
+    </colgroup>
+    <thead><tr>
+      <th class="axis">三家<span class="pl">横轴不动</span></th>
+      <th>真相契约<span class="pl">状态可归属</span></th>
+      <th>转移契约<span class="pl">转移可解释</span></th>
+      <th>副作用契约<span class="pl">副作用可对账</span></th>
+      <th>交互契约<span class="pl">失败可收敛</span></th>
+      <th>权限契约<span class="pl">权力有边界有期限</span></th>
+      <th>证据契约<span class="pl">结论有证据</span></th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td>Temporal<span class="q">workflow 引擎</span></td>
+        <td class="full"><span class="n">厚</span>全部执行历史进 event history，崩溃后确定性重放重建状态</td>
+        <td class="full"><span class="n">厚</span>模型调用收进 activity、记录在案，重放时复用不重调——"复用记录、永不重跑"的工业先例</td>
+        <td></td>
+        <td></td>
+        <td class="gap"><span class="n">空</span>agent 特有的权限时效不在它的模型里</td>
+        <td class="gap"><span class="n">空</span>重放保证的是"执行到了哪一步"，不是"这一步做得对"</td>
+      </tr>
+      <tr>
+        <td>LangGraph<span class="q">图编排框架</span></td>
+        <td class="half"><span class="n">半</span>三档 durability（exit/async/sync）；async 档的丢失窗口写在文档里——代价明码标价；state 是自定义字典，谁能写不强制</td>
+        <td></td>
+        <td class="gap"><span class="n">空</span>副作用怎么对账，框架不强制——履行推给使用者</td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>Claude Code<span class="q">编码 agent 产品</span></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td class="full"><span class="n">厚</span>session 以 append-only jsonl 落盘、可 resume</td>
+        <td class="full"><span class="n">厚</span>hook 与 permission 体系给了可控性的干预点</td>
+        <td class="gap"><span class="n">薄</span>transcript 记了过程，但"声称与实际的机器对账"没有硬门——假通过要靠 harness 之外的检查兜底</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="lgd">
+    <span><i class="i-full"></i>厚：正文点名的厚区</span>
+    <span><i class="i-half"></i>半：给了机制，代价明码标价</span>
+    <span><i class="i-gap"></i>空／薄：正文点名的空格</span>
+    <span><i class="i-na"></i>空白＝轮廓级未表态，不是判空</span>
+  </div>
+  </div>
+
+  <div class="find">
+    <h4>三家没有一家六格全实</h4>
+    <p>这不构成对谁的指控——每家的取舍都对应自己的负载画像。但它说明<b>矩阵的空格子是真实的工程债</b>，也是本卷后面十三章要逐格填的内容。选型的正确姿势由此而来：先画满自己的矩阵，再看候选方案盖住哪些格——<b>盖不住的格子，引入之后照样得自己建</b>。</p>
+  </div>
+
+  <div class="notes">
+    <div class="nc">
+      <h4>与第四章那张表怎么分工</h4>
+      <p>本图按<b>六份契约</b>切，答"各家力气花在哪些格子"；第四章 4.6 的逐组件映射按<b>八个组件</b>切，答"每张卡在三家各叫什么"。<span class="k">两张的空位读法同源</span>：空格不是缺陷指控，是"引入之后照样得自建"的清单。</p>
+    </div>
+    <div class="nc warn">
+      <h4>轮廓级的诚实边界</h4>
+      <p>图上只画正文点名的格，其余一律留白——<b>空白格是"本卷没查"，不是"它没有"</b>。三家的逐格实况以各家当前文档为准（终稿前逐格回核）；半实那格最值得学的是姿态：<span class="k">async 档的丢失窗口写在官方文档里</span>，把默认值的残留卖成了一个自觉的选项。</p>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div><span class="dot"></span>《Harness Study · 架构与工程卷》1.4 坐标系的第二个用途 · 对照图 1.5 检验矩阵（逐列同轴）· 第四章 4.6 逐组件映射</div>
+  </div>
+</div></div></body></html>
