@@ -69,20 +69,20 @@
     <path class="drop" d="M986,98 L986,122"/>
     <text class="amb" x="215" y="115" style="fill:#b3372a">agent 一来，三个逐个失效，而且是无声的</text>
 
-    <!-- 二层：三个变量与三类口子 -->
-    <text class="band" x="14" y="140" style="fill:#b3372a">二 · 变量与它划开的口子（1.1／1.2 节）</text>
+    <!-- 二层：三个变量与三类威胁 -->
+    <text class="band" x="14" y="140" style="fill:#b3372a">二 · 变量与它导致的威胁（1.1／1.2 节）</text>
     <g><rect class="vb" x="14" y="148" width="376" height="80" rx="10"/>
       <text class="vt" x="34" y="176">执行跨越故障边界</text>
       <text class="vs" x="34" y="200">进程活不满全程</text>
-      <text class="vs" x="34" y="220">口子：<tspan font-weight="700" fill="#b3372a">状态撕裂</tspan>——中间成果在内存，真相在磁盘</text></g>
+      <text class="vs" x="34" y="220">威胁：<tspan font-weight="700" fill="#b3372a">状态撕裂</tspan>——中间成果在内存，真相在磁盘</text></g>
     <g><rect class="vb" x="406" y="148" width="376" height="80" rx="10"/>
       <text class="vt" x="426" y="176">副作用泄向外部世界</text>
       <text class="vs" x="426" y="200">每一步都可能改文件、发消息、花钱</text>
-      <text class="vs" x="426" y="220">口子：<tspan font-weight="700" fill="#b3372a">账对不上</tspan>——返回成功 ≠ 外部世界成功</text></g>
+      <text class="vs" x="426" y="220">威胁：<tspan font-weight="700" fill="#b3372a">结果对不上</tspan>——返回成功 ≠ 外部世界成功</text></g>
     <g><rect class="vb" x="798" y="148" width="376" height="80" rx="10"/>
       <text class="vt" x="818" y="176">核心组件的输出不确定</text>
       <text class="vs" x="818" y="200">同一份输入，两次输出可以不同</text>
-      <text class="vs" x="818" y="220">口子：<tspan font-weight="700" fill="#b3372a">无从归因</tspan>——重放与对照双双失效</text></g>
+      <text class="vs" x="818" y="220">威胁：<tspan font-weight="700" fill="#b3372a">无从归因</tspan>——重放与对照双双失效</text></g>
 
     <!-- 二→三：反推出六份契约 -->
     <path class="e1" d="M150,228 L112,268"/>
@@ -114,7 +114,7 @@
       <text class="cs" x="1007" y="342" style="fill:#8b5cf6">← 归因：信任换证据</text></g>
 
     <line class="sepl" x1="14" y1="372" x2="1174" y2="372"/>
-    <text class="end" x="14" y="392"><tspan font-weight="700" fill="#6d28d9">三 · 站在救援者的位置反推（1.2 节）</tspan>——六份压成一句：<tspan font-weight="700" fill="#1a1428">每个状态有归宿，每个故障有路径，每个中断可恢复或诚实终结</tspan>。</text>
+    <text class="end" x="14" y="392"><tspan font-weight="700" fill="#6d28d9">三 · 从崩溃后的处境反推（1.2 节）</tspan>——六份压成一句：<tspan font-weight="700" fill="#1a1428">每个状态有归宿，每个故障有路径，每个中断可恢复或诚实终结</tspan>。</text>
     <text class="end" x="14" y="414">往下一层问"谁来守约"，八个组件就自己长出来了。</text>
 
     <!-- 四层：八个组件 -->
@@ -144,7 +144,7 @@
   <div class="notes">
     <div class="nc warn">
       <h4>第六份契约是唯一"算"出来的</h4>
-      <p>前五份各自对着一个口子反推；<b>权限契约来自两个变量的相乘</b>——输出不确定的组件，在长时执行中持有权力。不确定意味着边界不能靠 prompt 维持（模型可能被操纵，也可能单纯犯错），长时执行意味着授权要跨越崩溃、恢复与 fork。<span class="k">图上那两条虚线，就是这次相乘。</span></p>
+      <p>前五份各自对着一类威胁反推；<b>权限契约来自两个变量的相乘</b>——输出不确定的组件，在长时执行中持有权力。不确定意味着边界不能靠 prompt 维持（模型可能被操纵，也可能单纯犯错），长时执行意味着授权要跨越崩溃、恢复与 fork。<span class="k">图上那两条虚线，就是这次相乘。</span></p>
     </div>
     <div class="nc">
       <h4>凭什么至少是这六份，一份不缺</h4>
