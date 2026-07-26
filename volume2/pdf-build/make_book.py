@@ -139,7 +139,9 @@ for i, f in enumerate(files, 1):
         input=md, capture_output=True, text=True, encoding="utf-8", cwd=str(SRC))
     if r.returncode != 0:
         sys.stderr.write(f"[pandoc fail] {f.name}: {r.stderr[:300]}\n"); sys.exit(1)
-    body = FIG_RE.sub(fig_sub, r.stdout)
+    # 正文按 markdown 直读的相对路径写图（figures/…），而 book.html 生成在 pdf-build/ 下，
+    # 差一层目录——在这里补回来。
+    body = FIG_RE.sub(fig_sub, r.stdout.replace('src="figures/', 'src="../figures/'))
     frags.append(f'<section id="ch{i}" class="chapter">{body}</section>')
     pg = str(pages[i - 1]) if pages and i - 1 < len(pages) else ""
     toc.append(f'<li><a href="#ch{i}"><span class="ti">{html.escape(toc_title(title))}</span>'
