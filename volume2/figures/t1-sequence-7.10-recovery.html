@@ -12,6 +12,7 @@
   .src{fill:var(--purple-light);stroke:var(--purple);stroke-width:1.6}
   .srct{font-family:"JetBrains Mono",monospace;font-size:14px;font-weight:700;fill:var(--purple-dark)}
   .fail{font-family:var(--f-body);font-size:15px;fill:var(--red)}
+  .info{font-family:var(--f-body);font-size:15px;fill:var(--t3)}
   .ar{stroke:var(--purple);stroke-width:2.4;fill:none;marker-end:url(#ah)}
   .amb{fill:rgba(181,106,9,.09);stroke:var(--amber);stroke-width:2}
   .ambt{font-family:var(--f-head);font-size:15.5px;font-weight:700;fill:var(--amber)}
@@ -39,7 +40,7 @@
     </defs>
 
     <text class="hd" x="14" y="26">步骤</text>
-    <text class="hd" x="638" y="26">读哪件持久件</text>
+    <text class="hd" x="638" y="26">这一步的依据</text>
     <text class="hd" x="872" y="26">这一步的分支去向</text>
     <line class="lsep" x1="626" y1="34" x2="626" y2="614"/>
     <line class="lsep" x1="860" y1="34" x2="860" y2="614"/>
@@ -51,7 +52,7 @@
       <text class="ss" x="66" y="93">supervision 检测退出、退避重启</text></g>
     <g><rect class="src" x="638" y="58" width="210" height="32" rx="6"/>
       <text class="srct" x="654" y="79">supervisor</text></g>
-    <text class="fail" x="872" y="79">重启强度超限 → 停下呈人</text>
+    <text class="fail" x="872" y="79">重启强度超限 → 停止重启，呈现给人</text>
 
     <!-- 步 2 -->
     <path class="ar" d="M314,104 L314,126"/>
@@ -96,8 +97,8 @@
       <text class="ss" x="66" y="435">按 compaction 边界重组 context 投影</text></g>
     <g><rect class="src" x="638" y="400" width="210" height="32" rx="6"/>
       <text class="srct" x="654" y="421">工作制品 I · Lifetime</text></g>
-    <text class="fail" x="872" y="413">投影可重建，这步没有恢复负担；</text>
-    <text class="fail" x="872" y="435">子进程与句柄按 I 重建，不从 checkpoint 捞</text>
+    <text class="info" x="872" y="413">投影可重建，这步没有恢复负担；</text>
+    <text class="info" x="872" y="435">子进程与句柄按 I 重建，不从 checkpoint 捞</text>
 
     <!-- 步 6 -->
     <path class="ar" d="M314,446 L314,468"/>
@@ -125,8 +126,8 @@
 
   <div class="notes">
     <div class="nc">
-      <h4>七步，不是八步</h4>
-      <p>timer 扫描<b>并进步 2</b>，跟孤儿认领同一遍扫描完成——不单列一步。少一遍扫描，也少一处「两遍之间又崩了」的缝。</p>
+      <h4>timer 扫描不单列一步</h4>
+      <p>定时唤醒也是持久状态（7.7 节）：timer 表<b>并进步 2</b>，跟孤儿认领同一遍扫描完成——到期未触发的按既定 purpose 补触发或显式作废，每笔落事件。</p>
     </div>
     <div class="nc warn">
       <h4>恢复过程自己也要可观测</h4>

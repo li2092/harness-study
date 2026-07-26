@@ -1,0 +1,164 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="_base.css">
+<style>
+  .stage{margin-top:22px}
+  svg{display:block;width:100%;height:auto}
+  .lane{fill:rgba(26,20,40,.022)}
+  .lane-alt{fill:transparent}
+  .lsep{stroke:var(--divider);stroke-width:1}
+  .llab{font-family:var(--f-head);font-size:16px;font-weight:700;fill:var(--t1)}
+  .lsub{font-family:var(--f-label);font-size:11.5px;font-weight:700;fill:var(--t3);letter-spacing:.05em}
+  .trk{stroke:var(--purple);stroke-width:3.2;fill:none;stroke-linecap:round}
+  .trk-c{stroke:var(--purple-soft);stroke-width:2.8;fill:none;stroke-linecap:round}
+  .sp{stroke:var(--purple);stroke-width:2.2;fill:none;stroke-dasharray:6 5;marker-end:url(#ap)}
+  .mg{stroke:var(--green);stroke-width:2.4;fill:none;marker-end:url(#ag)}
+  .rj{stroke:var(--red);stroke-width:2.2;fill:none;stroke-dasharray:7 5;marker-end:url(#ar)}
+  .ann{font-family:var(--f-body);font-size:14.5px;fill:var(--t2)}
+  .ann-m{font-family:var(--f-body);font-size:14.5px;fill:var(--t3)}
+  .ann-g{font-family:var(--f-head);font-size:14.5px;font-weight:700;fill:var(--green)}
+  .ann-r{font-family:var(--f-body);font-size:14.5px;fill:var(--red)}
+  .gate{fill:var(--purple-light);stroke:var(--purple-dark);stroke-width:2.4}
+  .gt{font-family:var(--f-head);font-size:15.5px;font-weight:800;fill:var(--purple-dark)}
+  .gs{font-family:var(--f-body);font-size:13.5px;fill:var(--t2)}
+  .pin{fill:#fff;stroke:var(--amber);stroke-width:2.2}
+  .pinn{font-family:var(--f-head);font-size:16px;font-weight:800;fill:var(--amber)}
+  .card{fill:var(--card);stroke:var(--divider);stroke-width:1.6}
+  .cdt{font-family:var(--f-head);font-size:15px;font-weight:700;fill:var(--purple-dark)}
+  .cdc{font-family:var(--f-body);font-size:13.8px;fill:var(--t2)}
+  .scen{fill:rgba(179,55,42,.05);stroke:var(--red);stroke-width:2;rx:9}
+  .sct{font-family:var(--f-body);font-size:15px;fill:var(--red)}
+  .end{font-family:var(--f-body);font-size:16.5px;fill:var(--t2)}
+
+  .notes{display:flex;gap:18px;margin-top:20px}
+  .nc{flex:1;border:1px solid var(--divider);border-left:4px solid var(--purple);
+    border-radius:8px;background:var(--card);padding:13px 17px;box-shadow:var(--shadow)}
+  .nc.warn{border-left-color:var(--amber)}
+  .nc h4{font-family:var(--f-head);font-size:18px;font-weight:700;color:var(--t1);margin-bottom:6px}
+  .nc p{font-family:var(--f-body);font-size:16.5px;color:var(--t2);line-height:1.6}
+  .nc b{color:var(--t1)} .nc .k{font-family:var(--f-head);font-weight:700;color:var(--purple-dark)}
+  .nc.warn .k{color:var(--amber)}
+</style></head>
+<body><div class="canvas"><div class="grid-bg"></div><div class="inner">
+  <span class="label-type">Harness Study · 第二卷 12.4–12.7</span>
+  <h1>一次委派的生命周期：<span class="em">四张欠条钉在同一条时间线上</span></h1>
+  <div class="sub">父 run 派出两个分身，一个顺利、一个出岔——第十一章留下的四张欠条，各自落在这条线的哪一刻，看一遍就清楚。<b>底部那条红带是破坏实验的四个场景</b>：它们打的正是四张欠条的位置。</div>
+  <hr class="rule">
+
+  <div class="stage">
+  <svg viewBox="0 0 1188 560" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="ap" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6d28d9"/></marker>
+      <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#067a5b"/></marker>
+      <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b3372a"/></marker>
+    </defs>
+
+    <!-- 泳道 -->
+    <g>
+      <rect class="lane"     x="150" y="28"  width="1030" height="72"/>
+      <rect class="lane-alt" x="150" y="100" width="1030" height="60"/>
+      <rect class="lane"     x="150" y="160" width="1030" height="60"/>
+      <line class="lsep" x1="150" y1="28"  x2="1180" y2="28"/>
+      <line class="lsep" x1="150" y1="220" x2="1180" y2="220"/>
+    </g>
+    <text class="llab" x="10" y="60">父 run</text>
+    <text class="lsub" x="10" y="78">SPAWN · 等待 · 收敛</text>
+    <text class="llab" x="10" y="126">child A</text>
+    <text class="lsub" x="10" y="144">顺利的那个</text>
+    <text class="llab" x="10" y="186">child B</text>
+    <text class="lsub" x="10" y="204">出岔的那个</text>
+
+    <!-- 父轨迹 -->
+    <path class="trk" d="M180,64 L900,64"/>
+    <circle cx="180" cy="64" r="6" fill="#6d28d9"/>
+    <!-- spawn -->
+    <path class="sp" d="M240,70 L240,124"/>
+    <path class="sp" d="M240,124 L240,184"/>
+    <text class="ann" x="252" y="92">spawn＝又建两个 run——child 挂父 run_id，权限当场收窄</text>
+
+    <!-- child A -->
+    <path class="trk-c" d="M246,130 L700,130"/>
+    <circle cx="700" cy="130" r="6" fill="#067a5b"/>
+    <text class="ann" x="290" y="120">worktree A · 各改各的</text>
+    <path class="mg" d="M706,130 L820,72"/>
+    <text class="ann-g" x="712" y="152">跑完，回传</text>
+
+    <!-- child B -->
+    <path class="trk-c" d="M246,190 L560,190"/>
+    <g><line x1="566" y1="182" x2="582" y2="198" stroke="#b3372a" stroke-width="3"/>
+       <line x1="582" y1="182" x2="566" y2="198" stroke="#b3372a" stroke-width="3"/></g>
+    <text class="ann" x="290" y="180">worktree B · 各改各的</text>
+    <text class="ann-r" x="596" y="180">失败，或慢到超时</text>
+    <path class="rj" d="M590,190 L790,190 L820,80"/>
+    <text class="ann-m" x="640" y="212">按收敛判据处置：重试／降级／整批放弃——"没跑完"记 unknown，不许伪造成成功</text>
+
+    <!-- 收敛点 -->
+    <circle cx="826" cy="64" r="9" fill="#faf7f3" stroke="#067a5b" stroke-width="2.6"/>
+    <text class="ann-g" x="826" y="44" text-anchor="middle">merge · 单点收敛</text>
+
+    <!-- 校验门 -->
+    <g><rect class="gate" x="900" y="36" width="180" height="56" rx="9"/>
+      <text class="gt" x="990" y="58" text-anchor="middle">独立校验</text>
+      <text class="gs" x="990" y="78" text-anchor="middle">schema · 引用核对 · tripwire</text></g>
+    <path class="mg" d="M1080,52 L1160,52"/>
+    <text class="ann-g" x="1160" y="40" text-anchor="end">采信，落事件</text>
+    <path class="rj" d="M1080,84 L1130,84 L1130,110"/>
+    <text class="ann-r" x="1118" y="126" text-anchor="end">拒绝 → 回到失败处置（12.6）</text>
+
+    <!-- 四张欠条 pin -->
+    <g><circle class="pin" cx="240" cy="248" r="14"/><text class="pinn" x="240" y="254" text-anchor="middle">①</text></g>
+    <g><circle class="pin" cx="420" cy="248" r="14"/><text class="pinn" x="420" y="254" text-anchor="middle">②</text></g>
+    <g><circle class="pin" cx="700" cy="248" r="14"/><text class="pinn" x="700" y="254" text-anchor="middle">③</text></g>
+    <g><circle class="pin" cx="990" cy="248" r="14"/><text class="pinn" x="990" y="254" text-anchor="middle">④</text></g>
+
+    <g><rect class="card" x="14" y="276" width="278" height="96" rx="9"/>
+      <text class="cdt" x="30" y="300">① 权限取交集（12.4）</text>
+      <text class="cdc" x="30" y="322">有效权限＝agent ∩ user，两边都放行</text>
+      <text class="cdc" x="30" y="340">才放行；绝不自动继承父的"全放行"</text>
+      <text class="cdc" x="30" y="358">——工具面在定义处收窄</text></g>
+    <g><rect class="card" x="310" y="276" width="278" height="96" rx="9"/>
+      <text class="cdt" x="326" y="300">② 隔离 ≠ 协调（12.5）</text>
+      <text class="cdc" x="326" y="322">worktree 隔离只把冲突推迟到 merge；</text>
+      <text class="cdc" x="326" y="340">真正共享的状态要显式合并语义</text>
+      <text class="cdc" x="326" y="358">（reducer），写路径落回单点</text></g>
+    <g><rect class="card" x="606" y="276" width="278" height="96" rx="9"/>
+      <text class="cdt" x="622" y="300">③ 收敛判据显式定义（12.6）</text>
+      <text class="cdc" x="622" y="322">全成功／多数成功／关键子任务成功，</text>
+      <text class="cdc" x="622" y="340">配失败处置；框架只给前滚恢复，</text>
+      <text class="cdc" x="622" y="358">"部分成功怎么办"是父的职责</text></g>
+    <g><rect class="card" x="902" y="276" width="272" height="96" rx="9"/>
+      <text class="cdt" x="918" y="300">④ 回传默认不可信（12.7）</text>
+      <text class="cdc" x="918" y="322">回传是子 agent 的自述，不是外部世界</text>
+      <text class="cdc" x="918" y="340">替它作的证；校验器不得与被校验者</text>
+      <text class="cdc" x="918" y="358">共享同一个判断源（11.5）</text></g>
+
+    <!-- 破坏实验映射 -->
+    <g><rect class="scen" x="14" y="392" width="1160" height="52" rx="9"/>
+      <text class="sct" x="34" y="414">破坏实验四场景打的正是四张欠条的位置：①越权 subagent（超出交集的动作）②两 child 抢写同一 artifact</text>
+      <text class="sct" x="34" y="436">③慢 subagent 阻塞整批（永不返回）④恶意回传（注入指令／编造事实）——判定口径见本章破坏实验节</text></g>
+
+    <text class="end" x="14" y="478">subagent 是 <tspan font-weight="700" fill="#1a1428">child run，不是新物种</tspan>——这条时间线上每一站走的都是前十一章立好的规矩，多 agent 只是把它们递归地套在父子结构上（12.8）。</text>
+
+    <text class="ann-m" x="14" y="516">一手底座：配套实现项目里父 run 发 subagent 生命周期事件，child 有独立 run.jsonl／trajectory.jsonl、以父 run_id 关联；</text>
+    <text class="ann-m" x="14" y="538">worktree 隔离与并发收敛尚未接齐，照实记为待补格（第十四章工单）。</text>
+  </svg>
+  </div>
+
+  <div class="notes">
+    <div class="nc">
+      <h4>读写不对称</h4>
+      <p>并行地<b>读</b>可以扩展，并行地<b>写</b>会制造互相冲突的决策——所以收敛那一步必须落回单点。厂商自评数据：检索型任务上多 agent 比单 Opus 高 90.2%，代价是 token 约为单 agent 的 <b>3.75 倍</b>，且 token 用量本身解释了 80% 的表现差异（12.3）。</p>
+    </div>
+    <div class="nc warn">
+      <h4>父的账单</h4>
+      <p>父要为每个 child 承担一份完整的生命周期照管：<b>起得来、管得住、收得回、验得了</b>。child 越多，父越重——<span class="k">这是"能不上多 agent 就别上"的第一条理由</span>（12.1）。慢 subagent 阻塞整批，就是父的照管缺了"收得回"那一角。</p>
+    </div>
+    <div class="nc">
+      <h4>最容易缺的一条记录</h4>
+      <p>拒绝往往留痕，<b>采信常被当默认而无声</b>——"回传被采信"那一刻的校验记录，是本章 L2 底线里最容易缺的一条。查不到它，"这个结果哪个分身出的、谁核过"事后无从回答。</p>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div><span class="dot"></span>《Harness Study · 架构与工程卷》12.4 权限交集 · 12.5 并发写 · 12.6 收敛 · 12.7 回传校验 · 工作制品 W（Parent-Child Run Contract）· 案例已脱敏</div>
+  </div>
+</div></div></body></html>

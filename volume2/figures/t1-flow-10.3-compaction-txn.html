@@ -46,7 +46,7 @@
 <body><div class="canvas"><div class="grid-bg"></div><div class="inner">
   <span class="label-type">Harness Study · 第二卷 10.3</span>
   <h1>压缩是一个事务：<span class="em">四条纪律各守事务的哪一刻</span></h1>
-  <div class="sub">摘要这个动作看着轻，可它嵌在三件事的交叉点上。工作制品 R 列的是四条纪律的内容，这张图给的是它们各自<b>发生在事务的哪一刻</b>——一条守整段，三条各钉一步，其中"约束不入压缩"一条纪律有两个落点。</div>
+  <div class="sub">摘要这个动作看着轻，可它嵌在三件事的交叉点上。工作制品 R 列的是四条纪律的内容，这张图给的是它们各自<b>发生在事务的哪一刻</b>——一条守整段，三条各钉一步；"约束不入压缩"有两个可选落点（二选一），图上都标了位置。</div>
   <hr class="rule">
 
   <div class="stage">
@@ -65,8 +65,8 @@
     <!-- 三重耦合 -->
     <g><rect class="thr" x="14" y="24" width="372" height="74" rx="10"/>
       <text class="thh" x="34" y="50">第一重 · 崩溃</text>
-      <text class="tht" x="34" y="72">任一步崩了，都停在半压缩态：摘要写了</text>
-      <text class="tht" x="34" y="90">一半、原文裁了一截，剩下的两不着</text></g>
+      <text class="tht" x="34" y="72">不做成事务，任一步崩了就可能停在半压缩</text>
+      <text class="tht" x="34" y="90">态：摘要写了一半、原文裁了一截，两不着</text></g>
 
     <g><rect class="thr" x="406" y="24" width="372" height="74" rx="10"/>
       <text class="thh" x="426" y="50">第二重 · 缓存</text>
@@ -94,7 +94,7 @@
       <rect class="snb" x="34" y="152" width="30" height="24" rx="7"/><text class="sn" x="49" y="169" text-anchor="middle">1</text>
       <text class="st" x="48" y="200">读一段历史</text>
       <text class="ss" x="48" y="222">选定压缩段</text>
-      <text class="ss" x="48" y="240">系统约束排除在外</text></g>
+      <text class="ss" x="48" y="240">系统约束排除在外·落点一</text></g>
 
     <g><rect class="sb" x="264" y="152" width="200" height="96" rx="10"/>
       <rect class="snb" x="264" y="152" width="30" height="24" rx="7"/><text class="sn" x="279" y="169" text-anchor="middle">2</text>
@@ -138,15 +138,15 @@
       <text class="rt" x="34" y="374">系统约束不放进可压缩的历史段——被摘要吞掉，</text>
       <text class="rt" x="34" y="392">模型之后会安静地违反一条它再也看不见的规矩</text></g>
 
-    <g><rect class="rule-b" x="664" y="326" width="320" height="76" rx="10"/>
+    <g><rect class="rule-b" x="664" y="326" width="266" height="76" rx="10"/>
       <text class="rh" x="684" y="352">纪律二 · 边界落盘</text>
       <text class="rt" x="684" y="374">登记版本号与边界序号，</text>
-      <text class="rt" x="684" y="392">恢复时认准同一个版本（10.8 节）</text></g>
+      <text class="rt" x="684" y="392">恢复认同一版（10.8 节）</text></g>
 
-    <g><rect class="rule-b" x="1000" y="326" width="174" height="76" rx="10"/>
-      <text class="rh" x="1018" y="352">纪律四 · 配对修复</text>
-      <text class="rt" x="1018" y="374">tool_call 与 result</text>
-      <text class="rt" x="1018" y="392">不许拆成两半</text></g>
+    <g><rect class="rule-b" x="946" y="326" width="228" height="76" rx="10"/>
+      <text class="rh" x="964" y="352">纪律四 · 配对修复</text>
+      <text class="rt" x="964" y="374">tool_call 与 tool_result</text>
+      <text class="rt" x="964" y="392">不许拆成两半</text></g>
 
     <!-- COMMIT 之后 -->
     <g><rect class="aft" x="14" y="416" width="576" height="56" rx="10"/>
@@ -154,8 +154,8 @@
       <text class="aft-t" x="34" y="462">「摘要 ＋ 边界之后的原文」——裁的是投影，不是历史</text></g>
 
     <g><rect class="aft" x="610" y="416" width="564" height="56" rx="10"/>
-      <text class="afh" x="630" y="440">◆ 系统约束无条件重新注入</text>
-      <text class="aft-t" x="630" y="462">同一条纪律的第二个落点；每次注入拿到的都是当前版本</text></g>
+      <text class="afh" x="630" y="440">◆ 或：系统约束压缩后无条件重新注入</text>
+      <text class="aft-t" x="630" y="462">"约束不入压缩"的另一个落点，与步 1 的排除法二选一；每次注入拿到当前版本</text></g>
 
     <text class="foot-t" x="14" y="496">摘要是<tspan font-weight="700" fill="#1a1428">新增的行</tspan>；一旦反向覆盖原文，压缩就从"改投影"滑成了"改真相"。</text>
   </svg>
@@ -168,7 +168,7 @@
     </div>
     <div class="nc warn">
       <h4>压缩不能交给模型自觉</h4>
-      <p>一手观察：模型自认为快到窗口上限时会<b>抄近路草草收尾</b>，即使余量还很充足，而它对剩余 token 的自估"一贯低估，很精确却是错的"。所以压缩何时发生走<span class="k">确定性的硬路径</span>——由工程按登记的预算和边界决定，模型的自律只当参考。</p>
+      <p>压缩何时发生、reset 何时触发，走<span class="k">确定性的硬路径</span>——由工程按登记的预算和边界决定，用模型外的机制执行，<b>模型的自律只当参考、不当机制</b>。为什么模型对自己窗口的感觉靠不住，10.7 节有 Devin 团队（Cognition）的实测观察。</p>
     </div>
   </div>
 

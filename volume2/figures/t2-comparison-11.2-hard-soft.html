@@ -1,0 +1,104 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="_base.css">
+<style>
+  .stage{margin-top:24px}
+  svg{display:block;width:100%;height:auto}
+  .col-h{fill:rgba(6,122,91,.05);stroke:var(--green);stroke-width:2.4;rx:12}
+  .col-s{fill:rgba(181,106,9,.06);stroke:var(--amber);stroke-width:2.4;rx:12}
+  .ct-h{font-family:var(--f-head);font-size:20px;font-weight:800;fill:var(--green)}
+  .ct-s{font-family:var(--f-head);font-size:20px;font-weight:800;fill:var(--amber)}
+  .cd{font-family:var(--f-body);font-size:15.5px;fill:var(--t2)}
+  .mb{fill:#fff;stroke-width:2;rx:8}
+  .mb-h{stroke:var(--green)}
+  .mb-s{stroke:var(--amber)}
+  .mt{font-family:var(--f-head);font-size:15.5px;font-weight:700;fill:var(--t1)}
+  .ms{font-family:var(--f-body);font-size:14.5px;fill:var(--t3)}
+  .fail-h{font-family:var(--f-head);font-size:16px;font-weight:800;fill:var(--green)}
+  .fail-s{font-family:var(--f-head);font-size:16px;font-weight:800;fill:var(--red)}
+  .q{fill:var(--purple-light);stroke:var(--purple-dark);stroke-width:2.4;rx:10}
+  .qt{font-family:var(--f-head);font-size:18px;font-weight:800;fill:var(--purple-dark)}
+  .band{fill:rgba(179,55,42,.05);stroke:var(--red);stroke-width:2.4;rx:10}
+  .bd-t{font-family:var(--f-head);font-size:17px;font-weight:800;fill:var(--red)}
+  .bd-c{font-family:var(--f-body);font-size:15.5px;fill:var(--t2)}
+
+  .notes{display:flex;gap:18px;margin-top:22px}
+  .nc{flex:1;border:1px solid var(--divider);border-left:4px solid var(--purple);
+    border-radius:8px;background:var(--card);padding:13px 17px;box-shadow:var(--shadow)}
+  .nc.warn{border-left-color:var(--amber)}
+  .nc h4{font-family:var(--f-head);font-size:18px;font-weight:700;color:var(--t1);margin-bottom:6px}
+  .nc p{font-family:var(--f-body);font-size:16.5px;color:var(--t2);line-height:1.6}
+  .nc b{color:var(--t1)} .nc .k{font-family:var(--f-head);font-weight:700;color:var(--purple-dark)}
+  .nc.warn .k{color:var(--amber)}
+</style></head>
+<body><div class="canvas"><div class="grid-bg"></div><div class="inner">
+  <span class="label-type">Harness Study · 第二卷 11.2</span>
+  <h1>硬边界与软提示：<span class="em">强制点离模型有多远</span></h1>
+  <div class="sub">权限控制分好几层，它们的"硬度"天差地别，混为一谈是这一章最要防的错。分界只有一条：<b>硬边界在模型之外强制执行，模型想不想绕都绕不过；软提示尽力而为，可被绕过</b>。</div>
+  <hr class="rule">
+
+  <div class="stage">
+  <svg viewBox="0 0 1188 496" xmlns="http://www.w3.org/2000/svg">
+
+    <!-- 判据条 -->
+    <rect class="q" x="234" y="10" width="720" height="44" rx="10"/>
+    <text class="qt" x="594" y="38" text-anchor="middle">评审判据一句话：这层是模型外强制，还是尽力而为？逐层问</text>
+
+    <!-- 硬边界 -->
+    <rect class="col-h" x="14" y="72" width="572" height="272" rx="12"/>
+    <text class="ct-h" x="36" y="104">硬边界</text>
+    <text class="cd" x="130" y="104">在模型之外强制执行——想不想绕，都绕不过</text>
+    <g><rect class="mb mb-h" x="34" y="122" width="532" height="50"/>
+      <text class="mt" x="50" y="144">文件系统权限 · 沙箱</text>
+      <text class="ms" x="50" y="164">bubblewrap：默认整盘只读，可写根显式打开，更窄的规则赢（Codex）</text></g>
+    <g><rect class="mb mb-h" x="34" y="180" width="532" height="50"/>
+      <text class="mt" x="50" y="202">permission 的 deny 规则</text>
+      <text class="ms" x="50" y="222">六步求值序里 deny 命中即阻断——连"全放行"模式也拦不住它（Anthropic）</text></g>
+    <g><rect class="mb mb-h" x="34" y="238" width="532" height="50"/>
+      <text class="mt" x="50" y="260">execpolicy 的 forbidden 档</text>
+      <text class="ms" x="50" y="280">allow / prompt / forbidden 三档，规则在加载期自测（Codex）</text></g>
+    <text class="fail-h" x="36" y="326">失败时：fail-closed——门坏了，是关着的</text>
+
+    <!-- 软提示 -->
+    <rect class="col-s" x="602" y="72" width="572" height="272" rx="12"/>
+    <text class="ct-s" x="624" y="104">软提示</text>
+    <text class="cd" x="718" y="104">尽力而为，可被绕过</text>
+    <g><rect class="mb mb-s" x="622" y="122" width="532" height="50"/>
+      <text class="mt" x="638" y="144">prompt 里的话</text>
+      <text class="ms" x="638" y="164">"你不许删数据库"——可被注入绕过、被幻觉无视、可能压根没被读到</text></g>
+    <g><rect class="mb mb-s" x="622" y="180" width="532" height="50"/>
+      <text class="mt" x="638" y="202">best-effort 的过滤 hook</text>
+      <text class="ms" x="638" y="222">执行失败（退出码非 0 非 2、HTTP 报错、超时）一律 non-blocking，照常继续</text></g>
+    <g><rect class="mb mb-s" x="622" y="238" width="532" height="50"/>
+      <text class="mt" x="638" y="260">if 匹配器</text>
+      <text class="ms" x="638" y="280">同样 best-effort：Bash 命令解析不了就不按模式过滤，照跑不误</text></g>
+    <text class="fail-s" x="624" y="326">失败时：fail-open——门坏了，是开着的，还常常不留痕</text>
+
+    <!-- 假边界带 -->
+    <g><rect class="band" x="14" y="366" width="1160" height="86" rx="10"/>
+      <text class="bd-t" x="34" y="394">最常见的假边界：把软层当硬层</text>
+      <text class="bd-c" x="34" y="420">一手现场：hook 命令返回非 0、HTTP 非 2xx、或网络失败时，默认放行且不留审计——一道被寄予"安全"厚望的闸，失败时却是开着的。</text>
+      <text class="bd-c" x="34" y="442">官方的告诫也在同一页上：要硬 allow/deny，请用 permission 系统、别用 hook。</text></g>
+
+    <text class="cd" x="14" y="484">prompt 是对模型的一句<tspan font-weight="700" fill="#1a1428">请求</tspan>；把一句请求当成一道约束，等于<tspan font-weight="700" fill="#1a1428">把门锁画在纸上</tspan>。</text>
+  </svg>
+  </div>
+
+  <div class="notes">
+    <div class="nc">
+      <h4>显式升级长什么样</h4>
+      <p>默认收窄、需要时显式升级、每次升级留痕。实物：Codex 的 shell 提权走 <b>Run / Escalate / Deny</b> 三态协议——升级是显式动作，留痕；不是"提示一下，模型自己看着办"。<span class="k">强制点放在模型够不着的地方，是这一章开篇那句主张的落地。</span></p>
+    </div>
+    <div class="nc warn">
+      <h4>approval 的正确位置</h4>
+      <p>请人签字是<b>高风险动作的风险决策点</b>，不是通用边界——给每个动作都套上就成了摆设：什么都弹窗，用户会习惯性全点通过，<span class="k">闸形同虚设</span>。它既不算硬边界（人会疲劳），也不该被软用（滥发弹窗），要用在刀刃上。</p>
+    </div>
+    <div class="nc">
+      <h4>软层不是没用，是不许冒充</h4>
+      <p>hook 做观测、做提醒、做 best-effort 过滤都合法——问题只出在<b>把它当安全闸</b>。评审时逐层填工作制品 V 的六列，第一列就是这张图的判据：<span class="k">这层在哪个点强制，失败时是开还是关。</span></p>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div><span class="dot"></span>《Harness Study · 架构与工程卷》11.2 硬边界与软提示 · 11.5 共因失效 · 工作制品 V（Common-mode Failure Matrix）· 案例已脱敏</div>
+  </div>
+</div></div></body></html>

@@ -68,7 +68,7 @@
     <g><rect class="seg-g" x="908" y="48" width="266" height="86" rx="12"/>
       <text class="st" x="928" y="82">outcome</text>
       <text class="ss" x="928" y="106">外部世界的实况，独立取证</text>
-      <text class="ss" x="928" y="126" style="fill:#b56a09">读回贵或不可信时可跳过</text></g>
+      <text class="ss" x="928" y="126" style="fill:#b56a09;font-size:15px">读回贵或不可信：退回 unknown</text></g>
 
     <!-- 两站裁决：站在字据与动手之间 -->
     <g><rect class="gate" x="222" y="48" width="166" height="86" rx="12"/>
@@ -83,7 +83,8 @@
 
     <!-- 异常支 A -->
     <path class="ar-b" d="M104,134 L104,214"/>
-    <text class="el-b" x="120" y="180">崩溃 · 没等到</text>
+    <text class="el-b" x="120" y="172">崩溃 · result 没落盘</text>
+    <text class="el-b" x="120" y="194" style="font-weight:400">动作做没做，存疑</text>
     <g><rect class="bad" x="14" y="214" width="440" height="90" rx="12"/>
       <text class="badt" x="34" y="248">异常支 A · intent 有、result 无</text>
       <text class="badc" x="34" y="274">标 unknown 进调和——unknown 是账本的</text>
@@ -112,18 +113,18 @@
     <g><rect class="fin" x="840" y="404" width="126" height="34" rx="7"/><text class="fint" x="903" y="427" text-anchor="middle">compensated</text></g>
     <g><rect class="fin" x="978" y="404" width="86" height="34" rx="7"/><text class="fint" x="1021" y="427" text-anchor="middle">manual</text></g>
 
-    <text class="rule-t" x="14" y="466">dual-write 消不掉崩溃窗口，intent 先行只决定崩溃之后<tspan font-weight="700" fill="#1a1428">还剩不剩线索</tspan>——先执行后记账，账上一片空白，连"曾经想做这件事"都无从扫起。</text>
+    <text class="rule-t" x="14" y="466">两写结构（dual-write）躲不掉崩溃窗口，intent 先行只决定崩溃之后<tspan font-weight="700" fill="#1a1428">还剩不剩线索</tspan>——先执行后记账，账上一片空白，连"曾经想做这件事"都无从扫起。</text>
   </svg>
   </div>
 
   <div class="notes">
     <div class="nc">
       <h4>为什么 outcome 必须独立于 result</h4>
-      <p>result 是<b>执行方的报告</b>，outcome 是<b>外部世界的实况</b>。声称与实况脱钩，而验收链恰好只读声称——这正是「副作用可对账」这份契约要防的事。</p>
+      <p>result 是<b>执行方的报告</b>，outcome 是<b>外部世界的实况</b>。声称与实况脱钩，而验收链恰好只读声称——这正是「副作用可对账」这份契约要防的事（8.10 节展开）。</p>
     </div>
     <div class="nc warn">
-      <h4>这本账不是免费的</h4>
-      <p>每笔副作用<span class="k">至少两次落盘</span>（intent、result），加 outcome 取证是三次外部读写，账本随高频工具线性膨胀。代价划得来的前提是<b>只给危险动作记账</b>——8.4 节的增量铺开是这笔账的收敛条款。</p>
+      <h4>收敛条款：只给危险动作记账</h4>
+      <p>两次落盘加一次取证，账本随高频工具线性膨胀——所以按副作用等级增量铺开（8.4 节）：durable intent/result 首期只覆盖<b>写文件、编辑、git</b> 三类高副作用工具，读类工具不铺。<span class="k">账本是给危险动作记的，先记最怕重复的。</span></p>
     </div>
   </div>
 

@@ -1,0 +1,196 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="_base.css">
+<style>
+  .stage{margin-top:22px}
+  svg{display:block;width:100%;height:auto}
+  .lane{fill:rgba(26,20,40,.022)}
+  .lane-alt{fill:transparent}
+  .lsep{stroke:var(--divider);stroke-width:1}
+  .fsep{stroke:rgba(26,20,40,.07);stroke-width:1}
+  .hd{font-family:var(--f-label);font-size:16px;font-weight:700;fill:var(--t3);letter-spacing:.1em}
+  .llab{font-family:var(--f-head);font-size:19px;font-weight:800;fill:var(--t1)}
+  .lsub{font-family:var(--f-body);font-size:15px;fill:var(--t3)}
+  .mnum{font-family:var(--f-head);font-size:17px;font-weight:800;fill:var(--purple)}
+  .mlab{font-family:var(--f-body);font-size:15.5px;fill:var(--t2)}
+  .trk{stroke:var(--purple);stroke-width:4;fill:none;stroke-linecap:round}
+  .trk-thin{stroke:var(--purple);stroke-width:3;fill:none;stroke-linecap:round}
+  .trk-wait{stroke:var(--amber);stroke-width:3;fill:none;stroke-dasharray:6 5;stroke-linecap:round}
+  .trk-gap{stroke:var(--t3);stroke-width:3;fill:none;stroke-dasharray:8 7;opacity:.75}
+  .trk-ok{stroke:var(--green);stroke-width:3.4;fill:none;stroke-linecap:round}
+  .trk-bad{stroke:var(--red);stroke-width:3;fill:none;stroke-linecap:round}
+  .crash{stroke:var(--red);stroke-width:2.2;stroke-dasharray:7 6;opacity:.85}
+  .ann{font-family:var(--f-body);font-size:15.5px;fill:var(--t2)}
+  .ann-b{font-family:var(--f-body);font-size:15.5px;fill:var(--red)}
+  .ann-a{font-family:var(--f-body);font-size:15.5px;fill:var(--amber)}
+  .ann-g{font-family:var(--f-head);font-size:15.5px;font-weight:700;fill:var(--green)}
+  .ann-p{font-family:var(--f-body);font-size:15.5px;font-weight:700;fill:var(--purple-dark)}
+  .box-bad{fill:rgba(179,55,42,.07);stroke:var(--red);stroke-width:2.2}
+  .box-ok{fill:rgba(6,122,91,.07);stroke:var(--green);stroke-width:2.2}
+  .bt{font-family:var(--f-head);font-size:17px;font-weight:800;fill:var(--red)}
+  .bt-g{font-family:var(--f-head);font-size:17px;font-weight:800;fill:var(--green)}
+  .bc{font-family:var(--f-body);font-size:15.5px;fill:var(--red)}
+  .bc-g{font-family:var(--f-body);font-size:15.5px;fill:var(--green)}
+  .end{font-family:var(--f-body);font-size:17px;fill:var(--t2)}
+
+  .notes{display:flex;gap:18px;margin-top:22px}
+  .nc{flex:1;border:1px solid var(--divider);border-left:4px solid var(--purple);
+    border-radius:8px;background:var(--card);padding:13px 17px;box-shadow:var(--shadow)}
+  .nc.warn{border-left-color:var(--amber)}
+  .nc h4{font-family:var(--f-head);font-size:18px;font-weight:700;color:var(--t1);margin-bottom:6px}
+  .nc p{font-family:var(--f-body);font-size:16.5px;color:var(--t2);line-height:1.6}
+  .nc b{color:var(--t1)} .nc .k{font-family:var(--f-head);font-weight:700;color:var(--purple-dark)}
+  .nc.warn .k{color:var(--amber)}
+</style></head>
+<body><div class="canvas"><div class="grid-bg"></div><div class="inner">
+  <span class="label-type">Harness Study · 第二卷 6.11</span>
+  <h1>三条生命周期：<span class="em">状态、执行、授权，寿命天然不等</span></h1>
+  <div class="sub">resume 一个中断的 run，恢复的是什么？朴素答案"恢复一切"坏在一个根上：<b>三样东西的寿命天然不等</b>，却被一个 resume 混着恢复。纵轴是寿命——同一根时间轴、同一次崩溃，三条线三种反应：状态穿线而过，执行断了再接，<b>授权到线为止</b>——之后要的不是恢复，是重验。</div>
+  <hr class="rule">
+
+  <div class="stage">
+  <svg viewBox="0 0 1188 546" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#6d28d9"/></marker>
+      <marker id="ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#b3372a"/></marker>
+      <marker id="ahg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#067a5b"/></marker>
+    </defs>
+
+    <text class="hd" x="10" y="24">时刻</text>
+
+    <!-- 六个时刻 -->
+    <g>
+      <text class="mnum" x="248"  y="26" text-anchor="middle">1</text>
+      <text class="mlab" x="248"  y="50" text-anchor="middle">run 之前</text>
+      <text class="mlab" x="248"  y="70" text-anchor="middle">会话与历史已在</text>
+
+      <text class="mnum" x="416"  y="26" text-anchor="middle">2</text>
+      <text class="mlab" x="416"  y="50" text-anchor="middle">触发</text>
+      <text class="mlab" x="416"  y="70" text-anchor="middle">run 创建</text>
+
+      <text class="mnum" x="584"  y="26" text-anchor="middle">3</text>
+      <text class="mlab" x="584"  y="50" text-anchor="middle">审批通过</text>
+      <text class="mlab" x="584"  y="70" text-anchor="middle">waiting 回 running</text>
+
+      <text class="mnum" x="752"  y="26" text-anchor="middle">4</text>
+      <text class="mlab" x="752"  y="50" text-anchor="middle" style="fill:#b3372a;font-weight:700">崩溃</text>
+      <text class="mlab" x="752"  y="70" text-anchor="middle">kill −9</text>
+
+      <text class="mnum" x="920"  y="26" text-anchor="middle">5</text>
+      <text class="mlab" x="920"  y="50" text-anchor="middle">重启 resume</text>
+      <text class="mlab" x="920"  y="70" text-anchor="middle">启动扫描先裁决</text>
+
+      <text class="mnum" x="1088" y="26" text-anchor="middle">6</text>
+      <text class="mlab" x="1088" y="50" text-anchor="middle">终态</text>
+      <text class="mlab" x="1088" y="70" text-anchor="middle">run 结束</text>
+    </g>
+
+    <!-- 三条泳道 -->
+    <g>
+      <rect class="lane"     x="164" y="80"  width="1008" height="92"/>
+      <rect class="lane-alt" x="164" y="172" width="1008" height="106"/>
+      <rect class="lane"     x="164" y="278" width="1008" height="132"/>
+      <line class="lsep" x1="164" y1="80"  x2="1172" y2="80"/>
+      <line class="lsep" x1="164" y1="410" x2="1172" y2="410"/>
+    </g>
+    <g>
+      <line class="fsep" x1="332"  y1="80" x2="332"  y2="410"/>
+      <line class="fsep" x1="500"  y1="80" x2="500"  y2="410"/>
+      <line class="fsep" x1="668"  y1="80" x2="668"  y2="410"/>
+      <line class="fsep" x1="836"  y1="80" x2="836"  y2="410"/>
+      <line class="fsep" x1="1004" y1="80" x2="1004" y2="410"/>
+    </g>
+
+    <!-- 崩溃竖线：一条线切三条命 -->
+    <line class="crash" x1="752" y1="80" x2="752" y2="410"/>
+
+    <!-- 泳道名 -->
+    <text class="llab" x="10" y="116">状态</text>
+    <text class="lsub" x="10" y="137">最长——数据活多久</text>
+    <text class="llab" x="10" y="212">执行</text>
+    <text class="lsub" x="10" y="233">run 从生到死</text>
+    <text class="lsub" x="10" y="253">（第五章七状态）</text>
+    <text class="llab" x="10" y="322">授权</text>
+    <text class="lsub" x="10" y="343">最短——何时生效</text>
+    <text class="lsub" x="10" y="363">何时过期（第十一章）</text>
+
+    <!-- 线一：状态 —— 崩溃穿不断，run 结束后接着活 -->
+    <text class="ann" x="190" y="106">消息、事件、artifact——run 来之前就在</text>
+    <path class="trk" d="M180,126 L1150,126" marker-end="url(#ah)"/>
+    <circle cx="180" cy="126" r="7" fill="#6d28d9"/>
+    <circle cx="752" cy="126" r="6" fill="#f4f0eb" stroke="#067a5b" stroke-width="2.4"/>
+    <text class="ann-g" x="768" y="106">崩溃穿不断</text>
+    <text class="ann" x="190" y="158">已提交的事务完整可见，未提交的不留半行（破坏实验判定）</text>
+    <text class="ann" x="1156" y="158" text-anchor="end">run 结束后接着活——删除是另一件事（6.10）</text>
+
+    <!-- 线二：执行 -->
+    <text class="ann" x="416" y="200" text-anchor="middle">created</text>
+    <path class="trk-thin" d="M416,222 L508,222"/>
+    <path class="trk-wait" d="M508,222 L584,222"/>
+    <path class="trk-thin" d="M584,222 L744,222"/>
+    <circle cx="416" cy="222" r="7" fill="#6d28d9"/>
+    <text class="ann-a" x="546" y="200" text-anchor="middle">waiting·等审批</text>
+    <g><circle cx="752" cy="222" r="13" fill="#f4f0eb" stroke="#b3372a" stroke-width="2.2"/>
+      <path d="M746,216 L758,228 M758,216 L746,228" stroke="#b3372a" stroke-width="2.4"/></g>
+    <path class="trk-gap" d="M768,222 L908,222"/>
+    <text class="ann" x="838" y="200" text-anchor="middle" style="fill:#8a8098">interrupted</text>
+    <g><circle cx="920" cy="222" r="9" fill="#faf7f3" stroke="#6d28d9" stroke-width="2.6"/></g>
+    <path class="trk-thin" d="M929,222 L1088,222"/>
+    <circle cx="1088" cy="222" r="7" fill="#4c1d95"/>
+    <text class="ann-p" x="1160" y="200" text-anchor="end">从最后完整 step 之后继续（第七章）</text>
+    <text class="ann" x="936" y="252">断了，能接回——恢复的是执行位置</text>
+
+    <!-- 线三：授权 -->
+    <text class="ann" x="190" y="312">审批之前，没有这条线——权力不是常量</text>
+    <circle cx="584" cy="332" r="7" fill="#6d28d9"/>
+    <path class="trk-thin" d="M584,332 L744,332"/>
+    <text class="ann-p" x="590" y="312">批准落账（approvals 行）</text>
+    <line x1="748" y1="318" x2="748" y2="346" stroke="#b3372a" stroke-width="4" stroke-linecap="round"/>
+    <text class="ann-b" x="700" y="366" text-anchor="end">到线为止：上下文可能已变，批准者早已离场</text>
+
+    <!-- resume 后的两条走法 -->
+    <g><rect x="912" y="318" width="16" height="28" rx="3" fill="#faf7f3" stroke="#067a5b" stroke-width="2.4"/>
+      <line x1="920" y1="322" x2="920" y2="342" stroke="#067a5b" stroke-width="2"/></g>
+    <path class="trk-ok" d="M928,332 L1150,332" marker-end="url(#ahg)"/>
+    <text class="ann-g" x="936" y="312">重验通过，才有新的一段</text>
+    <path class="trk-bad" d="M920,388 L1090,388" marker-end="url(#ahr)"/>
+    <g><line x1="1100" y1="381" x2="1114" y2="395" stroke="#b3372a" stroke-width="2.4"/>
+       <line x1="1114" y1="381" x2="1100" y2="395" stroke="#b3372a" stroke-width="2.4"/></g>
+    <text class="ann-b" x="768" y="376">隐式恢复：旧授权原样带回——一次性的信任变成永久的</text>
+
+    <!-- 底部两带 -->
+    <g><rect class="box-bad" x="14" y="424" width="520" height="80" rx="10"/>
+      <text class="bt" x="34" y="450">朴素做法：resume ＝ 恢复一切</text>
+      <text class="bc" x="34" y="474">三种寿命被一个 resume 混着恢复——</text>
+      <text class="bc" x="34" y="494">崩溃前批过的高危审批，恢复后被当成还算数</text></g>
+
+    <g><rect class="box-ok" x="554" y="424" width="618" height="80" rx="10"/>
+      <text class="bt-g" x="574" y="450">落法：恢复什么，逐项声明——Lifetime Matrix（工作制品 I）</text>
+      <text class="bc-g" x="574" y="474">approval／delegation／credential 各答三问：随 checkpoint 保存？</text>
+      <text class="bc-g" x="574" y="494">随 resume 恢复？恢复前重验？——安全默认：不隐式恢复</text></g>
+
+    <text class="end" x="14" y="536">三条线各自有开始与结束——<tspan font-weight="700" fill="#1a1428">resume 只是执行线上的一个点，不是三条线的总开关</tspan>。</text>
+  </svg>
+  </div>
+
+  <div class="notes">
+    <div class="nc">
+      <h4>重验早就埋进了转移表</h4>
+      <p>第五章转移表里 waiting 回到 running 那一行，guard 写着<b>"授权仍有效（需重验）"</b>——埋的就是这条：执行每次从等待里回来，授权都要重新过一遍验，不吃老本。<span class="k">完整规则在第十一章 11.6 节。</span></p>
+    </div>
+    <div class="nc warn">
+      <h4>checkpoint 里根本没有授权</h4>
+      <p>6.5 节的清单写得明白：approval、delegation <b>不随 checkpoint 走</b>——不是漏了，是明确不保存。恢复要授权，resume 之后走重验，<span class="k">安全默认是不隐式恢复</span>；把授权塞进 checkpoint，等于把过期的信任存了档。</p>
+    </div>
+    <div class="nc">
+      <h4>状态最长，但不是永生</h4>
+      <p>数据活多久是状态生命周期的事：它跨 run、跨崩溃，run 死了它还在。但"删掉这个会话"是<b>三件不同的事</b>（6.10 节）——删会话、删运行记录、撤销外部动作各有各的语义，<span class="k">逐行登记在 State Registry 的删除语义列</span>，不归 resume 管。</p>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div><span class="dot"></span>《Harness Study · 架构与工程卷》6.11 三条生命周期 · 6.5 checkpoint 清单 · 6.10 删除三义 · 工作制品 I（Lifetime Matrix）</div>
+  </div>
+</div></div></body></html>

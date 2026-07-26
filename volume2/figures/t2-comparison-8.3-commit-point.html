@@ -1,0 +1,123 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="_base.css">
+<style>
+  .stage{margin-top:24px}
+  svg{display:block;width:100%;height:auto}
+  .lane-bad{fill:rgba(179,55,42,.035);stroke:var(--red);stroke-width:1.6;stroke-dasharray:9 6;rx:12}
+  .lane-ok{fill:rgba(6,122,91,.03);stroke:var(--green);stroke-width:1.6;rx:12}
+  .lt-bad{font-family:var(--f-head);font-size:18px;font-weight:800;fill:var(--red)}
+  .lt-ok{font-family:var(--f-head);font-size:18px;font-weight:800;fill:var(--green)}
+  .tl{stroke:rgba(26,20,40,.3);stroke-width:2.6;fill:none}
+  .win{fill:rgba(181,106,9,.08);stroke:var(--amber);stroke-width:1.8;stroke-dasharray:7 5;rx:9}
+  .wt{font-family:var(--f-body);font-size:15px;fill:var(--amber)}
+  .wr{font-family:var(--f-body);font-size:15px;fill:var(--red)}
+  .ck{font-family:var(--f-body);font-size:15px;fill:var(--t2)}
+  .ckb{font-family:var(--f-head);font-size:15.5px;font-weight:700;fill:var(--t1)}
+  .bad-t{font-family:var(--f-head);font-size:15.5px;font-weight:700;fill:var(--red)}
+  .ok-t{font-family:var(--f-head);font-size:15.5px;font-weight:700;fill:var(--green)}
+  .gate{fill:var(--purple-light);stroke:var(--purple-dark);stroke-width:2.6}
+  .gt{font-family:var(--f-head);font-size:17px;font-weight:800;fill:var(--purple-dark)}
+  .gs{font-family:var(--f-body);font-size:14.5px;fill:var(--t2)}
+  .a-ok{stroke:var(--green);stroke-width:2.6;fill:none;marker-end:url(#ag)}
+  .a-rej{stroke:var(--amber);stroke-width:2.4;fill:none;marker-end:url(#aa)}
+  .bx{stroke-width:2.2;rx:9}
+  .bx-d{fill:var(--card);stroke:var(--divider)}
+  .dt{font-family:var(--f-head);font-size:15.5px;font-weight:700;fill:var(--purple-dark)}
+  .dc{font-family:var(--f-body);font-size:14.5px;fill:var(--t2)}
+  .end{font-family:var(--f-body);font-size:17px;fill:var(--t2)}
+
+  .notes{display:flex;gap:18px;margin-top:22px}
+  .nc{flex:1;border:1px solid var(--divider);border-left:4px solid var(--purple);
+    border-radius:8px;background:var(--card);padding:13px 17px;box-shadow:var(--shadow)}
+  .nc.ok{border-left-color:var(--green)}
+  .nc h4{font-family:var(--f-head);font-size:18px;font-weight:700;color:var(--t1);margin-bottom:6px}
+  .nc p{font-family:var(--f-body);font-size:16.5px;color:var(--t2);line-height:1.6}
+  .nc b{color:var(--t1)} .nc .k{font-family:var(--f-head);font-weight:700;color:var(--purple-dark)}
+  .nc.ok .k{color:var(--green)}
+</style></head>
+<body><div class="canvas"><div class="grid-bg"></div><div class="inner">
+  <span class="label-type">Harness Study · 第二卷 8.3</span>
+  <h1>提交点：<span class="em">把校验从入口，搬到出门那一刻</span></h1>
+  <div class="sub">入口校验验的是"进门那一刻"的凭据；可入口与实际写盘之间隔着 await、确认框、文件 I/O——一段以秒计的窗口，窗口里会话可能已被抢占。这是第五章 TOCTOU 的工具层深水版：<b>检查与提交之间的距离，就是并发写坏世界的窗口</b>。</div>
+  <hr class="rule">
+
+  <div class="stage">
+  <svg viewBox="0 0 1188 470" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#067a5b"/></marker>
+      <marker id="aa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b56a09"/></marker>
+    </defs>
+
+    <!-- 上：入口校验 -->
+    <rect class="lane-bad" x="14" y="36" width="1160" height="112" rx="12"/>
+    <text class="lt-bad" x="34" y="28">入口校验——进门验一次证，进了门随便走</text>
+    <path class="tl" d="M120,106 L1030,106"/>
+    <circle cx="120" cy="106" r="8" fill="#067a5b"/>
+    <text class="ckb" x="60" y="70">入口验证 ✓</text>
+    <text class="ck" x="46" y="90">凭据当时是活的</text>
+    <rect class="win" x="300" y="62" width="500" height="70" rx="9"/>
+    <text class="wt" x="550" y="88" text-anchor="middle">以秒计的窗口：await · 用户确认框 · 文件 I/O</text>
+    <text class="wr" x="550" y="112" text-anchor="middle">窗口里世界变了——会话被抢占，工作区已易主</text>
+    <g><line x1="1046" y1="92" x2="1074" y2="120" stroke="#b3372a" stroke-width="3.4"/>
+       <line x1="1074" y1="92" x2="1046" y2="120" stroke="#b3372a" stroke-width="3.4"/></g>
+    <text class="bad-t" x="1160" y="70" text-anchor="end">落地写盘：写进已经易主的工作区</text>
+
+    <!-- 下：提交点校验 -->
+    <rect class="lane-ok" x="14" y="192" width="1160" height="146" rx="12"/>
+    <text class="lt-ok" x="34" y="184">提交点校验——动手那一刻的凭据必须是活的</text>
+    <path class="tl" d="M120,268 L694,268"/>
+    <circle cx="120" cy="268" r="8" fill="#8a8098"/>
+    <text class="ckb" x="66" y="230" style="fill:#6b6478">入口仍可初筛</text>
+    <text class="ck" x="56" y="250">但"不算完成"</text>
+    <rect class="win" x="300" y="226" width="360" height="66" rx="9"/>
+    <text class="wt" x="480" y="252" text-anchor="middle">同一段窗口</text>
+    <text class="wt" x="480" y="276" text-anchor="middle">世界照样会变，但变了也没关系</text>
+    <g><rect class="gate" x="700" y="216" width="216" height="104" rx="11"/>
+      <text class="gt" x="808" y="244" text-anchor="middle">提交点 · Effect Gateway</text>
+      <text class="gs" x="808" y="270" text-anchor="middle">执行权复核 ＋ intent 落盘</text>
+      <text class="gs" x="808" y="292" text-anchor="middle">副作用的唯一出口</text></g>
+    <path class="a-ok" d="M916,244 L1052,244"/>
+    <text class="ok-t" x="1060" y="238">凭据是活的</text>
+    <text class="ck" x="1060" y="258">→ 放行，写盘</text>
+    <path class="a-rej" d="M916,296 L1052,296"/>
+    <text class="bad-t" x="1060" y="284" style="fill:#b56a09">权已收回 → 拒绝</text>
+    <text class="ck" x="1060" y="304">落 zombie trace</text>
+    <text class="ck" x="700" y="334" style="fill:#067a5b">被挡下这件事本身是证据——只记录放行的系统，说不清自己拦截过谁</text>
+
+    <!-- 三条配套纪律 -->
+    <g><rect class="bx bx-d" x="14" y="356" width="372" height="76" rx="9"/>
+      <text class="dt" x="32" y="382">纪律一 · 等待阈值只是等待阈值</text>
+      <text class="dc" x="32" y="404">"10 秒只是可观测性阈值，不是 safety</text>
+      <text class="dc" x="32" y="424">timeout"——放行必须等到执行权真正交还</text></g>
+    <g><rect class="bx bx-d" x="408" y="356" width="372" height="76" rx="9"/>
+      <text class="dt" x="426" y="382">纪律二 · 派生副作用归属原 action</text>
+      <text class="dc" x="426" y="404">快照、索引、通知记在 derived_from_effect_id</text>
+      <text class="dc" x="426" y="424">名下——同一 barrier，过同一份执行权校验</text></g>
+    <g><rect class="bx bx-d" x="802" y="356" width="372" height="76" rx="9"/>
+      <text class="dt" x="820" y="382">纪律三 · 被拒的写入也留证</text>
+      <text class="dc" x="820" y="404">执行权收回后到达的旧写入：拒绝，并落</text>
+      <text class="dc" x="820" y="424">一条 zombie trace 事件——拦截可见（第十三章）</text></g>
+
+    <text class="end" x="14" y="462">修复裁决一句话（脱敏转述）：<tspan font-weight="700" fill="#1a1428">"仅在工具调用入口校验不算完成"</tspan>——校验搬到提交点，无论中间隔了多少 await，窗口就关上了。</text>
+  </svg>
+  </div>
+
+  <div class="notes">
+    <div class="nc">
+      <h4>Effect Gateway 的准确释义</h4>
+      <p>它不是新组件——指的是 tool executor 的<b>提交面</b>：intent 落盘加执行权校验，共同构成副作用的唯一出口。<span class="k">第四章的组件图不为它新增箱子。</span>多实例阶段，这道门再叠一层 fencing 编号校验（第五章 5.7 的最后一件装备在工具层就位）。</p>
+    </div>
+    <div class="nc ok">
+      <h4>产品级红测</h4>
+      <p>这不是纸面裁决：修复批次<b>先提交复现"副作用许可重叠"的失败测试，再修复转绿</b>——含派生副作用归属两笔，owner 已验收。<span class="k">全章证据等级最高的一段</span>：纪律是红过再绿的测试，不是评审意见。</p>
+    </div>
+    <div class="nc">
+      <h4>同一道门的两层检查</h4>
+      <p>提交点验<b>执行权</b>——谁有权动手；Plan Lease（8.12 节）验<b>前提</b>——凭什么这么动。权在人不对时挡住，前提在世界变了时挡住，<span class="k">两层都过，动作才出门。</span></p>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div><span class="dot"></span>《Harness Study · 架构与工程卷》8.3 提交点 · 8.12 Guarded Commit 与 Plan Lease · 工作制品 B（committed_under）· 案例已脱敏</div>
+  </div>
+</div></div></body></html>

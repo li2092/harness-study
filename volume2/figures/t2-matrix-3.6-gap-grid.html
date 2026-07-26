@@ -61,7 +61,7 @@
       <th>转移契约<span class="pl">转移可解释</span></th>
       <th>副作用契约<span class="pl">副作用可对账</span></th>
       <th>交互契约<span class="pl">失败可收敛</span></th>
-      <th>权限契约<span class="pl">权力有边界</span></th>
+      <th>权限契约<span class="pl">权力有边界有期限</span></th>
       <th>证据契约<span class="pl">结论有证据</span></th>
     </tr></thead>
     <tbody>
@@ -69,7 +69,7 @@
         <td>看得见吗<span class="q">可观测性</span></td>
         <td class="gap"><span class="n">缺口</span>运行中的对话没有真相源；唯一写路径挂在 run 收尾<span class="why">运行中那一轮，在任何持久载体都查不到</span></td>
         <td class="gap"><span class="n">缺口</span>抢占转移没有定义旧 run 数据的归宿<span class="why">帧 7 的抢占决策没有事件</span></td>
-        <td class="gap edge"><span class="n">擦边</span>文件改动实时落盘，可归属的那条消息随进程终止丢失<span class="why">外部改动与对话的账断了归属</span></td>
+        <td class="gap edge"><span class="n">擦边</span>文件改动实时落盘，归属它的那条消息可随进程终止丢失<span class="why">外部改动与对话的账断了归属</span></td>
         <td></td>
         <td></td>
         <td class="gap"><span class="n">缺口</span>3.4 那份缺失证据清单本身<span class="why">十帧没有一帧有运行时记录背书</span></td>
@@ -93,9 +93,9 @@
     </tbody>
   </table>
   <div class="lgd">
-    <span><i class="i-gap"></i>本次事故落格的缺口（六个，格格有名字）</span>
+    <span><i class="i-gap"></i>落格的缺口共六个，格格有名字——红五格，擦边一格</span>
     <span><i class="i-edge"></i>擦边：副作用本身落了盘，坏的是归属线</span>
-    <span><i class="i-empty"></i>这次事故没碰到的格</span>
+    <span><i class="i-empty"></i>空白＝不是该列最先失守的问，不等于这格没事</span>
   </div>
   </div>
 
@@ -110,8 +110,8 @@
       <p>3.1 节说的<b>缺口一、二、三</b>是三个代码级根因（导航逃逸／读库读到 run 开始前／抢占后跳过落库）；这张图上的六个是<b>契约级</b>缺口，一份契约一个。<span class="k">三个代码缺口串成一次丢失，六个契约缺口是它在坐标系上的投影</span>——数目对不上是正常的。</p>
     </div>
     <div class="nc">
-      <h4>前向通过了，反向只过一半</h4>
-      <p>前向对账：六个缺口格格有名字，矩阵够用来<b>命名</b>。反向实验（时间拨回事发前，判据挨个上）：三个结构性根因 <b>2/3</b> 被事前判据原样圈出；两个实现级回归 <b>0/2</b>，落在矩阵之外。<span class="k">矩阵是设计期的网，测量纪律是改动期的网</span>——缺哪张都有一类事故漏过去。</p>
+      <h4>压缩语的完整反面教材</h4>
+      <p>第一章那句压缩语——每个状态有归宿，每个故障有路径，每个中断可恢复或诚实终结——在这里<b>三条全违</b>：M5 在五个载体间漂流，没有一处算数；R1 从 running 到消失，没有一行记录解释它；被打断的一轮悬在<span class="k">"既没完成也没终结"的暗区</span>，无声蒸发。</p>
     </div>
   </div>
 

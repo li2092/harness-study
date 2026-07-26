@@ -1,0 +1,107 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="_base.css">
+<style>
+  .chain{margin-top:22px;display:flex;align-items:center;gap:10px;
+    border:1px solid var(--divider);border-radius:9px;background:var(--card);
+    padding:10px 16px;box-shadow:var(--shadow)}
+  .chain .lk{font-family:var(--f-head);font-size:16.5px;font-weight:700;color:var(--purple-dark)}
+  .chain .ar{font-family:var(--f-head);font-size:15px;color:var(--t3)}
+  .chain .cap{margin-left:auto;font-family:var(--f-body);font-size:15.5px;color:var(--t2)}
+  .chain .cap b{color:var(--t1)}
+
+  .row{display:flex;gap:13px;margin-top:15px}
+  .card{flex:1;background:var(--card);border:2px solid var(--purple);border-radius:10px;
+    padding:12px 15px 11px;box-shadow:var(--shadow);position:relative}
+  .card.danger{border-color:var(--red)}
+  .cls{position:absolute;top:11px;right:12px;font-family:var(--f-label);font-size:12.5px;font-weight:700;
+    color:#fff;background:var(--purple);border-radius:5px;padding:2px 8px}
+  .card.danger .cls{background:var(--red)}
+  .nm{font-family:var(--f-head);font-size:20px;font-weight:800;color:var(--t1);line-height:1.2}
+  .en{font-family:"JetBrains Mono",monospace;font-size:13.5px;font-weight:700;color:var(--purple-dark);margin-top:2px}
+  .how{font-family:var(--f-body);font-size:15px;color:var(--t2);margin-top:8px;line-height:1.5}
+  .fit{margin-top:8px;padding-top:7px;border-top:1px solid var(--divider);
+    font-family:var(--f-body);font-size:14.5px;color:var(--t3);line-height:1.45}
+  .fit b{color:var(--purple-dark)}
+  .cost{margin-top:8px;padding-top:7px;border-top:1px dashed var(--amber);
+    font-family:var(--f-body);font-size:14.5px;color:var(--amber);line-height:1.45}
+  .card.danger .cost{border-top-color:var(--red);color:var(--red)}
+
+  .nums{margin-top:15px;border:2px solid var(--green);border-radius:10px;background:rgba(6,122,91,.05);
+    padding:12px 17px}
+  .nums h5{font-family:var(--f-head);font-size:17px;font-weight:800;color:var(--green);margin-bottom:7px}
+  .nums p{font-family:var(--f-body);font-size:15.5px;color:var(--t2);line-height:1.65}
+  .nums b{color:var(--t1)}
+
+  .notes{display:flex;gap:18px;margin-top:16px}
+  .nc{flex:1;border:1px solid var(--divider);border-left:4px solid var(--purple);
+    border-radius:8px;background:var(--card);padding:13px 17px;box-shadow:var(--shadow)}
+  .nc.warn{border-left-color:var(--amber)}
+  .nc h4{font-family:var(--f-head);font-size:18px;font-weight:700;color:var(--t1);margin-bottom:6px}
+  .nc p{font-family:var(--f-body);font-size:16.5px;color:var(--t2);line-height:1.6}
+  .nc b{color:var(--t1)} .nc .k{font-family:var(--f-head);font-weight:700;color:var(--purple-dark)}
+  .nc.warn .k{color:var(--amber)}
+</style></head>
+<body><div class="canvas"><div class="grid-bg"></div><div class="inner">
+  <span class="label-type">Harness Study · 第二卷 10.2</span>
+  <h1>给窗口腾地方的四种手段：<span class="em">三类解空间，各担各的账</span></h1>
+  <div class="sub">预算有限，历史无限，早晚要给窗口腾地方。动作空间其实只有<b>三类</b>；业界把它细分成四种手段，落点各不同，共用一把尺——<b>省下的注意力预算，要花在高信号的 token 上</b>。</div>
+  <hr class="rule">
+
+  <div class="chain">
+    <span class="lk">压掉已有的</span><span class="ar">·</span>
+    <span class="lk">移出窗口，再按需拉回</span><span class="ar">·</span>
+    <span class="lk">分流到另一个干净窗口</span>
+    <span class="cap">三类解空间——<b>四种手段是它们的细分</b>，卡片右上角标着各自的类</span>
+  </div>
+
+  <div class="row">
+    <div class="card danger"><span class="cls">压掉已有的</span>
+      <div class="nm">压缩</div>
+      <div class="en">compaction</div>
+      <div class="how">接近上限时把一段历史摘要成短文，用摘要重启窗口</div>
+      <div class="fit">适合：<b>线性长对话</b></div>
+      <div class="cost">担着崩溃与缓存的账——半压缩态、前缀断裂；四种手段里唯一动历史本身的（图 10.3）</div>
+    </div>
+    <div class="card"><span class="cls">移出再拉回</span>
+      <div class="nm">记笔记</div>
+      <div class="en">note-taking</div>
+      <div class="how">要长期记住的写进窗口外的笔记（如一份 NOTES 文件），后续按需拉回</div>
+      <div class="fit">适合：<b>跨越多轮的任务状态</b></div>
+      <div class="cost">担着重建成本；写进去的每条要有来历——不然就是又一个没人认领的真相源（10.5）</div>
+    </div>
+    <div class="card"><span class="cls">移出再拉回</span>
+      <div class="nm">按需检索</div>
+      <div class="en">JIT retrieval</div>
+      <div class="how">上下文里只存轻量标识（文件路径、查询、链接），运行时才把正文拉进来</div>
+      <div class="fit">适合：<b>大语料</b></div>
+      <div class="cost">担着重建成本；拉回的正文随源头改动，不参与 replay 一致性（10.8）</div>
+    </div>
+    <div class="card"><span class="cls">分流</span>
+      <div class="nm">子代理</div>
+      <div class="en">subagent</div>
+      <div class="how">让子代理用干净窗口做一段深活，只回传一两千 token 的浓缩结论</div>
+      <div class="fit">适合：<b>能切分的深探</b></div>
+      <div class="cost">担着子代理的往返；委派的完整账法在第十二章</div>
+    </div>
+  </div>
+
+  <div class="nums">
+    <h5>收益是可量的（Anthropic 官方口径，指标各有出处）</h5>
+    <p>context editing ＋ memory 工具组合，内部 agentic search 评测较 baseline 抬了 <b>39%</b>（官方口径是 performance，未拆到具体指标）；百轮 web 检索评测里，仅 context editing 就让原本因 context 耗尽而失败的工作流跑完、token 消耗压了 <b>84%</b>；MCP 工具目录从全量预载改成按需发现，一个跨系统工作流 <b>15 万 token → 2 千</b>——代价换了个地方：agent 生成的代码得跑在带沙箱、限额与监控的执行环境里。</p>
+  </div>
+
+  <div class="notes">
+    <div class="nc warn">
+      <h4>省下的没有一样白得</h4>
+      <p>压缩担着<b>崩溃与缓存</b>的账，移出窗口担着<b>重建成本</b>，分流担着<b>子代理的往返</b>。<span class="k">选手段就是选愿意担哪笔账</span>——四张卡的虚线栏就是这笔账的登记位。</p>
+    </div>
+    <div class="nc">
+      <h4>为什么压缩单独占一节</h4>
+      <p>四种手段里只有压缩<b>动的是历史本身</b>——另外三种动的都是窗口外的东西，完整历史原封不动。所以它单独领一套事务纪律：<span class="k">失败回退、边界落盘、约束不入压缩、配对修复</span>（10.3／10.4，图 10.3）。</p>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div><span class="dot"></span>《Harness Study · 架构与工程卷》10.2 四种手段 · 10.1 注意力预算 · 数字出处 Anthropic context engineering／Managing context／Code execution with MCP</div>
+  </div>
+</div></div></body></html>

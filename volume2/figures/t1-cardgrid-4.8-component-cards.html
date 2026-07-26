@@ -19,6 +19,8 @@
   .cut{margin-top:8px;font-family:var(--f-body);font-size:14px;color:var(--amber);
     border-top:1px dashed var(--amber);padding-top:7px;line-height:1.4}
   .cut b{color:var(--amber)}
+  .bnd{margin-top:8px;font-family:var(--f-body);font-size:14px;color:var(--t3);
+    border-top:1px dashed var(--divider);padding-top:7px;line-height:1.4}
   .special{border-color:var(--purple-dark);border-style:dashed}
 
   .notes{display:flex;gap:18px;margin-top:6px}
@@ -58,7 +60,7 @@
         <div class="duty">归档 trajectory / policy 决策 / verifier 结论 / artifact 来历</div>
         <div class="ct">证据契约——只存不判</div>
         <div class="base">单机基线：<b>与事件流分储</b>（不把高频小事件与低频大归档压进同一张表）</div>
-        <div class="cut">✂ 判断动作归第十三章证据面，不在这张卡上</div>
+        <div class="bnd">判断动作归第十三章证据面，不在这张卡上</div>
       </div>
     </div>
   </div>
@@ -90,7 +92,7 @@
         <div class="nm">入口层</div>
         <div class="duty">UI / API / IM / scheduler——适配意图、转发流</div>
         <div class="ct">交互契约的呈现半边</div>
-        <div class="base"><b>投影不回写</b>；不实现任何 permission、cancel 捷径——四种语义只在内核</div>
+        <div class="base">单机基线：<b>守薄投影，不回写</b>；不实现任何 permission、cancel 捷径——四种语义只在内核</div>
         <div class="cut">把界面做厚一直有诱惑，代价是引回一份"第二真相"</div>
       </div>
       <div class="card"><span class="lv">L2</span>
@@ -113,7 +115,7 @@
   <div class="notes">
     <div class="nc">
       <h4>L 级起步：六张 L2、两张 L1</h4>
-      <p>本章<b>不给自己评级</b>——L 尺量的是机制，本章交付的是图。第六栏写的是每个未来机制的<span class="k">起步预期</span>，当作第五到十三章的验收底线预告。带 ✂ 的四条是取舍栏里的迁移信号，不带的两张不设断口，这个不对称本身是信息。</p>
+      <p>本章<b>不给自己评级</b>——L 尺量的是机制，本章交付的是图。第六栏写的是每个未来机制的<span class="k">起步预期</span>（虚线框即两张 L1 卡），当作第五到十三章的验收底线预告。带 ✂ 的四条对应 4.7 的四个切换信号；其余四张不设迁移断口，这个不对称本身是信息。</p>
     </div>
     <div class="nc warn">
       <h4>组件边界即迁移断口</h4>
