@@ -1,0 +1,166 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="_base.css">
+<style>
+  .stage{margin-top:20px}
+  svg{display:block;width:100%;height:auto}
+  .nb{fill:var(--card);stroke:var(--purple);stroke-width:2}
+  .nb-term{fill:#fff;stroke:var(--purple-dark);stroke-width:2}
+  .nb-bad{fill:rgba(179,55,42,.06);stroke:var(--red);stroke-width:2}
+  .nt{font-family:var(--f-head);font-size:19px;font-weight:800;fill:var(--t1)}
+  .ns{font-family:var(--f-body);font-size:13.4px;fill:var(--t3)}
+  .ed{stroke:var(--purple);stroke-width:2;fill:none;marker-end:url(#ah)}
+  .ed-b{stroke:var(--red);stroke-width:2;fill:none;marker-end:url(#ahr)}
+  .ed-x{stroke:var(--t3);stroke-width:1.8;fill:none;stroke-dasharray:6 5;opacity:.55}
+  .gb{fill:none;stroke:var(--purple-dark);stroke-width:1.5;stroke-dasharray:7 5;opacity:.5}
+  .gl{font-family:var(--f-label);font-size:13px;font-weight:700;fill:var(--purple-dark);letter-spacing:.08em}
+  .nm{fill:var(--purple)}
+  .nmt{font-family:var(--f-label);font-size:12.6px;font-weight:700;fill:#fff}
+  .cal{fill:rgba(26,20,40,.03);stroke:var(--t3);stroke-width:1.4;stroke-dasharray:6 5;opacity:.75}
+  .calt{font-family:var(--f-body);font-size:13.2px;fill:var(--t2)}
+  .calh{font-family:var(--f-head);font-size:13.4px;font-weight:700;fill:var(--t2)}
+
+  .cols{display:flex;gap:16px;margin-top:20px}
+  .card{flex:1;border:1px solid var(--divider);border-radius:var(--radius);background:var(--card);
+    overflow:hidden;box-shadow:var(--shadow)}
+  .ch{font-family:var(--f-label);font-size:12.4px;font-weight:700;color:#fff;background:var(--purple);
+    letter-spacing:.1em;padding:7px 13px}
+  table{width:100%;border-collapse:collapse;font-size:12.8px}
+  td,th{padding:6px 11px;border-top:1px solid var(--divider);text-align:left;line-height:1.45;vertical-align:top}
+  th{font-family:var(--f-head);font-size:12.2px;font-weight:700;color:var(--t3);background:var(--purple-muted)}
+  td:first-child{font-family:var(--f-label);font-weight:700;color:var(--purple);width:26px}
+  .tw td:first-child{width:88px;font-family:var(--f-head);color:var(--t1)}
+  td b{color:var(--t1)}
+  .note{margin-top:12px;font-size:12.8px;color:var(--t3);line-height:1.6}
+  .note b{color:var(--t2)}
+</style></head>
+<body><div class="canvas"><div class="grid-bg"></div><div class="inner">
+  <span class="label-type">Harness Study · 第二卷 5.2</span>
+  <h1>run 的七个状态：<span class="em">卡在 running 不是状态，是缺陷</span></h1>
+  <div class="sub">每个状态都是被一种处境逼出来的，每条转移都由「触发事件 ＋ guard ＋ 目标状态 ＋ terminal reason」四要素定义。这张图给形状，转移表给条文。</div>
+  <hr class="rule">
+
+  <div class="stage">
+  <svg viewBox="0 0 1188 432" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#6d28d9"/></marker>
+      <marker id="ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#b3372a"/></marker>
+    </defs>
+
+    <!-- 终态组框 -->
+    <rect class="gb" x="812" y="14" width="206" height="356" rx="12"/>
+    <text class="gl" x="915" y="392" text-anchor="middle">三个终态 · 互不连边</text>
+
+    <!-- 节点 -->
+    <g><rect class="nb" x="40" y="165" width="150" height="54" rx="10"/>
+      <text class="nt" x="115" y="188" text-anchor="middle">queued</text>
+      <text class="ns" x="115" y="207" text-anchor="middle">已接受 · 未执行</text></g>
+
+    <g><rect class="nb" x="420" y="40" width="150" height="54" rx="10"/>
+      <text class="nt" x="495" y="63" text-anchor="middle">waiting</text>
+      <text class="ns" x="495" y="82" text-anchor="middle">等系统给不出的输入</text></g>
+
+    <g><rect class="nb" x="420" y="165" width="150" height="54" rx="10"/>
+      <text class="nt" x="495" y="188" text-anchor="middle">running</text>
+      <text class="ns" x="495" y="207" text-anchor="middle">唯一消耗执行资源</text></g>
+
+    <g><rect class="nb-bad" x="420" y="290" width="150" height="54" rx="10"/>
+      <text class="nt" x="495" y="313" text-anchor="middle" fill="#b3372a">interrupted</text>
+      <text class="ns" x="495" y="332" text-anchor="middle">进程非自愿消失</text></g>
+
+    <g><rect class="nb-term" x="830" y="32" width="170" height="52" rx="10"/>
+      <text class="nt" x="915" y="54" text-anchor="middle">completed</text>
+      <text class="ns" x="915" y="72" text-anchor="middle">触发交付与通知</text></g>
+
+    <g><rect class="nb-term" x="830" y="166" width="170" height="52" rx="10"/>
+      <text class="nt" x="915" y="188" text-anchor="middle">cancelled</text>
+      <text class="ns" x="915" y="206" text-anchor="middle">不进失败率 · 不重试</text></g>
+
+    <g><rect class="nb-term" x="830" y="300" width="170" height="52" rx="10"/>
+      <text class="nt" x="915" y="322" text-anchor="middle">failed</text>
+      <text class="ns" x="915" y="340" text-anchor="middle">归因与重试判断</text></g>
+
+    <!-- 转移边 -->
+    <path class="ed" d="M190,192 L414,192"/>
+    <path class="ed" d="M475,165 L475,100"/>
+    <path class="ed" d="M515,100 L515,159"/>
+    <path class="ed" d="M570,178 L824,66"/>
+    <path class="ed" d="M570,192 L824,192"/>
+    <path class="ed" d="M570,206 L824,318"/>
+    <path class="ed-b" d="M495,219 L495,284"/>
+    <path class="ed" d="M420,317 L115,317 L115,225"/>
+    <path class="ed" d="M570,326 L824,326"/>
+
+    <!-- 边号 -->
+    <g><circle class="nm" cx="302" cy="192" r="11"/><text class="nmt" x="302" y="197" text-anchor="middle">1</text></g>
+    <g><circle class="nm" cx="475" cy="131" r="11"/><text class="nmt" x="475" y="136" text-anchor="middle">2</text></g>
+    <g><circle class="nm" cx="515" cy="131" r="11"/><text class="nmt" x="515" y="136" text-anchor="middle">3</text></g>
+    <g><circle class="nm" cx="700" cy="117" r="11"/><text class="nmt" x="700" y="122" text-anchor="middle">4</text></g>
+    <g><circle class="nm" cx="700" cy="192" r="11"/><text class="nmt" x="700" y="197" text-anchor="middle">5</text></g>
+    <g><circle class="nm" cx="700" cy="266" r="11"/><text class="nmt" x="700" y="271" text-anchor="middle">6</text></g>
+    <g><circle cx="495" cy="252" r="11" fill="#b3372a"/><text class="nmt" x="495" y="257" text-anchor="middle">7</text></g>
+    <g><circle class="nm" cx="268" cy="317" r="11"/><text class="nmt" x="268" y="322" text-anchor="middle">8</text></g>
+    <g><circle class="nm" cx="700" cy="326" r="11"/><text class="nmt" x="700" y="331" text-anchor="middle">9</text></g>
+
+    <!-- 有意不设 callout（含自足小示意，不画进主图以免与边 1 交叠） -->
+    <rect class="cal" x="40" y="336" width="400" height="84" rx="8"/>
+    <g>
+      <rect x="58" y="350" width="90" height="26" rx="6" fill="#fff" stroke="#8a8098" stroke-width="1.4"/>
+      <text x="103" y="368" text-anchor="middle" font-family="Inter,sans-serif" font-size="13.4" font-weight="700" fill="#8a8098">interrupted</text>
+      <path class="ed-x" d="M154,363 L192,363"/>
+      <circle cx="173" cy="363" r="10" fill="#f4f0eb" stroke="#8a8098" stroke-width="1.4"/>
+      <path d="M168.5,358.5 L177.5,367.5 M177.5,358.5 L168.5,367.5" stroke="#8a8098" stroke-width="1.8"/>
+      <rect x="198" y="350" width="74" height="26" rx="6" fill="#fff" stroke="#8a8098" stroke-width="1.4"/>
+      <text x="235" y="368" text-anchor="middle" font-family="Inter,sans-serif" font-size="13.4" font-weight="700" fill="#8a8098">waiting</text>
+      <text class="calh" x="286" y="368">这条回路有意不设</text>
+    </g>
+    <text class="calt" x="58" y="400">旧审批不跨崩溃继续有效——恢复后授权要重验一次（11.6 节）</text>
+  </svg>
+  </div>
+
+  <div class="cols">
+    <div class="card">
+      <div class="ch">转移表节选 · 全表十七行住工作制品 H（Run 状态转移表）</div>
+      <table>
+        <thead><tr><th>#</th><th>触发事件</th><th>guard（什么前提必须先成立）</th><th>目标 / terminal reason</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>内核派发</td><td>同会话无活跃 run 且额度足够</td><td>running</td></tr>
+          <tr><td>2</td><td>需要审批或追问</td><td>—</td><td>waiting</td></tr>
+          <tr><td>3</td><td>输入到达</td><td>授权仍有效（<b>需重验</b>）</td><td>running</td></tr>
+          <tr><td>4</td><td>任务做完</td><td>—</td><td>completed</td></tr>
+          <tr><td>5</td><td>新意图触发抢占</td><td>旧 run 半轮内容已终态化落盘</td><td>cancelled（preempted）</td></tr>
+          <tr><td>6</td><td>执行出错</td><td>—</td><td>failed（业务失败）</td></tr>
+          <tr><td>7</td><td><b>启动扫描</b>发现进程不在</td><td>进程标识已消失</td><td>interrupted</td></tr>
+          <tr><td>8</td><td>恢复裁决续跑</td><td>版本兼容且 checkpoint 完整</td><td>queued</td></tr>
+          <tr><td>9</td><td>恢复裁决放弃</td><td>版本不兼容或 checkpoint 残缺</td><td>failed（unrecoverable）</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="flex:0 0 386px">
+      <div class="ch">停留上限与超时归宿</div>
+      <table class="tw">
+        <tbody>
+          <tr><td>queued</td><td>排队超时 → cancelled（queue_expired）</td></tr>
+          <tr><td>running</td><td>心跳超时 → <b>看门狗</b>按基础设施失败收尾</td></tr>
+          <tr><td>waiting</td><td>自带 deadline，过期是显式终态</td></tr>
+          <tr><td>interrupted</td><td>由恢复裁决送往续跑或终态（第七章）</td></tr>
+        </tbody>
+      </table>
+      <div class="ch" style="background:var(--purple-dark)">两条扫描路径，别混</div>
+      <table class="tw">
+        <tbody>
+          <tr><td>看门狗</td><td>进程<b>还在</b>、run 卡死 → 直接给终态</td></tr>
+          <tr><td>启动扫描</td><td>进程<b>没了</b>、可能有救 → 收敛 interrupted，交恢复裁决</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="note">一条铁律压轴：<b>终态之间不许互转</b>——completed 改成 failed 等于改写历史。判错了就追加一条更正记录指向原状态，历史本身不动。代码里改 <b>run.status</b> 的路径只许有一条：内核的 transition 函数，查表、验 guard、写状态、落一条 run.* 事件。</div>
+
+  <div class="foot">
+    <div><span class="dot"></span>《Harness Study · 架构与工程卷》5.2 七状态 · 5.3 转移四要素 · 5.8 孤儿 run 与看门狗</div>
+  </div>
+</div></div></body></html>
