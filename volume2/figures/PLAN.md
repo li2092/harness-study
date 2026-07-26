@@ -2,7 +2,7 @@
 
 ## 进度（随批更新 · 压缩上下文后从这里接续）
 
-**已画 11 张，全部过 linter（五类检查全绿）。其中 9 张已接入正文，2 张待接。**
+**已画 11 张，全部过 linter（五类检查全绿），且全部已接入正文。**
 
 | 图 | 图型 | 文件 | 接入正文 |
 |---|---|---|---|
@@ -15,10 +15,10 @@
 | 8.2 四段账 | flow | `t1-flow-8.2-four-stage-ledger` | ✓ |
 | 11.7 五平面与三干预点 | layered | `t1-layered-11.7-five-planes` | ✓ |
 | 13.2 一条事件的解剖 | flow | `t1-flow-13.2-event-anatomy` | ✓ |
-| **12.2 双层控制流** | layered | `t1-layered-12.2-two-tier-control` | **✗ 待接**：替换 `12-multi-agent.md` 的「（配图占位：双层控制流图…）」整行 |
-| **14.2 十四步构造序** | layered | `t1-layered-14.2-build-order` | **✗ 待接**：该章无占位，插在 `14-build.md` 中「那些功能就是空中楼阁，第一次真出故障就立不住。」这句之后 |
+| 12.2 双层控制流 | layered | `t1-layered-12.2-two-tier-control` | ✓ |
+| 14.2 十四步构造序 | layered | `t1-layered-14.2-build-order` | ✓（该章原无占位，插在依赖顺序论述之后） |
 
-接完这两张须 `cd ../pdf-build && ~/.venvs/docgen/bin/python build_pdf.py` 重建（上次构建时只有 7 张图）。
+Tier 1 十六张已完成 11 张，正文全部接线。
 
 **下一批（第三批 5 张，凑齐 Tier 1 十六张）**：第二章契约六要素（cardgrid，2.4）、第九章三条时间线（sequence，9.1）、第十章压缩事务（flow，10.3）、第十五章九十分钟流程（flow，15.3）、附录六条主线地图（matrix）。
 
