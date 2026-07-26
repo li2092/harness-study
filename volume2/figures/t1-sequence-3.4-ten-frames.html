@@ -105,7 +105,7 @@
     <text class="llab" x="10" y="157">HTTP 请求体</text><text class="lsub" x="10" y="171">易失</text>
     <text class="llab" x="10" y="201">服务端内存</text><text class="lsub" x="10" y="215">易失</text>
     <text class="llab" x="10" y="245">SSE 流</text><text class="lsub" x="10" y="259">易失</text>
-    <text class="llab" x="10" y="305">SQLite</text><text class="lsub" x="10" y="319" fill="#067a5b">唯一持久</text>
+    <text class="llab" x="10" y="305">SQLite</text><text class="lsub" x="10" y="319" style="fill:#067a5b">唯一持久</text>
 
     <!-- M5 轨迹（实线粗）-->
     <g>
@@ -126,19 +126,19 @@
       <path class="r1" d="M500,246 L500,212"/>
       <path class="r1" d="M500,206 L1000,206"/>
       <path class="r1" style="opacity:.5" d="M1000,206 L1092,206"/>
-      <g><line class="gone" x1="1093" y1="199" x2="1107" y2="213" opacity=".7"/><line class="gone" x1="1107" y1="199" x2="1093" y2="213" opacity=".7"/></g>
+      <g><line class="gone" x1="1093" y1="199" x2="1107" y2="213" style="opacity:.7"/><line class="gone" x1="1107" y1="199" x2="1093" y2="213" style="opacity:.7"/></g>
       <g><circle cx="600" cy="108" r="8" fill="#f4f0eb" stroke="#b3372a" stroke-width="1.6"/>
-        <line class="gone" x1="596" y1="104" x2="604" y2="112" stroke-width="1.6"/><line class="gone" x1="604" y1="104" x2="596" y2="112" stroke-width="1.6"/></g>
+        <line class="gone" x1="596" y1="104" x2="604" y2="112" style="stroke-width:1.6"/><line class="gone" x1="604" y1="104" x2="596" y2="112" style="stroke-width:1.6"/></g>
     </g>
 
     <!-- SQLite 行内容 -->
     <g>
       <path d="M172,300 L1042,300" stroke="#067a5b" stroke-width="2.6" fill="none" stroke-linecap="round"/>
-      <text class="ut" x="200" y="291" text-anchor="middle" fill="#067a5b" font-weight="700">M1–M4</text>
-      <text class="ut" x="620" y="291" text-anchor="middle" fill="#067a5b">从帧 0 到帧 8，库里一直只有 M1–M4——运行中的这一轮，持久层全程不知情</text>
+      <text class="ut" x="200" y="291" text-anchor="middle" style="fill:#067a5b;font-weight:700">M1–M4</text>
+      <text class="ut" x="620" y="291" text-anchor="middle" style="fill:#067a5b">从帧 0 到帧 8，库里一直只有 M1–M4——运行中的这一轮，持久层全程不知情</text>
       <path d="M1042,300 L1092,300" stroke="#067a5b" stroke-width="2.6" fill="none"/>
       <circle cx="1100" cy="300" r="7" fill="#067a5b"/>
-      <text class="ut" x="1100" y="291" text-anchor="middle" fill="#067a5b" font-weight="700">＋M5′·R2</text>
+      <text class="ut" x="1100" y="291" text-anchor="middle" style="fill:#067a5b;font-weight:700">＋M5′·R2</text>
     </g>
 
     <!-- 三个缺口锚点 -->
@@ -152,13 +152,13 @@
     </g>
 
     <!-- 缺失证据带 -->
-    <text class="hd" x="10" y="392" fill="#b56a09">缺失的证据</text>
+    <text class="hd" x="10" y="392" style="fill:#b56a09">缺失的证据</text>
     <g>
-      <rect class="ev" x="256" y="376" width="188" height="22" rx="5"/><text class="ut" x="350" y="392" text-anchor="middle" fill="#b56a09">M5 被接受的记录</text>
-      <rect class="ev" x="456" y="376" width="488" height="22" rx="5"/><text class="ut" x="700" y="392" text-anchor="middle" fill="#b56a09">R1 已生成内容的快照</text>
-      <rect class="ev" x="556" y="406" width="188" height="22" rx="5"/><text class="ut" x="650" y="422" text-anchor="middle" fill="#b56a09">导航离开与 SSE 断开事件</text>
-      <rect class="ev" x="856" y="406" width="88" height="22" rx="5"/><text class="ut" x="900" y="422" text-anchor="middle" fill="#b56a09">R1 被抢占</text>
-      <rect class="ev" x="956" y="406" width="88" height="22" rx="5"/><text class="ut" x="1000" y="422" text-anchor="middle" fill="#b56a09">跳过落库的痕迹</text>
+      <rect class="ev" x="256" y="376" width="188" height="22" rx="5"/><text class="ut" x="350" y="392" text-anchor="middle" style="fill:#b56a09">M5 被接受的记录</text>
+      <rect class="ev" x="456" y="376" width="488" height="22" rx="5"/><text class="ut" x="700" y="392" text-anchor="middle" style="fill:#b56a09">R1 已生成内容的快照</text>
+      <rect class="ev" x="556" y="406" width="188" height="22" rx="5"/><text class="ut" x="650" y="422" text-anchor="middle" style="fill:#b56a09">导航离开与 SSE 断开事件</text>
+      <rect class="ev" x="856" y="406" width="88" height="22" rx="5"/><text class="ut" x="900" y="422" text-anchor="middle" style="fill:#b56a09">R1 被抢占</text>
+      <rect class="ev" x="956" y="406" width="88" height="22" rx="5"/><text class="ut" x="1000" y="422" text-anchor="middle" style="fill:#b56a09">跳过落库的痕迹</text>
     </g>
 
     <!-- 图例 -->

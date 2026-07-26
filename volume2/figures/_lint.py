@@ -15,7 +15,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 files = [pathlib.Path(a) for a in sys.argv[1:]] or sorted(HERE.glob("t*.html"))
 
 JS = r"""() => {
-  const out = {occluded: [], outside: [], overflow: [], shortArrow: []};
+  const out = {occluded: [], outside: [], overflow: [], shortArrow: [], overridden: []};
   const svg = document.querySelector('svg');
   if (!svg) return out;
   const vb = svg.viewBox.baseVal;
@@ -92,6 +92,25 @@ JS = r"""() => {
     }
   }
 
+  // 5. 颜色/字号被 class 压掉：SVG 表现属性优先级低于任何 CSS 规则，
+  //    写了 fill="#xxx" 却被 .cls{fill:...} 覆盖时，强调会静默消失
+  for (const el of svg.querySelectorAll('[fill],[stroke],[font-size],[font-weight]')) {
+    for (const prop of ['fill','stroke','font-size','font-weight']) {
+      const attr = el.getAttribute(prop);
+      if (!attr || attr === 'none' || !el.getAttribute('class')) continue;
+      const used = getComputedStyle(el)[prop];
+      const probe = document.createElement('span');
+      probe.style.setProperty(prop === 'fill' || prop === 'stroke' ? 'color' : prop, attr);
+      document.body.appendChild(probe);
+      const want = getComputedStyle(probe)[prop === 'fill' || prop === 'stroke' ? 'color' : prop];
+      probe.remove();
+      if (want && used && want !== used) {
+        out.overridden.push({t: (el.textContent||'').trim().slice(0,20) || el.tagName,
+                             cls: el.getAttribute('class'), prop, attr, used});
+      }
+    }
+  }
+
   // 4. 短箭头
   for (const p of svg.querySelectorAll('path')) {
     const st = getComputedStyle(p);
@@ -124,7 +143,7 @@ with sync_playwright() as pw:
         bad += 1
         print(f"✗ {f.name}")
         for k, zh in (("occluded", "被遮挡"), ("outside", "出界"),
-                      ("overflow", "溢出所属框"), ("shortArrow", "箭头过短")):
+                      ("overflow", "溢出所属框"), ("shortArrow", "箭头过短"), ("overridden", "颜色/字号被 class 压掉")):
             for it in r[k]:
                 print(f"    [{zh}] {json.dumps(it, ensure_ascii=False)}")
     b.close()

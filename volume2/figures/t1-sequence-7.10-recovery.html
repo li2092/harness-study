@@ -1,0 +1,140 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="_base.css">
+<style>
+  .stage{margin-top:26px}
+  svg{display:block;width:100%;height:auto}
+  .lsep{stroke:var(--divider);stroke-width:1}
+  .hd{font-family:var(--f-label);font-size:16px;font-weight:700;fill:var(--t3);letter-spacing:.1em}
+  .sb{fill:#fff;stroke:var(--purple);stroke-width:2.4}
+  .sn{font-family:var(--f-head);font-size:21px;font-weight:800;fill:var(--purple)}
+  .st{font-family:var(--f-head);font-size:18px;font-weight:700;fill:var(--t1)}
+  .ss{font-family:var(--f-body);font-size:15.5px;fill:var(--t3)}
+  .src{fill:var(--purple-light);stroke:var(--purple);stroke-width:1.6}
+  .srct{font-family:"JetBrains Mono",monospace;font-size:14px;font-weight:700;fill:var(--purple-dark)}
+  .fail{font-family:var(--f-body);font-size:15px;fill:var(--red)}
+  .ar{stroke:var(--purple);stroke-width:2.4;fill:none;marker-end:url(#ah)}
+  .amb{fill:rgba(181,106,9,.09);stroke:var(--amber);stroke-width:2}
+  .ambt{font-family:var(--f-head);font-size:15.5px;font-weight:700;fill:var(--amber)}
+
+  .notes{display:flex;gap:18px;margin-top:22px}
+  .nc{flex:1;border:1px solid var(--divider);border-left:4px solid var(--purple);
+    border-radius:8px;background:var(--card);padding:13px 17px;box-shadow:var(--shadow)}
+  .nc.warn{border-left-color:var(--amber)}
+  .nc h4{font-family:var(--f-head);font-size:18px;font-weight:700;color:var(--t1);margin-bottom:6px}
+  .nc p{font-family:var(--f-body);font-size:16.5px;color:var(--t2);line-height:1.6}
+  .nc b{color:var(--t1)} .nc .k{font-family:var(--f-head);font-weight:700;color:var(--purple-dark)}
+  .nc.warn .k{color:var(--amber)}
+</style></head>
+<body><div class="canvas"><div class="grid-bg"></div><div class="inner">
+  <span class="label-type">Harness Study · 第二卷 7.10</span>
+  <h1>崩溃之后的七步：<span class="em">每步读什么、失败了去哪</span></h1>
+  <div class="sub">kill -9 之后系统怎么回到一个可解释的状态。左边是步骤，中间是这一步<b>从哪张持久件里读</b>——这张图也是评审尺：拿七步逐步问，问不出的那步就是缺口。</div>
+  <hr class="rule">
+
+  <div class="stage">
+  <svg viewBox="0 0 1188 626" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#6d28d9"/></marker>
+    </defs>
+
+    <text class="hd" x="14" y="26">步骤</text>
+    <text class="hd" x="638" y="26">读哪件持久件</text>
+    <text class="hd" x="872" y="26">这一步的分支去向</text>
+    <line class="lsep" x1="626" y1="34" x2="626" y2="614"/>
+    <line class="lsep" x1="860" y1="34" x2="860" y2="614"/>
+
+    <!-- 步 1 -->
+    <g><rect class="sb" x="14" y="44" width="600" height="60" rx="10"/>
+      <text class="sn" x="36" y="82">1</text>
+      <text class="st" x="66" y="72">壳层拉起进程</text>
+      <text class="ss" x="66" y="93">supervision 检测退出、退避重启</text></g>
+    <g><rect class="src" x="638" y="58" width="210" height="32" rx="6"/>
+      <text class="srct" x="654" y="79">supervisor</text></g>
+    <text class="fail" x="872" y="79">重启强度超限 → 停下呈人</text>
+
+    <!-- 步 2 -->
+    <path class="ar" d="M314,104 L314,126"/>
+    <g><rect class="sb" x="14" y="128" width="600" height="66" rx="10"/>
+      <text class="sn" x="36" y="169">2</text>
+      <text class="st" x="66" y="156">启动扫描认领孤儿，<tspan fill="#b56a09">连同 timer 表一起扫</tspan></text>
+      <text class="ss" x="66" y="178">扫 running / waiting 的行；实例锁保证只有一个认领者</text></g>
+    <g><rect class="src" x="638" y="136" width="210" height="28" rx="6"/>
+      <text class="srct" x="654" y="155">实例锁 · runs</text></g>
+    <g><rect class="src" x="638" y="168" width="210" height="28" rx="6"/>
+      <text class="srct" x="654" y="187">timers</text></g>
+    <text class="fail" x="872" y="155">到期未触发的 timer：按 purpose</text>
+    <text class="fail" x="872" y="177">补触发或显式作废，每笔落事件</text>
+
+    <!-- 步 3 -->
+    <path class="ar" d="M314,194 L314,216"/>
+    <g><rect class="sb" x="14" y="218" width="600" height="60" rx="10"/>
+      <text class="sn" x="36" y="256">3</text>
+      <text class="st" x="66" y="246">定位截断点</text>
+      <text class="ss" x="66" y="267">读事件表最后一个完整事件；写半行的按截断纪律丢弃</text></g>
+    <g><rect class="src" x="638" y="232" width="210" height="32" rx="6"/>
+      <text class="srct" x="654" y="253">events · 工作制品 C</text></g>
+    <text class="fail" x="872" y="245">状态行与事件对不上，</text>
+    <text class="fail" x="872" y="267">以事件重建</text>
+
+    <!-- 步 4 -->
+    <path class="ar" d="M314,278 L314,300"/>
+    <g><rect class="sb" x="14" y="302" width="600" height="60" rx="10"/>
+      <text class="sn" x="36" y="340">4</text>
+      <text class="st" x="66" y="330">逐条裁决</text>
+      <text class="ss" x="66" y="351">版本兼容且 checkpoint 完整 → 送回 queued 续跑</text></g>
+    <g><rect class="src" x="638" y="316" width="210" height="32" rx="6"/>
+      <text class="srct" x="654" y="337">工作制品 H 续跑两行</text></g>
+    <text class="fail" x="872" y="329">其余 → failed</text>
+    <text class="fail" x="872" y="351">（unrecoverable）；每笔落事件</text>
+
+    <!-- 步 5 -->
+    <path class="ar" d="M314,362 L314,384"/>
+    <g><rect class="sb" x="14" y="386" width="600" height="60" rx="10"/>
+      <text class="sn" x="36" y="424">5</text>
+      <text class="st" x="66" y="414">重建执行环境</text>
+      <text class="ss" x="66" y="435">按 compaction 边界重组 context 投影</text></g>
+    <g><rect class="src" x="638" y="400" width="210" height="32" rx="6"/>
+      <text class="srct" x="654" y="421">工作制品 I · Lifetime</text></g>
+    <text class="fail" x="872" y="413">投影可重建，这步没有恢复负担；</text>
+    <text class="fail" x="872" y="435">子进程与句柄按 I 重建，不从 checkpoint 捞</text>
+
+    <!-- 步 6 -->
+    <path class="ar" d="M314,446 L314,468"/>
+    <g><rect class="sb" x="14" y="470" width="600" height="60" rx="10"/>
+      <text class="sn" x="36" y="508">6</text>
+      <text class="st" x="66" y="498">模型调用走账本</text>
+      <text class="ss" x="66" y="519">读 invocation 留档，完整行<tspan font-weight="700" fill="#1a1428">复用、不重调</tspan></text></g>
+    <g><rect class="src" x="638" y="484" width="210" height="32" rx="6"/>
+      <text class="srct" x="654" y="505">invocations</text></g>
+    <text class="fail" x="872" y="497">从第一个无记录的调用起，</text>
+    <text class="fail" x="872" y="519">才是新执行</text>
+
+    <!-- 步 7 -->
+    <path class="ar" d="M314,530 L314,552"/>
+    <g><rect class="sb" x="14" y="554" width="600" height="60" rx="10"/>
+      <text class="sn" x="36" y="592">7</text>
+      <text class="st" x="66" y="582">副作用对账</text>
+      <text class="ss" x="66" y="603">intent 有、result 无的行标 unknown 进调和</text></g>
+    <g><rect class="src" x="638" y="568" width="210" height="32" rx="6"/>
+      <text class="srct" x="654" y="589">effects · 工作制品 B</text></g>
+    <g><rect class="amb" x="866" y="566" width="308" height="36" rx="7"/>
+      <text class="ambt" x="1020" y="590" text-anchor="middle">此处不自动重放 → 第八章四类处置</text></g>
+  </svg>
+  </div>
+
+  <div class="notes">
+    <div class="nc">
+      <h4>七步，不是八步</h4>
+      <p>timer 扫描<b>并进步 2</b>，跟孤儿认领同一遍扫描完成——不单列一步。少一遍扫描，也少一处「两遍之间又崩了」的缝。</p>
+    </div>
+    <div class="nc warn">
+      <h4>恢复过程自己也要可观测</h4>
+      <p><span class="k">每步落事件</span>。否则崩溃恢复是一段无人见证的黑箱——出了问题连「恢复到底做没做、做到哪一步」都答不上来。</p>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div><span class="dot"></span>《Harness Study · 架构与工程卷》7.10 七步恢复时序 · 第五章 5.8/5.9 · 第六章 6.1/6.6 · 第八章四类处置</div>
+  </div>
+</div></div></body></html>

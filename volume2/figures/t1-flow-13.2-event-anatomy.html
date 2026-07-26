@@ -47,9 +47,9 @@
 
     <!-- 热路径 / 离线 分区 -->
     <rect class="hot" x="14" y="30" width="700" height="238" rx="12"/>
-    <text class="zh" x="34" y="54" fill="#b3372a">热路径 · 只写不可争议的事实</text>
+    <text class="zh" x="34" y="54" style="fill:#b3372a">热路径 · 只写不可争议的事实</text>
     <rect class="cold" x="740" y="30" width="434" height="308" rx="12"/>
-    <text class="zh" x="760" y="54" fill="#067a5b">离线 · 由 reducer 从事件重新算出解释</text>
+    <text class="zh" x="760" y="54" style="fill:#067a5b">离线 · 由 reducer 从事件重新算出解释</text>
 
     <!-- 事件本体 -->
     <g><rect class="ev" x="40" y="72" width="648" height="172" rx="12"/>
@@ -63,7 +63,7 @@
       <rect class="env" x="158" y="154" width="128" height="34" rx="6"/><text class="envt" x="222" y="177" text-anchor="middle">conversation</text>
       <rect class="env" x="292" y="154" width="60" height="34" rx="6"/><text class="envt" x="322" y="177" text-anchor="middle">run</text>
       <rect class="env" x="358" y="154" width="66" height="34" rx="6"/><text class="envt" x="391" y="177" text-anchor="middle">turn</text>
-      <rect class="gap"  x="430" y="154" width="66" height="34" rx="6"/><text class="envt" x="463" y="177" text-anchor="middle" fill="#b3372a">step</text>
+      <rect class="gap"  x="430" y="154" width="66" height="34" rx="6"/><text class="envt" x="463" y="177" text-anchor="middle" style="fill:#b3372a">step</text>
       <rect class="env" x="502" y="154" width="106" height="34" rx="6"/><text class="envt" x="555" y="177" text-anchor="middle">invocation</text>
       <rect class="env" x="614" y="154" width="72" height="34" rx="6"/><text class="envt" x="650" y="177" text-anchor="middle">effect</text>
       <rect class="env" x="64" y="196" width="86" height="34" rx="6"/><text class="envt" x="107" y="219" text-anchor="middle">artifact</text>
@@ -75,7 +75,7 @@
     <path class="ar-s" d="M688,120 L790,120"/>
     <path class="ar-s" d="M688,140 L790,182"/>
     <path class="ar-s" d="M688,170 L790,244"/>
-    <path class="ar-s" d="M688,196 L790,306" opacity="0"/>
+    <path class="ar-s" d="M688,196 L790,306" style="opacity:0"/>
     <g><rect class="proj" x="796" y="96" width="358" height="46" rx="9"/>
       <text class="pt" x="816" y="126">trajectory</text><text class="ps" x="960" y="126">给评测看的视图</text></g>
     <g><rect class="proj" x="796" y="158" width="358" height="46" rx="9"/>
@@ -88,15 +88,15 @@
     <text class="lb" x="796" y="352">四种投影都可以丢、可以错、<tspan font-weight="700" fill="#1a1428">可以重建</tspan></text>
 
     <!-- 断链后果 -->
-    <path class="ar" d="M463,244 L463,300" stroke="#b3372a" marker-end="url(#ah)" opacity="0"/>
+    <path class="ar" d="M463,244 L463,300" marker-end="url(#ah)" style="stroke:#b3372a;opacity:0"/>
     <g><rect x="14" y="292" width="700" height="76" rx="10" fill="rgba(179,55,42,.06)" stroke="#b3372a" stroke-width="2"/>
-      <text class="red" x="36" y="322" font-size="19">链断一级，因果就断在那一跳</text>
+      <text class="red" x="36" y="322" style="font-size:19">链断一级，因果就断在那一跳</text>
       <text class="lb" x="36" y="348">拼不回「这条事实属于哪次执行的哪一步」——第十二章那句欠条（child trace 以父</text></g>
     <text class="lb" x="36" y="366">run_id 关联、跨 agent 因果链能拼回来）就是在这里兑现的。</text>
 
     <!-- 代价 -->
     <g><rect x="740" y="376" width="434" height="76" rx="10" fill="rgba(26,20,40,.03)" stroke="#8a8098" stroke-width="1.6" stroke-dasharray="6 5"/>
-      <text class="hd" x="760" y="404" fill="#6b6478">代价</text>
+      <text class="hd" x="760" y="404" style="fill:#6b6478">代价</text>
       <text class="lb" x="760" y="428">每条事件冗余八个 ID，存储只涨不删——</text>
       <text class="lb" x="760" y="448">拿存储膨胀换<tspan font-weight="700" fill="#1a1428">任意一条事实的当场定位</tspan>。</text></g>
 

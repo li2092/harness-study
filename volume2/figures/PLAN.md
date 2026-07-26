@@ -2,21 +2,27 @@
 
 ## 进度（随批更新 · 压缩上下文后从这里接续）
 
-**已出 7 张，全部已接入正文并过 linter。** 全书 244 页，图目录页码自动汇总。
+**已画 11 张，全部过 linter（五类检查全绿）。其中 9 张已接入正文，2 张待接。**
 
-| 图 | 图型 | 文件 | 接入 |
+| 图 | 图型 | 文件 | 接入正文 |
 |---|---|---|---|
 | 1.5 六契约×四问检验矩阵 | matrix | `t1-matrix-1.5-contract-grid` | ✓（按裁决挂 1.5，1.0 只留轮廓叙述） |
 | 3.4 十帧重放 | sequence | `t1-sequence-3.4-ten-frames` | ✓ |
+| 4.8 八张组件卡 | cardgrid | `t1-cardgrid-4.8-component-cards` | ✓ |
 | 5.2 run 七状态 | flow | `t1-flow-5.2-run-states` | ✓ |
 | 6.0 六级实体链 | layered | `t1-layered-6.0-entity-chain` | ✓ |
+| 7.10 崩溃后七步 | sequence | `t1-sequence-7.10-recovery` | ✓ |
 | 8.2 四段账 | flow | `t1-flow-8.2-four-stage-ledger` | ✓ |
 | 11.7 五平面与三干预点 | layered | `t1-layered-11.7-five-planes` | ✓ |
 | 13.2 一条事件的解剖 | flow | `t1-flow-13.2-event-anatomy` | ✓ |
+| **12.2 双层控制流** | layered | `t1-layered-12.2-two-tier-control` | **✗ 待接**：替换 `12-multi-agent.md` 的「（配图占位：双层控制流图…）」整行 |
+| **14.2 十四步构造序** | layered | `t1-layered-14.2-build-order` | **✗ 待接**：该章无占位，插在 `14-build.md` 中「那些功能就是空中楼阁，第一次真出故障就立不住。」这句之后 |
 
-**下一批（第二批 4 张）**：第四章八张组件卡（cardgrid，**删数据流向**改画主守契约/L级/迁移断口）、第七章七步恢复时序（sequence，**画 7 步不是 8 步**，timer 已并入步 2）、第十二章双层控制流（layered）、第十四章十四步构造序（layered）。
+接完这两张须 `cd ../pdf-build && ~/.venvs/docgen/bin/python build_pdf.py` 重建（上次构建时只有 7 张图）。
 
-**再往后**：第二章契约六要素（cardgrid）、第九章三条时间线（sequence）、第十章压缩事务（flow）、第十五章九十分钟流程（flow）、附录六条主线地图（matrix）——即凑齐 Tier 1 十六张。Tier 2 十三张待 Tier 1 完成后、拿排好版的 PDF 翻一遍再定取舍。
+**下一批（第三批 5 张，凑齐 Tier 1 十六张）**：第二章契约六要素（cardgrid，2.4）、第九章三条时间线（sequence，9.1）、第十章压缩事务（flow，10.3）、第十五章九十分钟流程（flow，15.3）、附录六条主线地图（matrix）。
+
+Tier 2 十三张待 Tier 1 完成后、拿排好版的 PDF 翻一遍再定取舍（用户已提出「13 张够不够」的疑问，届时一并复议软否的那批）。
 
 **出图流程（每张必过）**：画 → `_render.py` 渲染 → `_lint.py` 检查 → 目视 → 接入正文（删占位）→ 重建 PDF。规范与踩过的坑见 [`README.md`](./README.md)。
 
