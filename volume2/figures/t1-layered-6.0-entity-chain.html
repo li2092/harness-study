@@ -1,0 +1,119 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="_base.css">
+<style>
+  .stage{margin-top:26px}
+  svg{display:block;width:100%;height:auto}
+  .nb{fill:var(--card);stroke:var(--purple);stroke-width:2.4}
+  .nb-opt{fill:var(--card);stroke:var(--purple);stroke-width:2.4;stroke-dasharray:8 5}
+  .nb-nt{fill:rgba(26,20,40,.035);stroke:var(--t3);stroke-width:2;stroke-dasharray:7 5}
+  .lv{font-family:var(--f-label);font-size:19px;font-weight:700;fill:var(--purple)}
+  .nt{font-family:var(--f-head);font-size:25px;font-weight:800;fill:var(--t1)}
+  .ns{font-family:var(--f-body);font-size:16.5px;fill:var(--t3)}
+  .tb{font-family:"JetBrains Mono",monospace;font-size:17px;font-weight:700;fill:var(--purple-dark)}
+  .lk{stroke:var(--purple);stroke-width:2.4;fill:none}
+  .tag{font-family:var(--f-body);font-size:16px;fill:var(--t2)}
+  .ex{fill:rgba(181,106,9,.06);stroke:var(--amber);stroke-width:2;stroke-dasharray:7 5}
+  .exh{font-family:var(--f-head);font-size:18px;font-weight:700;fill:var(--amber)}
+  .ext{font-family:var(--f-body);font-size:16px;fill:var(--t2)}
+  .hd{font-family:var(--f-label);font-size:16px;font-weight:700;fill:var(--t3);letter-spacing:.1em}
+
+  .notes{display:flex;gap:18px;margin-top:22px}
+  .nc{flex:1;border:1px solid var(--divider);border-left:4px solid var(--purple);
+    border-radius:8px;background:var(--card);padding:13px 17px;box-shadow:var(--shadow)}
+  .nc h4{font-family:var(--f-head);font-size:18px;font-weight:700;color:var(--t1);margin-bottom:6px}
+  .nc p{font-family:var(--f-body);font-size:16.5px;color:var(--t2);line-height:1.6}
+  .nc b{color:var(--t1)} .nc .k{font-family:var(--f-head);font-weight:700;color:var(--purple-dark)}
+</style></head>
+<body><div class="canvas"><div class="grid-bg"></div><div class="inner">
+  <span class="label-type">Harness Study · 第二卷 6.0</span>
+  <h1>六级实体链：<span class="em">全卷共用的一份词表</span></h1>
+  <div class="sub">后面九章都靠这套名词。这张图给的是<b>归属</b>——谁属于谁、各级落在哪张表；至于一条事件怎么定位到它所属的那一步，走的是另一套形状（第十三章的八级信封）。</div>
+  <hr class="rule">
+
+  <div class="stage">
+  <svg viewBox="0 0 1188 560" xmlns="http://www.w3.org/2000/svg">
+    <text class="hd" x="14" y="26">级</text>
+    <text class="hd" x="150" y="26">实体</text>
+    <text class="hd" x="640" y="26">落在哪张表</text>
+    <text class="hd" x="880" y="26">形状上的特异</text>
+
+    <!-- 1 Conversation -->
+    <text class="lv" x="14" y="72">1</text>
+    <rect class="nb-opt" x="150" y="44" width="330" height="58" rx="10"/>
+    <text class="nt" x="172" y="72">Conversation</text>
+    <text class="ns" x="172" y="92">用户视角的持续对话</text>
+    <text class="tb" x="640" y="80">conversations</text>
+    <text class="tag" x="880" y="80">可以没有——scheduler / webhook</text>
+    <text class="tag" x="880" y="100">触发的 run 不挂会话</text>
+
+    <!-- 2 Run -->
+    <path class="lk" d="M190,102 L190,128"/>
+    <text class="lv" x="14" y="156">2</text>
+    <rect class="nb" x="150" y="128" width="330" height="58" rx="10"/>
+    <text class="nt" x="172" y="156">Run</text>
+    <text class="ns" x="172" y="176">一次触发到终态的执行</text>
+    <text class="tb" x="640" y="164">runs</text>
+    <text class="tag" x="880" y="164">subagent 归为 child run</text>
+    <text class="tag" x="880" y="184">（parent_run_id），非独立实体</text>
+
+    <!-- 3 Turn -->
+    <path class="lk" d="M190,186 L190,212"/>
+    <text class="lv" x="14" y="240">3</text>
+    <rect class="nb-nt" x="150" y="212" width="330" height="58" rx="10"/>
+    <text class="nt" x="172" y="240" fill="#6b6478">Turn</text>
+    <text class="ns" x="172" y="260">一次用户意图之内的完整回合</text>
+    <text class="tb" x="640" y="248" fill="#8a8098">不设表</text>
+    <text class="tag" x="880" y="248">messages / steps 上的</text>
+    <text class="tag" x="880" y="268">turn_no 单调递增</text>
+
+    <!-- 4 Step -->
+    <path class="lk" d="M190,270 L190,296"/>
+    <text class="lv" x="14" y="324">4</text>
+    <rect class="nb" x="150" y="296" width="330" height="58" rx="10"/>
+    <text class="nt" x="172" y="324">Step</text>
+    <text class="ns" x="172" y="344">一次模型决策及其工具结果的闭环</text>
+    <text class="tb" x="640" y="332">steps</text>
+    <text class="tag" x="880" y="332" fill="#6d28d9" font-weight="700">恢复粒度锚点</text>
+    <text class="tag" x="880" y="352">从最后完整 step 之后继续</text>
+
+    <!-- 5a / 5b 并列 -->
+    <path class="lk" d="M190,354 L190,404 L250,404"/>
+    <path class="lk" d="M190,404 L190,468 L250,468"/>
+    <text class="lv" x="14" y="412">5a</text>
+    <rect class="nb" x="250" y="380" width="230" height="52" rx="10"/>
+    <text class="nt" x="270" y="406">Invocation</text>
+    <text class="ns" x="270" y="424">一次真实发生的模型调用</text>
+    <text class="tb" x="640" y="412">invocations</text>
+    <text class="tag" x="880" y="412">失败的调用也留档</text>
+    <text class="tag" x="880" y="432">invocation 即 attempt</text>
+
+    <text class="lv" x="14" y="476">5b</text>
+    <rect class="nb" x="250" y="444" width="230" height="52" rx="10"/>
+    <text class="nt" x="270" y="470">Tool Execution</text>
+    <text class="ns" x="270" y="488">一次工具副作用</text>
+    <text class="tb" x="640" y="476">effects</text>
+    <text class="tag" x="880" y="476">5a 与 5b <tspan font-weight="700">同级并列</tspan>，不分先后</text>
+    <text class="tag" x="880" y="496">重试记在 attempt_no 上</text>
+
+    <!-- 刻意不在链上 -->
+    <rect class="ex" x="14" y="512" width="1160" height="40" rx="8"/>
+    <text class="exh" x="34" y="538">✕ 执行权刻意不在链上</text>
+    <text class="ext" x="266" y="538">租约、副作用许可答「谁现在有权动手」；实体链答「发生过什么、归谁所有」——两本分开记的账。</text>
+  </svg>
+  </div>
+
+  <div class="notes">
+    <div class="nc">
+      <h4>六级实体，落成十一张表</h4>
+      <p>conversations · runs · messages · steps · invocations · effects · checkpoints · artifacts · approvals · timers · events。<b>全表与逐行归属住工作制品 A（State Registry）</b>，每行答满四列：唯一写者 / 读者 / 删除语义 / 崩溃后归宿。</p>
+    </div>
+    <div class="nc">
+      <h4>四条全局规则，全部持久对象一体适用</h4>
+      <p><span class="k">ID 与顺序</span>顺序的真相是自增序号，不信 ID 里的时间戳。<span class="k">owner</span>每行唯一写者。<span class="k">correlation</span>除顶层外每行带完整父链外键。<span class="k">version</span>每行带 schema_version。</p>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div><span class="dot"></span>《Harness Study · 架构与工程卷》6.0 统一语言：六级实体链与四条全局规则</div>
+  </div>
+</div></div></body></html>

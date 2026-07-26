@@ -22,7 +22,9 @@
 | 5a | Invocation | 一次真实发生的模型调用 | 每次调用一行，失败的调用也留档——invocation 即 attempt |
 | 5b | Tool Execution | 一次工具副作用（Effect Ledger 一行） | 重试记在 attempt_no 上，不另立实体 |
 
-（配图占位：六级实体链图——层级树＋各级归属表名）
+![](figures/t1-layered-6.0-entity-chain.png)
+
+*图 6.0 · 六级实体链：全卷共用的一份词表*
 
 第五级的两条裁决合起来是一项结构决定，来路要交代。本卷的桌面案例项目在后续一轮内部工程审计里，把统一状态链写成 Task→Run→Step→Attempt→Action——attempt 承载同一步的多次网络或模型尝试，立的约束是失败尝试的输出不得混入下一次尝试【经验，桌面案例项目内部审计，2026-07】。这条约束本卷全盘接受，承载方式不同：模型侧每次真实调用记一行 invocation，失败的调用也成行，序号与状态就是尝试的账；工具侧由 Effect Ledger 的 attempt_no 承载，"尝试可多次、结果只记一次"在工作制品 B 里早已是不变量——记账在 invocation，"失败输出不混入下一尝试"的执行约束则由 step 域的 context 组装承载。
 

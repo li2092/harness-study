@@ -31,7 +31,9 @@
 
 四段之外，完整的流水线还有两站：intent → policy → approval → attempt → result → outcome。policy 与 approval 站在字据与动手之间——意图立了字据，还要过裁决：policy 自动裁（规则允许吗、预算够吗），approval 请人裁（这一笔要不要人签字）。两站的位置本章立定，内容各有主场：审批怎么挂起、挂多久，第九章；规则怎么写、谁能改，第十一章。
 
-（配图占位：四段账状态机——intended→attempting→result_recorded→outcome_verified；异常两分支——intent 无 result 经 unknown 进调和（8.6 节），result 与 outcome 不符经对账事件进调和（8.10 节），调和终局记 reconciliation_status）
+![](figures/t1-flow-8.2-four-stage-ledger.png)
+
+*图 8.2 · 四段账：两条来路不同的异常，走同一套调和*
 
 到这里，一次工具执行在账本上的一生完整了。这本账不是免费的：每笔副作用至少两次落盘（intent、result），加 outcome 取证就是三次外部读写，账本随高频工具线性膨胀——代价划得来的前提是只给危险动作记账，8.4 节的增量铺开正是这笔账的收敛条款。接下来的问题是：立了字据、过了裁决，动手的那一刻，凭据还作数吗？
 

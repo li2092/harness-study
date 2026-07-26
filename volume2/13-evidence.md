@@ -29,6 +29,10 @@
 
 靠 correlation——一条八级的关联链，全量冗余地写进每一条事件：tenant、conversation、run、turn、step、invocation、effect、artifact，允许为空的层显式置空（conversation 即第六章统一语言里实体链的顶层，Claude Code 侧称 session）。这正是第十二章那句欠条的兑现："child trace 以父 run_id 关联、跨 agent 的因果链能拼回来"，落到实处就是每条 child 事件都带着父的 run_id。反过来看它的脆弱：这条链断一级，因果就断在那一跳。第十二章的 infinite handoff loop 之所以查不清谁 own 任务，根子就在 correlation 没有贯穿——少了那一环，账上就只剩一堆认不出亲缘的孤立事件。设计上就一句：每条事件带全链（工作制品 C（Event Schema，事件信封与类型表）升 v2 后的信封字段规定了这些）。代价是每条事件冗余八个 ID，拿存储的膨胀，换"任意一条事件都能当场定位到它属于哪个 run 的哪一步"。
 
+![](figures/t1-flow-13.2-event-anatomy.png)
+
+*图 13.2 · 一条事件的解剖：唯一事实、八级信封、四种投影*
+
 ## 13.4 只追加：能改的证据等于没有
 
 关联链解决了"这条事实属于谁"，下一条纪律管"这条事实能不能动"。

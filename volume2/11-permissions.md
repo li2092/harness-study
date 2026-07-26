@@ -63,6 +63,10 @@ resume、fork、replay 三种操作重建的是状态与执行，绝不能顺手
 
 权力真正被行使的地方是三个干预点——assemble（组装 context，决定模型看见什么，细节第十章）、model（决定这次可用哪些工具）、execute（是否授权并真正执行）——三处各自留证，不能以一处代替另外两处。runtime 必须为每个权限决策产出一条 policy decision 证据（这类决策并入事件流，不单列表）。三干预点交付为工作制品 F（Intervention Point Map，干预点图）的填充,五平面到组件的落位表随正文交付、另供第十五章评审取用。
 
+![](figures/t1-layered-11.7-five-planes.png)
+
+*图 11.7 · 五平面与三个干预点：把权力关系落成结构*
+
 ## 破坏实验：越权、投毒、过期、共命四场景
 
 按四步测量协议执行，四场景共用观测点：policy decision 事件、principal 与 scope、授权重验记录、剩余硬边界的 fail-closed 行为。
