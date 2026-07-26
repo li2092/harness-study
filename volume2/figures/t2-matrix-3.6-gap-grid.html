@@ -1,0 +1,121 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="_base.css">
+<style>
+  .wrap{margin-top:24px}
+  .mtx{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;
+    border-radius:var(--radius);overflow:hidden;border:1px solid var(--divider);box-shadow:var(--shadow)}
+  .mtx th{background:var(--purple);color:#fff;font-family:var(--f-head);font-weight:700;
+    padding:11px 10px 10px;text-align:left;font-size:15px;line-height:1.3;vertical-align:top}
+  .mtx th.axis{background:var(--purple-dark);font-size:14.5px}
+  .mtx th .pl{display:block;font-family:var(--f-label);font-size:14.5px;font-weight:700;
+    letter-spacing:.02em;opacity:.78;margin-top:4px;line-height:1.35}
+  .mtx td{padding:11px 10px;border-top:1px solid var(--divider);font-size:14.5px;
+    color:var(--t2);line-height:1.5;vertical-align:top;background:var(--card)}
+  .mtx tr td:first-child{font-family:var(--f-head);font-weight:700;color:var(--t1);
+    font-size:15px;background:var(--purple-muted)}
+  .mtx tr td:first-child .q{display:block;font-weight:400;color:var(--t3);font-size:14.5px;margin-top:2px}
+  .gap{background:#fff !important;color:var(--t1);box-shadow:inset 0 0 0 2px var(--red)}
+  .gap .n{display:inline-block;font-family:var(--f-label);font-size:13.5px;font-weight:700;color:#fff;
+    background:var(--red);border-radius:4px;padding:1px 7px;margin-bottom:4px}
+  .gap .why{display:block;color:var(--red);font-size:14px;margin-top:5px;line-height:1.4}
+  .gap.edge{box-shadow:inset 0 0 0 2px var(--amber)}
+  .gap.edge .n{background:var(--amber)} .gap.edge .why{color:var(--amber)}
+  .rowhot{background:rgba(179,55,42,.05) !important}
+
+  .lgd{display:flex;gap:26px;align-items:center;margin-top:13px;font-size:15px;color:var(--t3)}
+  .lgd i{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:7px}
+  .i-gap{background:#fff;border:2px solid var(--red)}
+  .i-edge{background:#fff;border:2px solid var(--amber)}
+  .i-empty{background:var(--card);border:1px solid var(--divider)}
+
+  .find{margin-top:20px;border:1px solid var(--divider);border-left:4px solid var(--red);
+    border-radius:8px;background:var(--card);padding:14px 18px;box-shadow:var(--shadow)}
+  .find h4{font-family:var(--f-head);font-size:19px;font-weight:800;color:var(--t1);margin-bottom:7px}
+  .find p{font-family:var(--f-body);font-size:16.5px;color:var(--t2);line-height:1.6}
+  .find b{color:var(--t1)}
+
+  .notes{display:flex;gap:18px;margin-top:18px}
+  .nc{flex:1;border:1px solid var(--divider);border-left:4px solid var(--purple);
+    border-radius:8px;background:var(--card);padding:13px 17px;box-shadow:var(--shadow)}
+  .nc.warn{border-left-color:var(--amber)}
+  .nc h4{font-family:var(--f-head);font-size:18px;font-weight:700;color:var(--t1);margin-bottom:6px}
+  .nc p{font-family:var(--f-body);font-size:16.5px;color:var(--t2);line-height:1.6}
+  .nc b{color:var(--t1)} .nc .k{font-family:var(--f-head);font-weight:700;color:var(--purple-dark)}
+  .nc.warn .k{color:var(--amber)}
+</style></head>
+<body><div class="canvas"><div class="grid-bg"></div><div class="inner">
+  <span class="label-type">Harness Study · 第二卷 3.6</span>
+  <h1>同一张矩阵，第二次用：<span class="em">把一次真实事故落进格子</span></h1>
+  <div class="sub">横轴与第一章那张检验矩阵<b>逐列相同</b>——那张是空白底图，这张是它的填充态。事故里缺的每一样东西都该能找到位置；找不到名字的，说明矩阵漏了格。落格的结果自己说了一句话：<b>六行里四行，先倒在"看得见吗"上</b>。</div>
+  <hr class="rule">
+
+  <div class="wrap">
+  <table class="mtx">
+    <colgroup>
+      <col style="width:13%"><col style="width:14.5%"><col style="width:14.5%">
+      <col style="width:14.5%"><col style="width:14.5%"><col style="width:14.5%"><col style="width:14.5%">
+    </colgroup>
+    <thead><tr>
+      <th class="axis">检验的四问<span class="pl">纵轴不动</span></th>
+      <th>真相契约<span class="pl">状态可归属</span></th>
+      <th>转移契约<span class="pl">转移可解释</span></th>
+      <th>副作用契约<span class="pl">副作用可对账</span></th>
+      <th>交互契约<span class="pl">失败可收敛</span></th>
+      <th>权限契约<span class="pl">权力有边界</span></th>
+      <th>证据契约<span class="pl">结论有证据</span></th>
+    </tr></thead>
+    <tbody>
+      <tr class="rowhot">
+        <td>看得见吗<span class="q">可观测性</span></td>
+        <td class="gap"><span class="n">缺口</span>运行中的对话没有真相源；唯一写路径挂在 run 收尾<span class="why">运行中那一轮，在任何持久载体都查不到</span></td>
+        <td class="gap"><span class="n">缺口</span>抢占转移没有定义旧 run 数据的归宿<span class="why">帧 7 的抢占决策没有事件</span></td>
+        <td class="gap edge"><span class="n">擦边</span>文件改动实时落盘，可归属的那条消息随进程终止丢失<span class="why">外部改动与对话的账断了归属</span></td>
+        <td></td>
+        <td></td>
+        <td class="gap"><span class="n">缺口</span>3.4 那份缺失证据清单本身<span class="why">十帧没有一帧有运行时记录背书</span></td>
+      </tr>
+      <tr>
+        <td>管得住吗<span class="q">可控性</span></td>
+        <td></td><td></td><td></td><td></td>
+        <td class="gap"><span class="n">缺口</span>一次点击就把运行时容器带离应用；导航边界零防线<span class="why">webview 的去向没有任何干预点</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>扰动下稳吗<span class="q">稳定性</span></td>
+        <td></td><td></td><td></td>
+        <td class="gap"><span class="n">缺口</span>断开安全但无接回；后台完成零通知，用户照过期画面做致损决策<span class="why">断开这个扰动把投影推离了真相</span></td>
+        <td></td><td></td>
+      </tr>
+      <tr>
+        <td>改进有数据吗<span class="q">闭环反馈</span></td>
+        <td></td><td></td><td></td><td></td><td></td><td></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="lgd">
+    <span><i class="i-gap"></i>本次事故落格的缺口（六个，格格有名字）</span>
+    <span><i class="i-edge"></i>擦边：副作用本身落了盘，坏的是归属线</span>
+    <span><i class="i-empty"></i>这次事故没碰到的格</span>
+  </div>
+  </div>
+
+  <div class="find">
+    <h4>落格结果本身就是一个发现</h4>
+    <p>六行里四行最先失守于"看得见吗"。这套系统的结构底色是<b>证据极度稀薄</b>——绝大多数缺口在被追问"管得住吗"之前，先倒在根本看不见上。只有两行例外：交互契约先失守在"扰动下稳吗"（断开这个扰动把投影推离真相），权限契约先失守在"管得住吗"（容器去向没有干预点）。<b>最后一行整行是空的</b>——一个连"发生过什么"都记不下来的系统，谈不上"改进有没有数据"。</p>
+  </div>
+
+  <div class="notes">
+    <div class="nc warn">
+      <h4>两套"缺口"不是同一套编号</h4>
+      <p>3.1 节说的<b>缺口一、二、三</b>是三个代码级根因（导航逃逸／读库读到 run 开始前／抢占后跳过落库）；这张图上的六个是<b>契约级</b>缺口，一份契约一个。<span class="k">三个代码缺口串成一次丢失，六个契约缺口是它在坐标系上的投影</span>——数目对不上是正常的。</p>
+    </div>
+    <div class="nc">
+      <h4>前向通过了，反向只过一半</h4>
+      <p>前向对账：六个缺口格格有名字，矩阵够用来<b>命名</b>。反向实验（时间拨回事发前，判据挨个上）：三个结构性根因 <b>2/3</b> 被事前判据原样圈出；两个实现级回归 <b>0/2</b>，落在矩阵之外。<span class="k">矩阵是设计期的网，测量纪律是改动期的网</span>——缺哪张都有一类事故漏过去。</p>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div><span class="dot"></span>《Harness Study · 架构与工程卷》3.1 三个代码级缺口 · 3.6 对账矩阵与反向实验 · 交付物 契约缺口图 · 案例已脱敏</div>
+  </div>
+</div></div></body></html>

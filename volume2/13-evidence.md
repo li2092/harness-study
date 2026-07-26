@@ -67,6 +67,10 @@
 
 其中最经不起含糊的一条是 certifies 必须带 scope。用完整历史 backtest 一个模型，只证明它解释了已经见过的样本（retrodictive consistency），绝不证明它在没见过的状态上还成立（generalization）。所以 Model Certificate（工作制品 Z）不能只写一句 backtest=green，至少要并列记五类测试——full-history replay、prospective 下一步预测、held-out 转移、invariant 属性测试、planner-adversarial（让 planner 主动去找模型漏洞）——外加 scope、history cursor、生成 provenance（模型／提示／工具版本）和已知反例，正好补齐第六章 6.12 给信念工件规定的那四件随身证据。一个公开的 model-based harness 项目的保留轨迹佐证这套机制确有其事：逐行统计里，9 次误预测均触发了重新建模与提交流程（1:1 先后对应属推断，终稿回核）【厂商实践／项目自述，只引轨迹统计、不引其自述分数】——"预测错即计划失效"可从公开工件复算、非独立受控消融。这一节把观察→建模→认证→规划→提交这条链，加上反例回填这条返回边，合成一个可验证的反馈环。代价是建一份像样的 certificate 是笔实打实的额外工程，且只在"可显式建模"的域才划算——状态紧凑、转移大体确定、真实动作昂贵而内部仿真便宜；域选错了，这份工程就白花在一个"仿真并不比真跑省"的地方，所以不要求每个任务都去建一个 simulator。
 
+![](figures/t2-flow-13.8-belief-ring.png)
+
+*图 13.8 · 可执行信念的证据环：七条命名边，三条建、两条溯源、两条回填*
+
 ## 破坏实验：吞错误、关检测器、成功无 artifact、模型漏洞四场景
 
 按四步测量协议执行，四场景共用观测点：event 是否 append-only 落账、correlation 链是否贯穿、absence 检测与检测器测试记录是否报、completion 与 outcome 是否对账、certificate 的 scope 是否被尊重。
