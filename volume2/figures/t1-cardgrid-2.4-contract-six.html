@@ -1,0 +1,119 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="_base.css">
+<style>
+  .chain{margin-top:22px;display:flex;align-items:center;gap:9px;
+    border:1px solid var(--divider);border-radius:9px;background:var(--card);
+    padding:9px 15px;box-shadow:var(--shadow)}
+  .chain .lk{font-family:"JetBrains Mono",monospace;font-size:17px;font-weight:700;color:var(--purple-dark)}
+  .chain .ar{font-family:var(--f-head);font-size:15px;color:var(--t3)}
+  .chain .cap{margin-left:auto;font-family:var(--f-body);font-size:16px;color:var(--t2)}
+  .chain .cap b{color:var(--t1)}
+
+  .row{display:flex;gap:14px;margin-top:15px}
+  .card{flex:1;background:var(--card);border:2px solid var(--purple);border-radius:10px;
+    padding:12px 15px 11px;box-shadow:var(--shadow);position:relative}
+  .card.last{border-color:var(--red)}
+  .no{position:absolute;top:11px;right:12px;font-family:var(--f-label);font-size:13.5px;font-weight:700;
+    color:#fff;background:var(--purple);border-radius:5px;padding:2px 9px}
+  .card.last .no{background:var(--red)}
+  .nm{font-family:"JetBrains Mono",monospace;font-size:23px;font-weight:700;color:var(--t1);line-height:1.2}
+  .q{font-family:var(--f-body);font-size:16px;color:var(--t3);margin-top:4px;line-height:1.45}
+  .miss{margin-top:9px;padding-top:8px;border-top:1px solid var(--divider);
+    font-family:var(--f-body);font-size:15.5px;color:var(--t2);line-height:1.45}
+  .miss .k{font-family:var(--f-head);font-weight:700;color:var(--red)}
+  .ex{margin-top:8px;padding-top:7px;border-top:1px dashed var(--purple);
+    font-family:var(--f-body);font-size:15.5px;color:var(--purple-dark);line-height:1.4}
+  .ex .t{font-family:var(--f-label);font-size:14.5px;font-weight:700;letter-spacing:.1em;
+    color:var(--t3);display:block;margin-bottom:2px}
+  .card.last .ex{border-top-color:var(--red)}
+  .ex .qm{font-family:var(--f-head);font-size:21px;font-weight:800;color:var(--red)}
+
+  .demo{margin-top:15px;border:1px solid var(--divider);border-left:4px solid var(--purple-dark);
+    border-radius:8px;background:var(--purple-muted);padding:10px 16px;
+    font-family:var(--f-body);font-size:16.5px;color:var(--t2);line-height:1.55}
+  .demo b{color:var(--t1)}
+
+  .notes{display:flex;gap:18px;margin-top:18px}
+  .nc{flex:1;border:1px solid var(--divider);border-left:4px solid var(--purple);
+    border-radius:8px;background:var(--card);padding:13px 17px;box-shadow:var(--shadow)}
+  .nc.warn{border-left-color:var(--red)}
+  .nc h4{font-family:var(--f-head);font-size:18px;font-weight:700;color:var(--t1);margin-bottom:6px}
+  .nc p{font-family:var(--f-body);font-size:16.5px;color:var(--t2);line-height:1.6}
+  .nc b{color:var(--t1)} .nc .k{font-family:var(--f-head);font-weight:700;color:var(--purple-dark)}
+  .nc.warn .k{color:var(--red)}
+</style></head>
+<body><div class="canvas"><div class="grid-bg"></div><div class="inner">
+  <span class="label-type">Harness Study · 第二卷 2.4</span>
+  <h1>契约六要素：<span class="em">一条承诺的六个可失守关节</span></h1>
+  <div class="sub">隐式假设长在三个地方——代码注释里的"这里不会并发"、口头共识里的"用户会确认的"，以及最隐蔽的<b>某个 if 分支的缺失</b>（没写就是假设不会发生）。把它逼出来的唯一办法是补齐这六格。</div>
+  <hr class="rule">
+
+  <div class="chain">
+    <span class="lk">owner</span><span class="ar">→</span>
+    <span class="lk">trigger</span><span class="ar">→</span>
+    <span class="lk">guard</span><span class="ar">→</span>
+    <span class="lk">action</span><span class="ar">→</span>
+    <span class="lk">outcome</span><span class="ar">→</span>
+    <span class="lk">evidence</span>
+    <span class="cap">从"谁认领"到"留下什么证据"，<b>一次动作从触发到自证的完整因果链</b></span>
+  </div>
+
+  <div class="row">
+    <div class="card"><span class="no">1</span>
+      <div class="nm">owner</div>
+      <div class="q">谁负责让这条承诺成立</div>
+      <div class="miss"><span class="k">少这格</span>承诺无人认领——第三章那场事故里五个组件各自与设计一致、承诺仍然落空，就是这么来的</div>
+      <div class="ex"><span class="t">SSE 示范</span>run manager</div>
+    </div>
+    <div class="card"><span class="no">2</span>
+      <div class="nm">trigger</div>
+      <div class="q">什么事件触发它</div>
+      <div class="miss"><span class="k">少这格</span>承诺不知何时生效，人人以为"下次再说"</div>
+      <div class="ex"><span class="t">SSE 示范</span>SSE 连接断开</div>
+    </div>
+    <div class="card"><span class="no">3</span>
+      <div class="nm">guard</div>
+      <div class="q">什么前置条件必须先成立</div>
+      <div class="miss"><span class="k">少这格</span>两个触发并发时打架，没有裁决依据</div>
+      <div class="ex"><span class="t">SSE 示范</span>run 仍在执行</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="card"><span class="no">4</span>
+      <div class="nm">action</div>
+      <div class="q">系统做什么</div>
+      <div class="miss"><span class="k">少这格</span>承诺停在态度上，没有可执行的动作</div>
+      <div class="ex"><span class="t">SSE 示范</span>剥离流、run 后台继续</div>
+    </div>
+    <div class="card"><span class="no">5</span>
+      <div class="nm">outcome</div>
+      <div class="q">结束于哪个已定义状态</div>
+      <div class="miss"><span class="k">少这格</span>半途设计不显形</div>
+      <div class="ex"><span class="t">SSE 示范</span>run 照常到达终态并落库</div>
+    </div>
+    <div class="card last"><span class="no">6</span>
+      <div class="nm">evidence</div>
+      <div class="q">拿什么证明它发生过</div>
+      <div class="miss"><span class="k">少这格</span>契约退化成一条注释</div>
+      <div class="ex"><span class="t">SSE 示范</span><span class="qm">？</span>　断开无记录、完成无通知，填不出来</div>
+    </div>
+  </div>
+
+  <div class="demo">示范拿的是一条真实设计：桌面案例把"界面掉线不中断后台任务"写进代码注释，一句话——<b>"SSE 断开不杀 run"</b>。改写成契约，前五格都填得出，第六格卡住。<b>半途设计在代码里是隐形的，在契约表上是空格</b>；这一格要等到第九章 9.3 节的 cursor 与 replay window，才真正补上。</div>
+
+  <div class="notes">
+    <div class="nc">
+      <h4>为什么恰好六格，不是七格</h4>
+      <p>六个关节就是一条承诺的完整生命周期，与事件溯源记 <span class="k">who／when／what／outcome</span> 是同一副骨架。常见的第七列——"优先级""重要程度"——不在这条因果链上，它是<b>排期信息</b>，进不了契约本体。</p>
+    </div>
+    <div class="nc warn">
+      <h4>填不满的那两格会说话</h4>
+      <p><b>outcome 和 evidence 两列填不满的设计，一定只做了一半。</b>本卷两把判据尺量的正是这两格：<span class="k">catch 三问</span>的前两问——终点状态叫什么名字（outcome）、谁会知道系统走到了这里（evidence）——各占一格；<span class="k">假落地诊断</span>的"有名字、无事件"，量的也是 evidence。</p>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div><span class="dot"></span>《Harness Study · 架构与工程卷》2.4 契约六要素 · 2.2 catch 三问 · 交付物 Assumption Register · 案例已脱敏</div>
+  </div>
+</div></div></body></html>

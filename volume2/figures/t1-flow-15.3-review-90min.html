@@ -1,0 +1,180 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="_base.css">
+<style>
+  .stage{margin-top:24px}
+  svg{display:block;width:100%;height:auto}
+  .hd{font-family:var(--f-label);font-size:16px;font-weight:700;fill:var(--t3);letter-spacing:.1em}
+
+  .pre{fill:var(--card);stroke:var(--purple-dark);stroke-width:2.2;stroke-dasharray:9 6}
+  .box{fill:rgba(181,106,9,.05);stroke:var(--amber);stroke-width:2}
+  .ph{font-family:var(--f-head);font-size:19px;font-weight:800;fill:var(--t1)}
+  .pt{font-family:var(--f-body);font-size:15px;fill:var(--t2)}
+  .gap{font-family:var(--f-body);font-size:15px;fill:var(--red);font-weight:700}
+
+  .sb{fill:#fff;stroke:var(--purple);stroke-width:2.4}
+  .sb-out{fill:rgba(6,122,91,.07);stroke:var(--green);stroke-width:2.6}
+  .nb{fill:var(--purple)}
+  .nt{font-family:var(--f-label);font-size:15px;font-weight:700;fill:#fff}
+  .badge{fill:var(--purple-dark)}
+  .bt{font-family:var(--f-label);font-size:14.5px;font-weight:700;fill:#fff}
+  .st{font-family:var(--f-head);font-size:19px;font-weight:800;fill:var(--t1)}
+  .st-g{font-family:var(--f-head);font-size:19px;font-weight:800;fill:var(--green)}
+  .sd{font-family:var(--f-body);font-size:15px;fill:var(--t2)}
+  .sd-g{font-family:var(--f-body);font-size:15px;fill:var(--green)}
+  .tl{font-family:"JetBrains Mono",monospace;font-size:14.5px;font-weight:700;fill:var(--purple-dark)}
+  .tl-z{font-family:var(--f-body);font-size:14.5px;font-weight:700;fill:var(--purple-dark)}
+  .tl-g{font-family:var(--f-body);font-size:14.5px;font-weight:700;fill:var(--green)}
+  .sep{stroke:var(--divider);stroke-width:1}
+  .ar{stroke:var(--purple);stroke-width:2.6;fill:none;marker-end:url(#ah)}
+  .ar-d{stroke:var(--purple-dark);stroke-width:2.6;fill:none;marker-end:url(#ahd)}
+
+  .cul{fill:rgba(26,20,40,.03);stroke:var(--t3);stroke-width:2;stroke-dasharray:8 5}
+  .ch{font-family:var(--f-head);font-size:17px;font-weight:800;fill:var(--t1)}
+  .ct{font-family:var(--f-body);font-size:15.5px;fill:var(--t2)}
+  .end{font-family:var(--f-body);font-size:17px;fill:var(--t2)}
+
+  .notes{display:flex;gap:18px;margin-top:22px}
+  .nc{flex:1;border:1px solid var(--divider);border-left:4px solid var(--purple);
+    border-radius:8px;background:var(--card);padding:13px 17px;box-shadow:var(--shadow)}
+  .nc.warn{border-left-color:var(--amber)}
+  .nc h4{font-family:var(--f-head);font-size:18px;font-weight:700;color:var(--t1);margin-bottom:6px}
+  .nc p{font-family:var(--f-body);font-size:16.5px;color:var(--t2);line-height:1.6}
+  .nc b{color:var(--t1)} .nc .k{font-family:var(--f-head);font-weight:700;color:var(--purple-dark)}
+  .nc.warn .k{color:var(--amber)}
+</style></head>
+<body><div class="canvas"><div class="grid-bg"></div><div class="inner">
+  <span class="label-type">Harness Study · 第二卷 15.3</span>
+  <h1>九十分钟七步：<span class="em">五件工具接在哪一步上</span></h1>
+  <div class="sub">评审不发"通过还是不通过"的判决。它拿全卷的登记表，对着被评系统逐项提问，产出一张<b>有 owner 的残余风险清单</b>。角标字母是这一步取用的工作制品编号——七步里有四步是现成登记表的评审用法，后三步是把发现变成可执行的动作。</div>
+  <hr class="rule">
+
+  <div class="stage">
+  <svg viewBox="0 0 1188 560" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#6d28d9"/></marker>
+      <marker id="ahd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#4c1d95"/></marker>
+    </defs>
+
+    <text class="hd" x="14" y="16">流程之前</text>
+
+    <!-- 开场标尺 -->
+    <g><rect class="pre" x="14" y="24" width="606" height="86" rx="10"/>
+      <text class="ph" x="34" y="50">开场标尺 · Component Register（工作制品 G）</text>
+      <text class="pt" x="34" y="72">拿第四章八张组件卡，逐张对被评系统自画的组件图——对不上的当场标红</text>
+      <text class="gap" x="34" y="94">正文只称它"开场标尺"，下面的七步里没有对应步骤</text></g>
+
+    <g><rect class="box" x="640" y="24" width="534" height="86" rx="10"/>
+      <text class="ph" x="660" y="50" style="fill:#b56a09">九十分钟 · 时间盒是有意的</text>
+      <text class="pt" x="660" y="72">只够到结构层：够定位哪几份契约有结构性风险，不够深挖每一个 bug</text>
+      <text class="pt" x="660" y="94">换来的是评审可复制、可排进日程，不必等一个稀缺专家有空</text></g>
+
+    <path class="ar-d" d="M149,110 L149,132"/>
+
+    <!-- 第一行：步 1-4 -->
+    <g><rect class="sb" x="14" y="134" width="270" height="134" rx="10"/>
+      <rect class="nb" x="14" y="134" width="30" height="24" rx="7"/><text class="nt" x="29" y="151" text-anchor="middle">1</text>
+      <rect class="badge" x="248" y="134" width="36" height="24" rx="7"/><text class="bt" x="266" y="151" text-anchor="middle">D</text>
+      <text class="st" x="30" y="184">画边界</text>
+      <text class="sd" x="30" y="208">进程／网络／身份／工具／</text>
+      <text class="sd" x="30" y="228">信任边界画出来，圈定范围</text>
+      <line class="sep" x1="30" y1="240" x2="268" y2="240"/>
+      <text class="tl" x="30" y="259">Runtime Trust Boundary</text></g>
+
+    <g><rect class="sb" x="310" y="134" width="270" height="134" rx="10"/>
+      <rect class="nb" x="310" y="134" width="30" height="24" rx="7"/><text class="nt" x="325" y="151" text-anchor="middle">2</text>
+      <rect class="badge" x="544" y="134" width="36" height="24" rx="7"/><text class="bt" x="562" y="151" text-anchor="middle">A</text>
+      <text class="st" x="326" y="184">登记状态</text>
+      <text class="sd" x="326" y="208">关键状态的 owner／存储／</text>
+      <text class="sd" x="326" y="228">版本过一遍</text>
+      <line class="sep" x1="326" y1="240" x2="564" y2="240"/>
+      <text class="tl" x="326" y="259">State Registry</text></g>
+
+    <g><rect class="sb" x="606" y="134" width="270" height="134" rx="10"/>
+      <rect class="nb" x="606" y="134" width="30" height="24" rx="7"/><text class="nt" x="621" y="151" text-anchor="middle">3</text>
+      <rect class="badge" x="840" y="134" width="36" height="24" rx="7"/><text class="bt" x="858" y="151" text-anchor="middle">B</text>
+      <text class="st" x="622" y="184">登记副作用</text>
+      <text class="sd" x="622" y="208">高风险副作用的账法</text>
+      <text class="sd" x="622" y="228">过一遍</text>
+      <line class="sep" x1="622" y1="240" x2="860" y2="240"/>
+      <text class="tl" x="622" y="259">Effect Ledger</text></g>
+
+    <g><rect class="sb" x="902" y="134" width="270" height="134" rx="10"/>
+      <rect class="nb" x="902" y="134" width="30" height="24" rx="7"/><text class="nt" x="917" y="151" text-anchor="middle">4</text>
+      <rect class="badge" x="1108" y="134" width="64" height="24" rx="7"/><text class="bt" x="1140" y="151" text-anchor="middle">本章新起</text>
+      <text class="st" x="918" y="184">检查六契约承诺</text>
+      <text class="sd" x="918" y="208">六契约 × 五审查维度，逐格</text>
+      <text class="sd" x="918" y="228">问守没守：空格本身是发现</text>
+      <line class="sep" x1="918" y1="240" x2="1156" y2="240"/>
+      <text class="tl" x="918" y="259">Runtime Contract Matrix</text></g>
+
+    <path class="ar" d="M287,201 L307,201"/>
+    <path class="ar" d="M583,201 L603,201"/>
+    <path class="ar" d="M879,201 L899,201"/>
+
+    <!-- 换行 -->
+    <path class="ar" d="M1037,268 L1037,286 L149,286 L149,302"/>
+
+    <!-- 第二行：步 5-7 ＋ 产出 -->
+    <g><rect class="sb" x="14" y="306" width="270" height="134" rx="10"/>
+      <rect class="nb" x="14" y="306" width="30" height="24" rx="7"/><text class="nt" x="29" y="323" text-anchor="middle">5</text>
+      <text class="st" x="30" y="356">选高风险场景</text>
+      <text class="sd" x="30" y="380">从对不上的格子里，挑两三</text>
+      <text class="sd" x="30" y="400">个最可能出事的</text>
+      <line class="sep" x1="30" y1="412" x2="268" y2="412"/>
+      <text class="tl-z" x="30" y="431">输入＝上一步空着的格</text></g>
+
+    <g><rect class="sb" x="310" y="306" width="270" height="134" rx="10"/>
+      <rect class="nb" x="310" y="306" width="30" height="24" rx="7"/><text class="nt" x="325" y="323" text-anchor="middle">6</text>
+      <text class="st" x="326" y="356">指定破坏实验</text>
+      <text class="sd" x="326" y="380">给选中的场景挑对应 fixture，</text>
+      <text class="sd" x="326" y="400">当场设计怎么破坏、怎么判定</text>
+      <line class="sep" x1="326" y1="412" x2="564" y2="412"/>
+      <text class="tl-z" x="326" y="431">第十四章标准故障包</text></g>
+
+    <g><rect class="sb" x="606" y="306" width="270" height="134" rx="10"/>
+      <rect class="nb" x="606" y="306" width="30" height="24" rx="7"/><text class="nt" x="621" y="323" text-anchor="middle">7</text>
+      <text class="st" x="622" y="356">明确残余风险及 owner</text>
+      <text class="sd" x="622" y="380">每条记清：踩哪份契约、哪个</text>
+      <text class="sd" x="622" y="400">场景暴露、谁补、什么时候补</text>
+      <line class="sep" x1="622" y1="412" x2="860" y2="412"/>
+      <text class="tl-z" x="622" y="431">残余风险清单模板</text></g>
+
+    <g><rect class="sb-out" x="902" y="306" width="270" height="134" rx="10"/>
+      <text class="st-g" x="918" y="336">产出不是判决</text>
+      <text class="sd-g" x="918" y="360">一句"通过"让人闭着眼发车；</text>
+      <text class="sd-g" x="918" y="380">挂了 owner、带了期限的清单，</text>
+      <text class="sd-g" x="918" y="400">让同一个发车决定睁着眼做</text>
+      <line class="sep" x1="918" y1="412" x2="1156" y2="412"/>
+      <text class="tl-g" x="918" y="431">第三卷生产化的入口</text></g>
+
+    <path class="ar" d="M287,373 L307,373"/>
+    <path class="ar" d="M583,373 L603,373"/>
+    <path class="ar" d="M879,373 L899,373"/>
+
+    <!-- 两条查不出来的线 -->
+    <g><rect class="cul" x="14" y="456" width="1160" height="76" rx="10"/>
+      <text class="ch" x="34" y="482">两条登记表查不出来的线 · 靠访谈和历史记录，预测的是这套系统会不会持续退化</text>
+      <text class="ct" x="34" y="506">① framework 思维还是 harness 思维——失败检测、恢复触发、跨实例协调，是框架替这个团队做了，还是它自己有代码对账？答"框架都管了"的按高风险记</text>
+      <text class="ct" x="34" y="526">② 敢不敢动自己的 core——只敢在外围打补丁、碰都不敢碰 core 的，无论当下跑得多稳，都按高残余风险记</text></g>
+
+    <text class="end" x="14" y="556">代价直说：逐项提问比"看一眼给个结论"慢，一次要占足九十分钟。省掉的，是<tspan font-weight="700" fill="#1a1428">被那句二元判决盖住、上线之后才兑现成事故的结构性风险</tspan>。</text>
+  </svg>
+  </div>
+
+  <div class="notes">
+    <div class="nc warn">
+      <h4>"五件都对上"不等于"全查过"</h4>
+      <p>把附录那张 13×13 机制矩阵和整套 A–Z 工作制品，压成这五件<b>单维登记</b>，是拿"查得全"换"九十分钟跑得完"。<span class="k">三元交叉、用户行为耦合、时间漂移这类跨维风险，五件工具逐件都照不到</span>——只能靠热点交叉发现表和场景卡另补。评审者得记住这层系统性盲区。</p>
+    </div>
+    <div class="nc">
+      <h4>拿不出登记，本身就是第一个发现</h4>
+      <p>这五件工具有个前提——被评系统得拿得出对应的登记。拿不出，恰恰是<b>最大的那个发现</b>：一个连状态 owner 都列不出的系统，谈不上守住真相契约。同理，<span class="k">一张没有 owner 的清单，和"通过"其实一样</span>，只是把风险留在原地。</p>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div><span class="dot"></span>《Harness Study · 架构与工程卷》15.2 五件工具 · 15.3 九十分钟七步 · 15.4 残余风险清单 · 15.5 两条文化判定线</div>
+  </div>
+</div></div></body></html>

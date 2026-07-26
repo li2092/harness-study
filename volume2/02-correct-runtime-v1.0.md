@@ -64,6 +64,10 @@ durable execution 的严格定义和实现留给 §七。这里先立一块界�
 
 为什么恰好六个要素？因为一条承诺的生命周期只有六个可失守的关节——从"谁认领"到"留下什么证据"，恰是一次动作从触发到自证的完整因果链，与事件溯源记 who／when／what／outcome 是同一副骨架。六个关节一个都省不掉：少 owner，承诺无人认领——§三 五个组件各自与设计一致、承诺仍然落空，就是这么来的；少 trigger，承诺不知何时生效，人人以为"下次再说"；少 guard，两个触发并发时打架没有裁决依据；少 action，承诺停在态度，没有可执行的动作；少 outcome，半途设计不显形；少 evidence，契约退化成一条注释。至于常见的第七列——"优先级""重要程度"——它不在这条因果链上，是排期信息，进不了契约本体。
 
+![](figures/t1-cardgrid-2.4-contract-six.png)
+
+*图 2.4 · 契约六要素：每一格少了会怎样，以及那格填不出来的 evidence*
+
 一个旁证：腾讯 HY LLM Frontier 团队与高校合作、2026 年 7 月开源的 Harness Handbook 做的是反方向的事——把既有 harness 代码库自动整理成 L1-L3 分层文档，最细的 L3 一条一个行为单元。它给 L3 定的输出 schema 是 locator_role、stage_context、synopsis、interface（signature／params／reads_state／returns／side_effects）、execution_flow、design_decisions、relations【预印，arXiv:2607.13285 附录 D.1.4，终稿前回核仓库现状】。与契约六要素部分重叠：stage_context 交代这条单元何时被调到，接近 trigger；execution_flow 对 action；interface 的 returns 与 side_effects 对 outcome；reads_state 标出它碰哪些状态。对不上的几格更说明问题——没有 owner，也没有 guard，代码测绘不必回答"谁认领""并发时谁裁决"；evidence 也不是一格字段，它的"凭什么相信"落在 locator 上：每条 L3 条目必须解析到当前仓库的源码，解析不到就冻结、不再参与定位。测绘实然与声明应然只在这条因果链的中段重合，两端得靠契约自己补。
 
 ## 2.5 保证、尽力、推断、未知
