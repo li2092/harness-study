@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="../_base.css">
+<style>
+  .canvas{width:1320px;padding:24px 26px;background:var(--bg)}
+  .cont{font-family:var(--f-label);font-size:19px;font-weight:700;color:var(--t3);
+    letter-spacing:.08em;margin:0 0 12px 2px}
+  table{border-collapse:collapse;width:100%;background:var(--card);
+    font-family:var(--f-body);font-size:28px;line-height:1.6;color:var(--t2)}
+  th,td{border:1px solid var(--divider);padding:13px 17px;vertical-align:top;overflow-wrap:break-word}
+  th{font-family:var(--f-head);font-weight:700;color:var(--purple-dark);
+    background:rgba(109,40,217,.08);border-bottom:2.5px solid var(--purple)}
+  tr:nth-child(even) td{background:rgba(26,20,40,.022)}
+  td b{color:var(--t1);font-weight:700}
+  td em{color:var(--purple-dark);font-style:normal;font-weight:600}
+  th code,td code{font-family:"JetBrains Mono","LXGW WenKai",monospace;font-size:.9em;
+    background:#efeae2;padding:1px 6px;border-radius:4px;color:var(--purple-dark)}
+</style></head>
+<body><div class="canvas"><table><thead><tr><th style="text-align:left;white-space:nowrap">章</th><th style="text-align:left">破坏动作</th><th style="text-align:left">观测点（盯这些字段/事件）</th><th style="text-align:left">通过判定</th></tr></thead><tbody><tr><td style="text-align:left;white-space:nowrap">5</td><td style="text-align:left">双入口毫秒级同触发同会话</td><td style="text-align:left">events 两条意图的裁决事件；runs 活跃行数</td><td style="text-align:left">恰一个进 running，另一个落 reject/enqueue/interrupt 显式事件</td></tr><tr><td style="text-align:left;white-space:nowrap">5</td><td style="text-align:left">双进程同 resume 同一孤儿</td><td style="text-align:left">认领事件与写入路径</td><td style="text-align:left">恰一个认领；单机实例锁拒第二个，多实例慢者被 fencing 拒写且有事件</td></tr><tr><td style="text-align:left;white-space:nowrap">6</td><td style="text-align:left">三处写入之间 kill -9（三杀）</td><td style="text-align:left">各表内容与事件表截断点；配对不变量扫描；checkpoint 完整性标记</td><td style="text-align:left">已提交完整可见、未提交不留半行；事件按最后完整行截断可重建</td></tr><tr><td style="text-align:left;white-space:nowrap">7</td><td style="text-align:left">副作用已发生、result 未落时 kill -9</td><td style="text-align:left">effect 账本该行状态；恢复后的调和事件；副作用是否被二次执行</td><td style="text-align:left">该行停在 intent 有 result 无、标 unknown 进调和、不自动重放</td></tr><tr><td style="text-align:left;white-space:nowrap">8</td><td style="text-align:left">超时但远端已成功 / 返回成功但 artifact 缺 / 改 policy / 单步 mismatch</td><td style="text-align:left">effect 账本行状态；effect.* 与反例事件；外部世界实况</td><td style="text-align:left">幂等重试无双份 / outcome 取证对出矛盾 / 拒 stale lease / 废剩余队列</td></tr><tr><td style="text-align:left;white-space:nowrap">9</td><td style="text-align:left">断网 / 刷新 / 抢占 / 审批跨 session 恢复</td><td style="text-align:left">run 状态与转移事件；下行事件游标；半轮 message 落盘状态；授权重验记录</td><td style="text-align:left">run 不受连累、按游标补全、半轮终态化、授权重验再放行</td></tr></tbody></table></div></body></html>

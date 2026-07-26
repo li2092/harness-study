@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="../_base.css">
+<style>
+  .canvas{width:1320px;padding:24px 26px;background:var(--bg)}
+  .cont{font-family:var(--f-label);font-size:19px;font-weight:700;color:var(--t3);
+    letter-spacing:.08em;margin:0 0 12px 2px}
+  table{border-collapse:collapse;width:100%;background:var(--card);
+    font-family:var(--f-body);font-size:28px;line-height:1.6;color:var(--t2)}
+  th,td{border:1px solid var(--divider);padding:13px 17px;vertical-align:top;overflow-wrap:anywhere}
+  th{font-family:var(--f-head);font-weight:700;color:var(--purple-dark);
+    background:rgba(109,40,217,.08);border-bottom:2.5px solid var(--purple)}
+  tr:nth-child(even) td{background:rgba(26,20,40,.022)}
+  td b{color:var(--t1);font-weight:700}
+  td em{color:var(--purple-dark);font-style:normal;font-weight:600}
+  th code,td code{font-family:"JetBrains Mono","LXGW WenKai",monospace;font-size:.9em;
+    background:#efeae2;padding:1px 6px;border-radius:4px;color:var(--purple-dark)}
+</style></head>
+<body><div class="canvas"><table><thead><tr><th style="text-align:left">想查的字段属于</th><th style="text-align:left">去工作制品</th><th style="text-align:left">内容</th></tr></thead><tbody><tr><td style="text-align:left">持久状态对象的 owner/存储/删除/崩溃归宿</td><td style="text-align:left">A · State Registry</td><td style="text-align:left">每个持久对象一行，含 conversation/run/message/step/invocation/effect/checkpoint/timer/event 等</td></tr><tr><td style="text-align:left">副作用四段账字段</td><td style="text-align:left">B · Effect Ledger</td><td style="text-align:left">effect_id、idempotency_key、action_class、committed_under、intent_at、四段状态、reconciliation_status</td></tr><tr><td style="text-align:left">事件信封字段</td><td style="text-align:left">C · Event Schema</td><td style="text-align:left">event_id、seq、correlation 链、type、payload、source；事件类型全表</td></tr><tr><td style="text-align:left">run 转移的触发/guard/终结原因</td><td style="text-align:left">H · Run 状态转移表</td><td style="text-align:left">17 行合法转移，每行 event/guard/transition/terminal_reason/随行事件</td></tr><tr><td style="text-align:left">携带物是否随 checkpoint 保存/恢复/重验</td><td style="text-align:left">I · Lifetime Matrix</td><td style="text-align:left">消息游标、compaction 版本、state_machine_version、approval、lease、credential 等</td></tr><tr><td style="text-align:left">流的收尾判定</td><td style="text-align:left">O · Stream Terminal Table</td><td style="text-align:left">七种收尾×成功/失败×说明</td></tr><tr><td style="text-align:left">四词对 run 的影响与转移</td><td style="text-align:left">P · Interaction Semantics</td><td style="text-align:left">disconnect/cancel/interrupt/suspend×影响×转移×半轮归宿</td></tr></tbody></table></div></body></html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="../_base.css">
+<style>
+  .canvas{width:1320px;padding:24px 26px;background:var(--bg)}
+  .cont{font-family:var(--f-label);font-size:19px;font-weight:700;color:var(--t3);
+    letter-spacing:.08em;margin:0 0 12px 2px}
+  table{border-collapse:collapse;width:100%;background:var(--card);
+    font-family:var(--f-body);font-size:28px;line-height:1.6;color:var(--t2)}
+  th,td{border:1px solid var(--divider);padding:13px 17px;vertical-align:top;overflow-wrap:break-word}
+  th{font-family:var(--f-head);font-weight:700;color:var(--purple-dark);
+    background:rgba(109,40,217,.08);border-bottom:2.5px solid var(--purple)}
+  tr:nth-child(even) td{background:rgba(26,20,40,.022)}
+  td b{color:var(--t1);font-weight:700}
+  td em{color:var(--purple-dark);font-style:normal;font-weight:600}
+  th code,td code{font-family:"JetBrains Mono","LXGW WenKai",monospace;font-size:.9em;
+    background:#efeae2;padding:1px 6px;border-radius:4px;color:var(--purple-dark)}
+</style></head>
+<body><div class="canvas"><table><thead><tr><th style="text-align:left">边</th><th style="text-align:left">含义</th></tr></thead><tbody><tr><td style="text-align:left">observation --grounds--&gt; model_version</td><td style="text-align:left">观察为模型提供依据</td></tr><tr><td style="text-align:left">model_version --predicts--&gt; transition</td><td style="text-align:left">模型预测某个转移</td></tr><tr><td style="text-align:left">history_set --certifies--&gt; model_version</td><td style="text-align:left">完整历史为模型背书（<b>必带 scope</b>：只证 retrodictive consistency，不证 generalization）</td></tr><tr><td style="text-align:left">counterexample --refutes--&gt; model_version</td><td style="text-align:left">反例推翻模型</td></tr><tr><td style="text-align:left">plan --derived_from--&gt; model_version</td><td style="text-align:left">计划从某模型版本派生（回指工作制品 N Plan Lease）</td></tr><tr><td style="text-align:left">commit --realizes--&gt; plan</td><td style="text-align:left">提交兑现计划</td></tr><tr><td style="text-align:left">mismatch --invalidates--&gt; remaining_plan</td><td style="text-align:left">预测与观察不符即废止剩余计划（回指工作制品 N Counterexample Event）</td></tr></tbody></table></div></body></html>

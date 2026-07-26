@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="../_base.css">
+<style>
+  .canvas{width:1320px;padding:24px 26px;background:var(--bg)}
+  .cont{font-family:var(--f-label);font-size:19px;font-weight:700;color:var(--t3);
+    letter-spacing:.08em;margin:0 0 12px 2px}
+  table{border-collapse:collapse;width:100%;background:var(--card);
+    font-family:var(--f-body);font-size:28px;line-height:1.6;color:var(--t2)}
+  th,td{border:1px solid var(--divider);padding:13px 17px;vertical-align:top;overflow-wrap:break-word}
+  th{font-family:var(--f-head);font-weight:700;color:var(--purple-dark);
+    background:rgba(109,40,217,.08);border-bottom:2.5px solid var(--purple)}
+  tr:nth-child(even) td{background:rgba(26,20,40,.022)}
+  td b{color:var(--t1);font-weight:700}
+  td em{color:var(--purple-dark);font-style:normal;font-weight:600}
+  th code,td code{font-family:"JetBrains Mono","LXGW WenKai",monospace;font-size:.9em;
+    background:#efeae2;padding:1px 6px;border-radius:4px;color:var(--purple-dark)}
+</style></head>
+<body><div class="canvas"><table><thead><tr><th style="text-align:left">章·节</th><th style="text-align:left">这一层的形态</th></tr></thead><tbody><tr><td style="text-align:left">第二章</td><td style="text-align:left">验收层：pass=true 假通过——执行方自报成功，无人独立判定</td></tr><tr><td style="text-align:left">第五章 5.5</td><td style="text-align:left">run 终态 guard：半轮内容终态化落盘，抢占才允许发生</td></tr><tr><td style="text-align:left">第八章 8.3 / 8.10</td><td style="text-align:left">工具提交点：lease 校验从入口搬到副作用提交点（关掉 TOCTOU 窗口）；result 是报告、outcome 是实况、独立取证、两向对账</td></tr><tr><td style="text-align:left">第九章 9.4</td><td style="text-align:left">传输层：成功不在 2xx 响应头提交、在内容写入下游之后提交；流终结真值表默认 fail closed</td></tr><tr><td style="text-align:left">第十二章 12.7</td><td style="text-align:left">多 agent 层：child 的回传是子 agent 的自述，不是外部世界替它作的证——“内部”不构成可信的理由（12.6 同理：没跑完、结果未知是合法终态 unknown，不许伪造成成功）</td></tr><tr><td style="text-align:left">第十三章 13.5</td><td style="text-align:left">证据层：completion claim 必须连到 outcome evidence——完成声明不连 outcome，就是拿自述当事实</td></tr><tr><td style="text-align:left">第十四章 14.6</td><td style="text-align:left">集成验收层：验收不看“能跑”，看标准故障包全绿——九章留下的 fixture 在这里汇编成逐格验收表</td></tr></tbody></table></div></body></html>

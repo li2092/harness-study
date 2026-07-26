@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="../_base.css">
+<style>
+  .canvas{width:1320px;padding:24px 26px;background:var(--bg)}
+  .cont{font-family:var(--f-label);font-size:19px;font-weight:700;color:var(--t3);
+    letter-spacing:.08em;margin:0 0 12px 2px}
+  table{border-collapse:collapse;width:100%;background:var(--card);
+    font-family:var(--f-body);font-size:28px;line-height:1.6;color:var(--t2)}
+  th,td{border:1px solid var(--divider);padding:13px 17px;vertical-align:top;overflow-wrap:break-word}
+  th{font-family:var(--f-head);font-weight:700;color:var(--purple-dark);
+    background:rgba(109,40,217,.08);border-bottom:2.5px solid var(--purple)}
+  tr:nth-child(even) td{background:rgba(26,20,40,.022)}
+  td b{color:var(--t1);font-weight:700}
+  td em{color:var(--purple-dark);font-style:normal;font-weight:600}
+  th code,td code{font-family:"JetBrains Mono","LXGW WenKai",monospace;font-size:.9em;
+    background:#efeae2;padding:1px 6px;border-radius:4px;color:var(--purple-dark)}
+</style></head>
+<body><div class="canvas"><table><thead><tr><th style="text-align:left">fixture</th><th style="text-align:left;white-space:nowrap">出处</th><th style="text-align:left">破坏场景</th><th style="text-align:left">主守契约</th></tr></thead><tbody><tr><td style="text-align:left">contract test</td><td style="text-align:left;white-space:nowrap">第五章</td><td style="text-align:left">双入口同触发／双进程同 resume／同请求重发／入口语义分叉</td><td style="text-align:left">转移</td></tr><tr><td style="text-align:left">atomicity fixture</td><td style="text-align:left;white-space:nowrap">第六章</td><td style="text-align:left">消息落库／compaction 摘要／artifact 登记，三处相邻写入两两之间 kill -9</td><td style="text-align:left">真相（原子性）</td></tr><tr><td style="text-align:left">replay fixture</td><td style="text-align:left;white-space:nowrap">第七章</td><td style="text-align:left">工具副作用已发生、结果未记录时杀进程</td><td style="text-align:left">副作用（恢复侧）</td></tr><tr><td style="text-align:left">reconciliation fixture</td><td style="text-align:left;white-space:nowrap">第八章</td><td style="text-align:left">超时远端已成功／成功但 artifact 缺失／policy 变化拒 stale lease／单步 mismatch 废队列</td><td style="text-align:left">副作用</td></tr><tr><td style="text-align:left">cancel propagation test</td><td style="text-align:left;white-space:nowrap">第九章</td><td style="text-align:left">断网重连／刷新页面／抢占／审批跨会话恢复</td><td style="text-align:left">交互</td></tr><tr><td style="text-align:left">compaction fixture</td><td style="text-align:left;white-space:nowrap">第十章</td><td style="text-align:left">压缩中断／摘要遗漏系统约束／memory 污染／resume 读旧版本</td><td style="text-align:left">真相（连续性）</td></tr><tr><td style="text-align:left">permission fixture</td><td style="text-align:left;white-space:nowrap">第十一章</td><td style="text-align:left">subagent 越权／恶意 tool result／过期 delegation 后 resume／secret 进 sandbox／关闭共享件</td><td style="text-align:left">权限</td></tr><tr><td style="text-align:left">coordination fixture</td><td style="text-align:left;white-space:nowrap">第十二章</td><td style="text-align:left">越权 subagent／并发写同一 artifact／慢 subagent 阻塞／恶意回传</td><td style="text-align:left">权限＋副作用（父子）</td></tr><tr><td style="text-align:left">detector/certificate fixture</td><td style="text-align:left;white-space:nowrap">第十三章</td><td style="text-align:left">吞错误／关检测器／成功但无 artifact／模型漏洞</td><td style="text-align:left">证据</td></tr></tbody></table></div></body></html>

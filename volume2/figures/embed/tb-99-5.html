@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="../_base.css">
+<style>
+  .canvas{width:1320px;padding:24px 26px;background:var(--bg)}
+  .cont{font-family:var(--f-label);font-size:19px;font-weight:700;color:var(--t3);
+    letter-spacing:.08em;margin:0 0 12px 2px}
+  table{border-collapse:collapse;width:100%;background:var(--card);
+    font-family:var(--f-body);font-size:28px;line-height:1.6;color:var(--t2)}
+  th,td{border:1px solid var(--divider);padding:13px 17px;vertical-align:top;overflow-wrap:break-word}
+  th{font-family:var(--f-head);font-weight:700;color:var(--purple-dark);
+    background:rgba(109,40,217,.08);border-bottom:2.5px solid var(--purple)}
+  tr:nth-child(even) td{background:rgba(26,20,40,.022)}
+  td b{color:var(--t1);font-weight:700}
+  td em{color:var(--purple-dark);font-style:normal;font-weight:600}
+  th code,td code{font-family:"JetBrains Mono","LXGW WenKai",monospace;font-size:.9em;
+    background:#efeae2;padding:1px 6px;border-radius:4px;color:var(--purple-dark)}
+</style></head>
+<body><div class="canvas"><table><thead><tr><th style="text-align:left">章·节</th><th style="text-align:left">这一层的形态</th></tr></thead><tbody><tr><td style="text-align:left">第五章</td><td style="text-align:left">waiting 状态——run 停下等外部输入</td></tr><tr><td style="text-align:left">第六章 6.11</td><td style="text-align:left">三生命周期分离（状态/执行/授权）；lease 分层，执行权不进实体链</td></tr><tr><td style="text-align:left">第七章 7.8</td><td style="text-align:left">四操作四后果表里授权列：resume/replay/fork/time travel 没有一种自动携带旧授权</td></tr><tr><td style="text-align:left">第八章 8.3</td><td style="text-align:left">committed_under：副作用提交点校验当刻的执行权</td></tr><tr><td style="text-align:left">第九章 9.8</td><td style="text-align:left">挂起恢复时授权重验——checkpoint 存了挂起，不管三天前的授权是否还有效</td></tr><tr><td style="text-align:left">第十章 10.8</td><td style="text-align:left">恢复时 prompt asset 要拆两半：塑形行为的那部分按崩溃前那一版重建，<b>系统约束取当前版</b>——约束在 run 中途收紧了、恢复还照旧版走，等于绕过刚立的新规则。与 11.6 是同一句话的两种说法</td></tr><tr><td style="text-align:left">第十一章 11.6</td><td style="text-align:left"><b>主场收口</b>：resume／fork／replay 重建的是状态与执行，绝不顺手把旧授权一起复活；确需跨恢复保留的授权必须显式列进契约，并在上下文、主体、版本上逐项重验。工作制品 U（Authority Lifecycle Matrix）是它的登记表</td></tr></tbody></table></div></body></html>

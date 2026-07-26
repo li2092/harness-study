@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="../_base.css">
+<style>
+  .canvas{width:1320px;padding:24px 26px;background:var(--bg)}
+  .cont{font-family:var(--f-label);font-size:19px;font-weight:700;color:var(--t3);
+    letter-spacing:.08em;margin:0 0 12px 2px}
+  table{border-collapse:collapse;width:100%;background:var(--card);
+    font-family:var(--f-body);font-size:28px;line-height:1.6;color:var(--t2)}
+  th,td{border:1px solid var(--divider);padding:13px 17px;vertical-align:top;overflow-wrap:break-word}
+  th{font-family:var(--f-head);font-weight:700;color:var(--purple-dark);
+    background:rgba(109,40,217,.08);border-bottom:2.5px solid var(--purple)}
+  tr:nth-child(even) td{background:rgba(26,20,40,.022)}
+  td b{color:var(--t1);font-weight:700}
+  td em{color:var(--purple-dark);font-style:normal;font-weight:600}
+  th code,td code{font-family:"JetBrains Mono","LXGW WenKai",monospace;font-size:.9em;
+    background:#efeae2;padding:1px 6px;border-radius:4px;color:var(--purple-dark)}
+</style></head>
+<body><div class="canvas"><table><thead><tr><th style="text-align:left">条件</th><th style="text-align:left">单机最低充分解（事件表＋intent/result＋启动扫描＋timer 扫描）</th><th style="text-align:left">checkpoint 引擎（LangGraph 类）</th><th style="text-align:left">journal 引擎（Temporal/Restate 类）</th></tr></thead><tbody><tr><td style="text-align:left">单机单实例、本地副作用为主</td><td style="text-align:left"><b>默认选择</b>（第七章 7.10 七步时序）</td><td style="text-align:left">图编排需求强时可用，三档 durability 显式选</td><td style="text-align:left">确定性改造税通常不划算</td></tr><tr><td style="text-align:left">编排跨进程/跨服务</td><td style="text-align:left">不够——需自建协调</td><td style="text-align:left">三件缺口自建（失败检测/恢复触发/跨实例协调）</td><td style="text-align:left"><b>值回票价</b>：账本一致性＋单派发</td></tr><tr><td style="text-align:left">durable timer 密度高、错过成本高</td><td style="text-align:left">自建扫描维护成本上升</td><td style="text-align:left">同左</td><td style="text-align:left">引擎 timer 原生</td></tr><tr><td style="text-align:left">LLM 结果复用</td><td style="text-align:left">invocation 留档（第六章/第七章 7.2）</td><td style="text-align:left">需自行保证节点内不重调</td><td style="text-align:left">Activity 结果缓存原生</td></tr></tbody></table></div></body></html>

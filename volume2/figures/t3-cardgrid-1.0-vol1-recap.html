@@ -1,0 +1,87 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="_base.css">
+<style>
+  .stage{margin-top:26px;display:flex;gap:0;align-items:stretch}
+  .panel{border-radius:12px;padding:20px 22px;background:var(--card)}
+  .p-left{flex:0 0 560px;border:2px solid var(--green)}
+  .p-right{flex:1;border:2px dashed var(--red);background:rgba(179,55,42,.03)}
+  .mid{flex:0 0 108px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+  .mid .arr{font-size:34px;color:var(--purple)}
+  .mid .t{font-family:var(--f-label);font-size:13.2px;font-weight:700;color:var(--purple);
+    letter-spacing:.06em;text-align:center;line-height:1.5}
+  .ph{font-family:var(--f-head);font-size:19.5px;font-weight:800;margin-bottom:13px}
+  .p-left .ph{color:var(--green)} .p-right .ph{color:var(--red)}
+  .ph small{font-family:var(--f-label);font-size:12.6px;font-weight:700;color:var(--t3);
+    letter-spacing:.08em;margin-left:9px}
+  .chips{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .chip{border:1.5px solid var(--divider);background:#fff;border-radius:8px;padding:8px 12px;
+    font-family:var(--f-head);font-size:15.3px;font-weight:700;color:var(--t1)}
+  .chip small{display:block;font-family:var(--f-body);font-size:12.8px;font-weight:400;color:var(--t3);margin-top:2px}
+  .bandlet{margin-top:9px;border:1.5px solid var(--purple-light);background:var(--purple-muted);
+    border-radius:8px;padding:7px 12px;font-family:var(--f-head);font-size:14.6px;font-weight:700;color:var(--purple-dark)}
+  .bandlet small{font-family:var(--f-body);font-weight:400;color:var(--t3);font-size:13px;margin-left:8px}
+  .ok{margin-top:13px;font-family:var(--f-body);font-size:15.2px;color:var(--green)}
+  .ok b{font-weight:700}
+  .woe{display:flex;flex-direction:column;gap:10px}
+  .w{border:1.5px solid rgba(179,55,42,.35);background:#fff;border-radius:8px;padding:10px 14px;
+    font-family:var(--f-body);font-size:15.6px;color:var(--t2);line-height:1.55}
+  .w b{color:var(--red);font-weight:700}
+  .no{margin-top:13px;font-family:var(--f-head);font-size:15.4px;font-weight:800;color:var(--red)}
+  .evi{margin-top:20px;display:flex;gap:16px}
+  .ev{flex:1;border:1px solid var(--divider);border-left:4px solid var(--t3);border-radius:8px;
+    background:var(--card);padding:12px 16px;font-family:var(--f-body);font-size:14.8px;color:var(--t2);line-height:1.6}
+  .ev b{color:var(--t1)} .ev .num{font-family:var(--f-head);font-weight:800;color:var(--purple-dark)}
+  .thesis{margin-top:16px;border:2px solid var(--purple-dark);background:var(--purple-light);
+    border-radius:10px;padding:13px 20px;font-family:var(--f-body);font-size:16.8px;color:var(--t1);line-height:1.65}
+  .thesis b{font-family:var(--f-head);color:var(--purple-dark)}
+</style></head>
+<body><div class="canvas"><div class="grid-bg"></div><div class="inner">
+  <span class="label-type">Harness Study · 第二卷 1.0</span>
+  <h1>入门卷的行装与开场怪事：<span class="em">部件都在，约定没人验</span></h1>
+  <div class="sub">读完入门卷，手里是一张按能力切的部件蓝图——照着搭，检查一遍，该有的都有。怪事偏偏在部件齐全之后开始：三桩事故没有一件能怪到"缺部件"头上，而干没干到底，从外面看不出来。</div>
+  <hr class="rule">
+
+  <div class="stage">
+    <div class="panel p-left">
+      <div class="ph">入门卷的行装<small>按能力切 · 8 件 RUNTIME</small></div>
+      <div class="chips">
+        <div class="chip">Agent Loop</div>
+        <div class="chip">Model Adapter &amp; Routing</div>
+        <div class="chip">Tool Registry &amp; ACI</div>
+        <div class="chip">Context · Memory · Artifact</div>
+        <div class="chip">Prompt Assets</div>
+        <div class="chip">Observation Surface</div>
+        <div class="chip">Trajectory · Event Stream</div>
+        <div class="chip">Verifier</div>
+      </div>
+      <div class="bandlet">＋ Safety 控制面<small>横切八件的控制层</small></div>
+      <div class="bandlet">＋ 控制论四原则（第九章）<small>可观测 · 可控 · 稳定 · 闭环</small></div>
+      <div class="ok"><b>检查一遍，该有的都有</b>——loop 在转，工具挂上了，压缩、验证一样不少。</div>
+    </div>
+    <div class="mid">
+      <div class="t">照蓝图<br>搭起来</div>
+      <div class="arr">→</div>
+      <div class="t">然后怪事<br>开始了</div>
+    </div>
+    <div class="panel p-right">
+      <div class="ph">三桩怪事，全在部件齐全之后</div>
+      <div class="woe">
+        <div class="w">agent <b>声称任务做完了</b>，翻开工作区，其实没做。</div>
+        <div class="w">同一个工具<b>悄悄跑了两遍</b>，账单和副作用都翻倍。</div>
+        <div class="w">界面卡在"生成中"，后台的进程<b>其实早就死了</b>。</div>
+      </div>
+      <div class="no">没有一件能怪到"缺部件"头上——是部件没把自己的活干到底。</div>
+    </div>
+  </div>
+
+  <div class="evi">
+    <div class="ev"><b>Harness-Bench · 控制实验</b>：8 个模型接进 6 个 harness，跑同一组 106 个沙箱任务——模型不动，只换 harness，复合分最好与最差差 <span class="num">23.8</span>（76.2 对 52.4）。</div>
+    <div class="ev"><b>MAST · 事后剖析</b>：7 个框架 1642 条轨迹，三类故障全落在系统设计层——规范缺陷 <span class="num">44.2%</span> · 协调失败 <span class="num">32.3%</span> · 验证缺失 <span class="num">23.5%</span>。</div>
+  </div>
+
+  <div class="thesis"><b>本卷命题：harness 的工程质量是独立变量。</b>部件蓝图管"零件齐不齐"，这一卷管"零件之间的约定成不成立"——把从没写下来的约定写成六份契约明文，再用故障证明它们真的成立。</div>
+
+  <div class="foot">
+    <div><span class="dot"></span>《Harness Study · 架构与工程卷》1.0 入门卷行装 · 数据：Harness-Bench（arXiv:2605.27922）/ MAST（arXiv:2503.13657）· 案例已脱敏</div>
+  </div>
+</div></div></body></html>

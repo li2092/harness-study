@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="../_base.css">
+<style>
+  .canvas{width:1320px;padding:24px 26px;background:var(--bg)}
+  .cont{font-family:var(--f-label);font-size:19px;font-weight:700;color:var(--t3);
+    letter-spacing:.08em;margin:0 0 12px 2px}
+  table{border-collapse:collapse;width:100%;background:var(--card);
+    font-family:var(--f-body);font-size:26px;line-height:1.6;color:var(--t2)}
+  th,td{border:1px solid var(--divider);padding:12px 14px;vertical-align:top;overflow-wrap:break-word}
+  th{font-family:var(--f-head);font-weight:700;color:var(--purple-dark);
+    background:rgba(109,40,217,.08);border-bottom:2.5px solid var(--purple)}
+  tr:nth-child(even) td{background:rgba(26,20,40,.022)}
+  td b{color:var(--t1);font-weight:700}
+  td em{color:var(--purple-dark);font-style:normal;font-weight:600}
+  th code,td code{font-family:"JetBrains Mono","LXGW WenKai",monospace;font-size:.9em;
+    background:#efeae2;padding:1px 6px;border-radius:4px;color:var(--purple-dark)}
+</style></head>
+<body><div class="canvas"><table><thead><tr><th style="text-align:left">授权对象</th><th style="text-align:left">授予</th><th style="text-align:left">范围</th><th style="text-align:left">期限 / 失效条件</th><th style="text-align:left">恢复时（resume/fork/replay）</th></tr></thead><tbody><tr><td style="text-align:left">approval（已决审批）</td><td style="text-align:left">请人签字</td><td style="text-align:left">该次高风险动作</td><td style="text-align:left">用完即止；expires_at 过期</td><td style="text-align:left">不延续，重验（11.6 节、Lifetime Matrix）</td></tr><tr><td style="text-align:left">session permission</td><td style="text-align:left">mode/规则授予</td><td style="text-align:left">该会话</td><td style="text-align:left">会话结束即失效</td><td style="text-align:left">不恢复，重新授予</td></tr><tr><td style="text-align:left">delegation token</td><td style="text-align:left">上游委托</td><td style="text-align:left">token scope</td><td style="text-align:left">expires_at；授予者权限被收回即失效</td><td style="text-align:left">不恢复，重新授予</td></tr><tr><td style="text-align:left">credential / secret</td><td style="text-align:left">密钥管理</td><td style="text-align:left">特定资源</td><td style="text-align:left">轮换周期</td><td style="text-align:left">不恢复，重新获取</td></tr><tr><td style="text-align:left">lease / 执行权</td><td style="text-align:left">认领取得</td><td style="text-align:left">该 run 副作用提交</td><td style="text-align:left">重启即失效（6.0 节、8.3 节）</td><td style="text-align:left">不恢复，重新取得</td></tr></tbody></table></div></body></html>

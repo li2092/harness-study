@@ -37,7 +37,7 @@
 
 关联链解决了"这条事实属于谁"，下一条纪律管"这条事实能不能动"。
 
-答案是不能。工作制品 C（Event Schema）的四条纪律，第一条最硬：append-only，永不 UPDATE；记错了，追加一条 correction.appended 指向原事件，不回去改那一行。理由很简单——证据一旦能改，就不再是证据，能改的证据等于没有。另外三条配套：其一，粒度到 step 或消息完成，不逐 token（token delta 走流式投影通道，没有恢复价值，不入账）；其二，append-only 和 crash-safe 是两件事——进程可能在写半行事件的当口崩溃，恢复时按最后一个完整事件截断、丢掉那半行尾，这不算数据损坏，两层保证分开立；其三，内部 schema 稳定优先——OpenTelemetry（OTel）的 GenAI semantic conventions 截至 2026-07 仍是 Development 状态，只做导出映射、不做内部依赖【规范/官方文档，终稿回核】。代价是记错的也得留着、再追加更正，历史因此臃肿——但换来的是不可抵赖：任何一条账都动不了，事后谁都改不了口径。
+答案是不能。工作制品 C（Event Schema）的四条纪律，第一条最硬：append-only，永不 UPDATE；记错了，追加一条 correction.appended 指向原事件，不回去改那一行。理由很简单——证据一旦能改，就不再是证据，能改的证据等于没有。另外三条配套：其一，粒度到 step 或消息完成，不逐 token（token delta 走流式投影通道，没有恢复价值，不入账）；其二，append-only 和 crash-safe 是两件事——进程可能在写半行事件的当口崩溃，恢复时按最后一个完整事件截断、丢掉那半行尾，这不算数据损坏，两层保证分开立；其三，内部 schema 稳定优先——OpenTelemetry（OTel）的 GenAI semantic conventions 截至 2026-07 仍是 Development 状态，只做导出映射、不做内部依赖【规范/官方文档】。代价是记错的也得留着、再追加更正，历史因此臃肿——但换来的是不可抵赖：任何一条账都动不了，事后谁都改不了口径。
 
 ## 13.5 决策与完成，都要留证
 
@@ -67,7 +67,7 @@
 
 前面七节管的是"发生过什么"的证据。还有一类系统，它的核心是一个会变的判断——可执行的 Belief/World Model（第六章 6.12 立的：agent 把当前对世界的理解写成一段可执行代码）。对这类系统，证据面要多回答一个问题：系统凭什么相信当前这个模型，又是什么证据推翻了它？
 
-这靠给工作制品 X 的四条对账边补七条认识论边、不另造一张平行图谱：observation 为 model 提供依据（grounds）、model 预测某个 transition（predicts）、完整历史为 model 背书（certifies）、反例推翻 model（refutes）、plan 从某个 model 版本派生（derived_from）、commit 兑现 plan（realizes）、预测与观察不符则废止剩余计划（invalidates）。四条对账边回答"动作、结果、artifact、完成声明怎么对上"，这七条边补上"信念的来路与去路"。入门卷 §8.4 那十条边登记的是跨件、跨 cell 的可观测关系，与本卷这两组互补，不是同一张图。
+这靠给工作制品 X 的四条对账边补七条认识论边、不另造一张平行图谱：observation 为 model 提供依据（grounds）、model 预测某个 transition（predicts）、完整历史为 model 背书（certifies）、反例推翻 model（refutes）、plan 从某个 model 版本派生（derived_from）、commit 兑现 plan（realizes）、预测与观察不符则废止剩余计划（invalidates）。四条对账边回答"动作、结果、artifact、完成声明怎么对上"，这七条边补上"信念的来路与去路"。入门卷 8.4 节那十条边登记的是跨件、跨 cell 的可观测关系，与本卷这两组互补，不是同一张图。
 
 其中最经不起含糊的一条是 certifies 必须带 scope。用完整历史 backtest 一个模型，只证明它解释了已经见过的样本（retrodictive consistency），绝不证明它在没见过的状态上还成立（generalization）。所以 Model Certificate（工作制品 Z）不能只写一句 backtest=green，至少要并列记五类测试——full-history replay、prospective 下一步预测、held-out 转移、invariant 属性测试、planner-adversarial（让 planner 主动去找模型漏洞）——外加 scope、history cursor、生成 provenance（模型／提示／工具版本）和已知反例，正好补齐第六章 6.12 给信念工件规定的那四件随身证据。一个公开的 model-based harness 项目的保留轨迹佐证这套机制确有其事：逐行统计里，9 次误预测均触发了重新建模与提交流程（1:1 先后对应属推断，终稿回核）【厂商实践／项目自述，只引轨迹统计、不引其自述分数】——"预测错即计划失效"可从公开工件复算、非独立受控消融。这一节把观察→建模→认证→规划→提交这条链，加上反例回填这条返回边，合成一个可验证的反馈环。代价是建一份像样的 certificate 是笔实打实的额外工程，且只在"可显式建模"的域才划算——状态紧凑、转移大体确定、真实动作昂贵而内部仿真便宜；域选错了，这份工程就白花在一个"仿真并不比真跑省"的地方，所以不要求每个任务都去建一个 simulator。
 
@@ -125,6 +125,7 @@ assessor 版本：问被评团队两个问题——"哪些关键事件，如果�
 | R1 grep 红线 | 首稿自查＋评审后复跑 | "你"系病灶 0（assessor/builder 动作段"你们/你"为对被评团队/读者提问的第二人称指令，沿 §十二 惯例保留）；元叙述 0；模糊词 0；文字化引用正文零 §。首稿自查清 7 处（6 卫星对比＋1 "你最"＋"能崩"语域）；style 评审补抓反向卫星对比（不含"是"的"是X不是Y"变体）L14 两处/L56 三重叠加、"硬核""最要命"语域滑词，落实后全清；复跑正文显式禁形仅余"不等于"两处（result≠outcome、讲得通≠造得出来，技术等价否定、援 §十一 先例，style 判可接受），章主张两句用 ＝ 号不占配额；整句加粗仅章主张；工作制品 C 首现（13.3）已补名称（technical P2）；体量正文约 127 行 |
 | 四维评审 | **四路已跑齐并全部落实（2026-07-24，均用 opus）：technical B+→A-（四条纪律补全＋session→conversation）／style A-（反向卫星对比＋语域清零）／cybernetic A-（方法论比例约 80%、代价末环八点全落、§十二 老毛病保持治住）／business 合规达标（Schema 引用铁律全守，零 P0）** | technical P1：13.4"四条纪律"只列 2 条→补纪律 4（内部 schema 稳定优先／OTel GenAI 2026-07 仍 Development，把 OTel 现状拉进正文不再只在删除区）；P1：13.3 correlation"session"→"conversation"（与第六章冻结实体链顶层／工作制品 C 信封 conversation_id 对齐，SPEC §二十 N3 同步）；P2：工作制品 C 首现补名称、五平面归属改第十一章 11.7（非第四章 4.8 仅标位）、"9 次每一次都"→"均触发（1:1 属推断）"对齐第八章降精度、"现有 Evidence Graph"→入门卷已立（工作制品 X 继承对账边）。cybernetic P1：四问闭环句完成时态"三腿俱全"→就地限定"设计上到位、配套实现未接齐、没跑通一圈"（§十二 同款复现，此处措辞更强）；P2：Model Certificate 收 6.12 四件随身证据漏 provenance→补"生成 provenance（模型/提示/工具版本）"并点名兑现 6.12；P2：13.5 代价只覆盖 completion-outcome→扩到 policy/zombie 三样；P3：13.8 代价"额外工程"近"设计负担前移"→补"域选错白花在仿真不比真跑省的地方"。style P1：13.7 content 敏感三重否定叠加→拆并归厂商；P2：L14 两反向对比转陈述、"硬核"→"最要紧的一节"、"最要命"→"最经不起含糊"、MODA"五层"列 6 项→"五层（观/建/认/规/提）＋反例回填返回边"；P3："留"三连、"三腿"（腿）→改。business P1：13.7"业界成熟口径"把 Anthropic＋Codex 升为中立共识→归还厂商实践、标"非中立基准"；P2："业界 rollout-trace"→"Codex rollout-trace 厂商口径"；P3：L 级"桌面案例"与底座"配套实现项目"化名混用→统一、"坐实...实机制"→"佐证...确有其事（可复算、非独立受控消融）" |
 | 终稿回核清单 | — | OTel GenAI semantic conventions 截至发稿的稳定度（回核 research/07 §3，是否仍 Development）；rollout-trace "Observe First, Interpret Later"／"tracing is not telemetry" 出处（回核 research/07 §2）；Anthropic 生产 tracing"监控决策模式不监控内容"出处（回核 research/03）；model-based harness 轨迹统计 78/17/2/15/9/15（回核 research/10，匿名口径、实名待第六章终稿裁决）；Schema Harness 分数四限定纪律（若终稿引分数）；WorldCoder（NeurIPS 2024）等 model-based 前史编号 |
+| 终稿回核清单 | 2026-07-27 正文【】标注清理（用户指令） | 13.2 事件纪律段【规范/官方文档】出处终稿回核 |
 
 ## 引用来源
 

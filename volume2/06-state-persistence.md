@@ -13,14 +13,7 @@
 
 对话产品的直觉词汇只有两个："会话"和"消息"。这两个词撑不住一个运行时——第五章整章讲的 run 在这套词汇里没有位置，第八章要对账的工具执行更没有。运行时的实体链有六级，每一级都由一类必须区分的东西逼出来：
 
-| 级 | 实体 | 一句定义 | 关键裁决 |
-|---|---|---|---|
-| 1 | Conversation | 用户视角的持续对话，消息的归属容器 | 可以没有——scheduler/webhook 触发的 run 不挂会话 |
-| 2 | Run | 一次触发到终态的执行（第五章的主角） | subagent 归为 child run（parent_run_id），非独立实体 |
-| 3 | Turn | 一次用户意图之内的完整交互回合 | 不设独立表——messages/steps 上的 turn_no 单调递增 |
-| 4 | Step | 一次模型决策及其工具结果的闭环 | 恢复粒度锚点：从最后完整 step 之后继续（第七章） |
-| 5a | Invocation | 一次真实发生的模型调用 | 每次调用一行，失败的调用也留档——invocation 即 attempt |
-| 5b | Tool Execution | 一次工具副作用（Effect Ledger 一行） | 重试记在 attempt_no 上，不另立实体 |
+![](figures/embed/tb-06-1.png)
 
 第五级的两条裁决合起来是一项结构决定，来路要交代。本卷的桌面案例项目在后续一轮内部工程审计里，把统一状态链写成 Task→Run→Step→Attempt→Action——attempt 承载同一步的多次网络或模型尝试，立的约束是失败尝试的输出不得混入下一次尝试【经验，桌面案例项目内部审计，2026-07】。这条约束本卷全盘接受，承载方式不同：模型侧每次真实调用记一行 invocation，失败的调用也成行，序号与状态就是尝试的账；工具侧由 Effect Ledger 的 attempt_no 承载，"尝试可多次、结果只记一次"在工作制品 B 里早已是不变量——记账在 invocation，"失败输出不混入下一尝试"的执行约束则由 step 域的 context 组装承载。
 
@@ -66,12 +59,7 @@ State Registry v1 至此交付（工作制品 A），本章末尾随信念工件
 
 恢复要有锚点，锚点就是 checkpoint。对它的朴素想象是"把一切存下来"；一切存不下来，因为有几样东西根本不归数据库管。清单直接给：
 
-| 保存 | 明确不保存（及理由） |
-|---|---|
-| 消息游标、最后完整 step 序号 | 文件系统与外部副作用——另有账本（第八章），回滚是另一件事 |
-| compaction 版本与摘要引用 | 授权——approval、delegation 不随 checkpoint 走，安全默认不隐式恢复（6.11 节） |
-| state_machine_version 等版本钉 | 模型内部状态——不可得，invocation 记录代之 |
-| 包含物清单本身 | ——每个 checkpoint 自述包含什么；不完整的 checkpoint 必须可识别、必须丢弃 |
+![](figures/embed/tb-06-2.png)
 
 业界有一套值得端详的产品契约。Anthropic 的 Agent SDK 把"状态存哪、怎么恢复"写成了文档：session 以 jsonl 追加落盘，continue、resume、fork 三种恢复语义齐备；官方一句定性把边界划得很诚实——"session 持久化的是对话，不是文件系统"【规范/官方文档，Agent SDK 文档 2026-07 版】。
 

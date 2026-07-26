@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="../_base.css">
+<style>
+  .canvas{width:1320px;padding:24px 26px;background:var(--bg)}
+  .cont{font-family:var(--f-label);font-size:19px;font-weight:700;color:var(--t3);
+    letter-spacing:.08em;margin:0 0 12px 2px}
+  table{border-collapse:collapse;width:100%;background:var(--card);
+    font-family:var(--f-body);font-size:23px;line-height:1.6;color:var(--t2)}
+  th,td{border:1px solid var(--divider);padding:9px 11px;vertical-align:top;overflow-wrap:break-word}
+  th{font-family:var(--f-head);font-weight:700;color:var(--purple-dark);
+    background:rgba(109,40,217,.08);border-bottom:2.5px solid var(--purple)}
+  tr:nth-child(even) td{background:rgba(26,20,40,.022)}
+  td b{color:var(--t1);font-weight:700}
+  td em{color:var(--purple-dark);font-style:normal;font-weight:600}
+  th code,td code{font-family:"JetBrains Mono","LXGW WenKai",monospace;font-size:.9em;
+    background:#efeae2;padding:1px 6px;border-radius:4px;color:var(--purple-dark)}
+</style></head>
+<body><div class="canvas"><table><thead><tr><th style="text-align:left">入口</th><th style="text-align:left">意图适配</th><th style="text-align:left">流转发</th><th style="text-align:left;white-space:nowrap">permission</th><th style="text-align:left;white-space:nowrap">cancel</th><th style="text-align:left;white-space:nowrap">resume</th><th style="text-align:left;white-space:nowrap">工具执行</th></tr></thead><tbody><tr><td style="text-align:left">UI</td><td style="text-align:left">消息/操作→intent（携 idempotency key）</td><td style="text-align:left">订阅事件流重建投影</td><td style="text-align:left;white-space:nowrap">内核</td><td style="text-align:left;white-space:nowrap">内核</td><td style="text-align:left;white-space:nowrap">内核</td><td style="text-align:left;white-space:nowrap">内核</td></tr><tr><td style="text-align:left">API</td><td style="text-align:left">请求体→intent（调用方自带 key）</td><td style="text-align:left">SSE / 轮询</td><td style="text-align:left;white-space:nowrap">内核</td><td style="text-align:left;white-space:nowrap">内核</td><td style="text-align:left;white-space:nowrap">内核</td><td style="text-align:left;white-space:nowrap">内核</td></tr><tr><td style="text-align:left">IM 渠道</td><td style="text-align:left">平台消息→intent</td><td style="text-align:left">消息回推（异步分片）</td><td style="text-align:left;white-space:nowrap">内核</td><td style="text-align:left;white-space:nowrap">内核</td><td style="text-align:left;white-space:nowrap">内核</td><td style="text-align:left;white-space:nowrap">内核</td></tr><tr><td style="text-align:left">scheduler/timer</td><td style="text-align:left">timer.fired→intent</td><td style="text-align:left">无人值守：结果走库与通知</td><td style="text-align:left;white-space:nowrap">内核</td><td style="text-align:left;white-space:nowrap">内核</td><td style="text-align:left;white-space:nowrap">内核</td><td style="text-align:left;white-space:nowrap">内核</td></tr><tr><td style="text-align:left">webhook</td><td style="text-align:left">外部事件（验签）→intent</td><td style="text-align:left">无人值守：结果走库与通知</td><td style="text-align:left;white-space:nowrap">内核</td><td style="text-align:left;white-space:nowrap">内核</td><td style="text-align:left;white-space:nowrap">内核</td><td style="text-align:left;white-space:nowrap">内核</td></tr><tr><td style="text-align:left">SDK/CLI</td><td style="text-align:left">调用→intent</td><td style="text-align:left">流式回调 / stdout</td><td style="text-align:left;white-space:nowrap">内核</td><td style="text-align:left;white-space:nowrap">内核</td><td style="text-align:left;white-space:nowrap">内核</td><td style="text-align:left;white-space:nowrap">内核</td></tr></tbody></table></div></body></html>

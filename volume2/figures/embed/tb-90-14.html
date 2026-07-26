@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="../_base.css">
+<style>
+  .canvas{width:1320px;padding:24px 26px;background:var(--bg)}
+  .cont{font-family:var(--f-label);font-size:19px;font-weight:700;color:var(--t3);
+    letter-spacing:.08em;margin:0 0 12px 2px}
+  table{border-collapse:collapse;width:100%;background:var(--card);
+    font-family:var(--f-body);font-size:26px;line-height:1.6;color:var(--t2)}
+  th,td{border:1px solid var(--divider);padding:12px 14px;vertical-align:top;overflow-wrap:break-word}
+  th{font-family:var(--f-head);font-weight:700;color:var(--purple-dark);
+    background:rgba(109,40,217,.08);border-bottom:2.5px solid var(--purple)}
+  tr:nth-child(even) td{background:rgba(26,20,40,.022)}
+  td b{color:var(--t1);font-weight:700}
+  td em{color:var(--purple-dark);font-style:normal;font-weight:600}
+  th code,td code{font-family:"JetBrains Mono","LXGW WenKai",monospace;font-size:.9em;
+    background:#efeae2;padding:1px 6px;border-radius:4px;color:var(--purple-dark)}
+</style></head>
+<body><div class="canvas"><table><thead><tr><th style="text-align:left">操作</th><th style="text-align:left">状态</th><th style="text-align:left">执行</th><th style="text-align:left">副作用</th><th style="text-align:left">授权</th></tr></thead><tbody><tr><td style="text-align:left">resume</td><td style="text-align:left">从最后完整点继续，历史不动</td><td style="text-align:left">接着跑未完成部分</td><td style="text-align:left">已记录不重做；intent 无 result 进对账（第八章）</td><td style="text-align:left">不自动延续，按 I 节 Lifetime Matrix 逐项重验（11.6 节）</td></tr><tr><td style="text-align:left">replay</td><td style="text-align:left">只读重建，不新增历史</td><td style="text-align:left">决策重演（审计/调试）</td><td style="text-align:left">零副作用</td><td style="text-align:left">无需授权</td></tr><tr><td style="text-align:left">fork</td><td style="text-align:left">复制历史开新分支</td><td style="text-align:left">两线独立</td><td style="text-align:left">新分支新账</td><td style="text-align:left">不复制，按新 run 重新授权</td></tr><tr><td style="text-align:left">time travel</td><td style="text-align:left">回历史 checkpoint 分叉</td><td style="text-align:left">从旧状态重新出发</td><td style="text-align:left">旧分支已发生的副作用不消失</td><td style="text-align:left">同 fork</td></tr></tbody></table></div></body></html>

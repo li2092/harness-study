@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="../_base.css">
+<style>
+  .canvas{width:1320px;padding:24px 26px;background:var(--bg)}
+  .cont{font-family:var(--f-label);font-size:19px;font-weight:700;color:var(--t3);
+    letter-spacing:.08em;margin:0 0 12px 2px}
+  table{border-collapse:collapse;width:100%;background:var(--card);
+    font-family:var(--f-body);font-size:28px;line-height:1.6;color:var(--t2)}
+  th,td{border:1px solid var(--divider);padding:13px 17px;vertical-align:top;overflow-wrap:break-word}
+  th{font-family:var(--f-head);font-weight:700;color:var(--purple-dark);
+    background:rgba(109,40,217,.08);border-bottom:2.5px solid var(--purple)}
+  tr:nth-child(even) td{background:rgba(26,20,40,.022)}
+  td b{color:var(--t1);font-weight:700}
+  td em{color:var(--purple-dark);font-style:normal;font-weight:600}
+  th code,td code{font-family:"JetBrains Mono","LXGW WenKai",monospace;font-size:.9em;
+    background:#efeae2;padding:1px 6px;border-radius:4px;color:var(--purple-dark)}
+</style></head>
+<body><div class="canvas"><table><thead><tr><th style="text-align:left">保存</th><th style="text-align:left">明确不保存（及理由）</th></tr></thead><tbody><tr><td style="text-align:left">消息游标、最后完整 step 序号</td><td style="text-align:left">文件系统与外部副作用——另有账本（第八章），回滚是另一件事</td></tr><tr><td style="text-align:left">compaction 版本与摘要引用</td><td style="text-align:left">授权——approval、delegation 不随 checkpoint 走，安全默认不隐式恢复（6.11 节）</td></tr><tr><td style="text-align:left">state_machine_version 等版本钉</td><td style="text-align:left">模型内部状态——不可得，invocation 记录代之</td></tr><tr><td style="text-align:left">包含物清单本身</td><td style="text-align:left">——每个 checkpoint 自述包含什么；不完整的 checkpoint 必须可识别、必须丢弃</td></tr></tbody></table></div></body></html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="../_base.css">
+<style>
+  .canvas{width:1320px;padding:24px 26px;background:var(--bg)}
+  .cont{font-family:var(--f-label);font-size:19px;font-weight:700;color:var(--t3);
+    letter-spacing:.08em;margin:0 0 12px 2px}
+  table{border-collapse:collapse;width:100%;background:var(--card);
+    font-family:var(--f-body);font-size:28px;line-height:1.6;color:var(--t2)}
+  th,td{border:1px solid var(--divider);padding:13px 17px;vertical-align:top;overflow-wrap:break-word}
+  th{font-family:var(--f-head);font-weight:700;color:var(--purple-dark);
+    background:rgba(109,40,217,.08);border-bottom:2.5px solid var(--purple)}
+  tr:nth-child(even) td{background:rgba(26,20,40,.022)}
+  td b{color:var(--t1);font-weight:700}
+  td em{color:var(--purple-dark);font-style:normal;font-weight:600}
+  th code,td code{font-family:"JetBrains Mono","LXGW WenKai",monospace;font-size:.9em;
+    background:#efeae2;padding:1px 6px;border-radius:4px;color:var(--purple-dark)}
+</style></head>
+<body><div class="canvas"><table><thead><tr><th style="text-align:left;white-space:nowrap">目标系统</th><th style="text-align:left">天然能力</th><th style="text-align:left">首选调和</th><th style="text-align:left">陷阱</th></tr></thead><tbody><tr><td style="text-align:left;white-space:nowrap">本地文件</td><td style="text-align:left">可读回校验（存在性、checksum）</td><td style="text-align:left">查询对账</td><td style="text-align:left">旁路写：不经工具的写入不进账（8.10 节）</td></tr><tr><td style="text-align:left;white-space:nowrap">HTTP API</td><td style="text-align:left">取决于对端：幂等 key？查询端点？</td><td style="text-align:left">幂等重试，或查询回填</td><td style="text-align:left">“超时但远端已成功”且对端不可查——只能 unknown</td></tr><tr><td style="text-align:left;white-space:nowrap">数据库</td><td style="text-align:left">事务</td><td style="text-align:left">事务边界内天然原子</td><td style="text-align:left">跨库、跨事务的写退回 dual-write 处境</td></tr><tr><td style="text-align:left;white-space:nowrap">消息队列</td><td style="text-align:left">至少一次投递＋消费端去重</td><td style="text-align:left">幂等消费</td><td style="text-align:left">broker 承诺的 exactly-once 只覆盖 broker 内部</td></tr><tr><td style="text-align:left;white-space:nowrap">支付</td><td style="text-align:left">双边记账，有对账单</td><td style="text-align:left">定期对账</td><td style="text-align:left">实时接口的成败与日终对账单可能不一致</td></tr></tbody></table></div></body></html>

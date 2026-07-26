@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="../_base.css">
+<style>
+  .canvas{width:1320px;padding:24px 26px;background:var(--bg)}
+  .cont{font-family:var(--f-label);font-size:19px;font-weight:700;color:var(--t3);
+    letter-spacing:.08em;margin:0 0 12px 2px}
+  table{border-collapse:collapse;width:100%;background:var(--card);
+    font-family:var(--f-body);font-size:28px;line-height:1.6;color:var(--t2)}
+  th,td{border:1px solid var(--divider);padding:13px 17px;vertical-align:top;overflow-wrap:break-word}
+  th{font-family:var(--f-head);font-weight:700;color:var(--purple-dark);
+    background:rgba(109,40,217,.08);border-bottom:2.5px solid var(--purple)}
+  tr:nth-child(even) td{background:rgba(26,20,40,.022)}
+  td b{color:var(--t1);font-weight:700}
+  td em{color:var(--purple-dark);font-style:normal;font-weight:600}
+  th code,td code{font-family:"JetBrains Mono","LXGW WenKai",monospace;font-size:.9em;
+    background:#efeae2;padding:1px 6px;border-radius:4px;color:var(--purple-dark)}
+</style></head>
+<body><div class="canvas"><table><thead><tr><th style="text-align:left">字段</th><th style="text-align:left">说明</th></tr></thead><tbody><tr><td style="text-align:left">event_id</td><td style="text-align:left"><code>evt_</code> 前缀 ID</td></tr><tr><td style="text-align:left">seq</td><td style="text-align:left">数据库自增序号——<b>顺序的真相</b>（6.0 节全局规则一，不信 ID 里的时间戳）</td></tr><tr><td style="text-align:left">occurred_at</td><td style="text-align:left">挂钟时间，仅供人读</td></tr><tr><td style="text-align:left">tenant / conversation_id / run_id / turn_no / step_id / invocation_id / effect_id / artifact_id</td><td style="text-align:left">correlation 八级全量冗余，允许为空的层级显式置空（第十三章补全 invocation/effect/artifact 三级——child 事件带父 run_id 即第十二章跨 agent 因果链的兑现）</td></tr><tr><td style="text-align:left">type</td><td style="text-align:left">见下</td></tr><tr><td style="text-align:left">payload / payload_ref</td><td style="text-align:left">小负载内嵌，大负载外置引用（stub/body 分离，入门卷 5.6 节）</td></tr><tr><td style="text-align:left">source</td><td style="text-align:left">产生事件的组件</td></tr><tr><td style="text-align:left">schema_version</td><td style="text-align:left">—</td></tr></tbody></table></div></body></html>

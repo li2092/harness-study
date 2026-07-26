@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="../_base.css">
+<style>
+  .canvas{width:1320px;padding:24px 26px;background:var(--bg)}
+  .cont{font-family:var(--f-label);font-size:19px;font-weight:700;color:var(--t3);
+    letter-spacing:.08em;margin:0 0 12px 2px}
+  table{border-collapse:collapse;width:100%;background:var(--card);
+    font-family:var(--f-body);font-size:28px;line-height:1.6;color:var(--t2)}
+  th,td{border:1px solid var(--divider);padding:13px 17px;vertical-align:top;overflow-wrap:break-word}
+  th{font-family:var(--f-head);font-weight:700;color:var(--purple-dark);
+    background:rgba(109,40,217,.08);border-bottom:2.5px solid var(--purple)}
+  tr:nth-child(even) td{background:rgba(26,20,40,.022)}
+  td b{color:var(--t1);font-weight:700}
+  td em{color:var(--purple-dark);font-style:normal;font-weight:600}
+  th code,td code{font-family:"JetBrains Mono","LXGW WenKai",monospace;font-size:.9em;
+    background:#efeae2;padding:1px 6px;border-radius:4px;color:var(--purple-dark)}
+</style></head>
+<body><div class="canvas"><table><thead><tr><th style="text-align:left">组件</th><th style="text-align:left">主守契约</th><th style="text-align:left">不设防的失效方式与约束（一句）</th></tr></thead><tbody><tr><td style="text-align:left">model adapter</td><td style="text-align:left">转移＋证据</td><td style="text-align:left">恢复时把没跑完的部分重跑一遍——模型输出不确定，重跑制造第二个版本的历史；出路是每次调用完整留档（模型标识、参数、上下文摘要、输出），复用记录、永不重调</td></tr><tr><td style="text-align:left">agent loop</td><td style="text-align:left">（被所有契约约束）</td><td style="text-align:left">内存攒半轮成果，进程一死全部蒸发——领全卷最硬的约束：内存里攒的一切要么立刻落盘，要么等于不存在</td></tr><tr><td style="text-align:left">入口层（UI/API/IM/scheduler）</td><td style="text-align:left">交互契约</td><td style="text-align:left">前端超时自作主张把任务标失败，用户照着重发，两个 run 并行写一个会话——所以界面显示的一切都是投影，即持久状态的只读呈现，投影不回写，UI 的聪明猜测活不过一次刷新</td></tr></tbody></table></div></body></html>

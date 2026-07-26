@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="../_base.css">
+<style>
+  .canvas{width:1320px;padding:24px 26px;background:var(--bg)}
+  .cont{font-family:var(--f-label);font-size:19px;font-weight:700;color:var(--t3);
+    letter-spacing:.08em;margin:0 0 12px 2px}
+  table{border-collapse:collapse;width:100%;background:var(--card);
+    font-family:var(--f-body);font-size:23px;line-height:1.6;color:var(--t2)}
+  th,td{border:1px solid var(--divider);padding:9px 11px;vertical-align:top;overflow-wrap:break-word}
+  th{font-family:var(--f-head);font-weight:700;color:var(--purple-dark);
+    background:rgba(109,40,217,.08);border-bottom:2.5px solid var(--purple)}
+  tr:nth-child(even) td{background:rgba(26,20,40,.022)}
+  td b{color:var(--t1);font-weight:700}
+  td em{color:var(--purple-dark);font-style:normal;font-weight:600}
+  th code,td code{font-family:"JetBrains Mono","LXGW WenKai",monospace;font-size:.9em;
+    background:#efeae2;padding:1px 6px;border-radius:4px;color:var(--purple-dark)}
+</style></head>
+<body><div class="canvas"><table><thead><tr><th style="text-align:left">组件</th><th style="text-align:left">职责一句</th><th style="text-align:left">边界（明确不做什么）</th><th style="text-align:left">上下游接口</th><th style="text-align:left">主守契约与守约方式</th><th style="text-align:left">替代方案与取舍</th><th style="text-align:left;white-space:nowrap">L 级起步</th></tr></thead><tbody><tr><td style="text-align:left">状态层</td><td style="text-align:left">持久真相唯一落点，答“现在是什么”</td><td style="text-align:left">不答“怎么来的/凭什么信”；不做业务裁决；不为读侧长花样</td><td style="text-align:left">写侧仅单一写者；读侧全组件只读</td><td style="text-align:left">真相——单写者串行化＋owner/version＋状态变化落事件</td><td style="text-align:left">SQLite 单写者 vs Postgres+lease（多实例）vs 内存+快照（死于撕裂）</td><td style="text-align:left;white-space:nowrap">L2</td></tr><tr><td style="text-align:left">事件流</td><td style="text-align:left">发生过什么的机器可读记录（append-only）</td><td style="text-align:left">不当队列用（无投递承诺）；不存大负载（stub/body 分离）</td><td style="text-align:left">统一 emit 路径写入；恢复扫描/UI 订阅/审计读</td><td style="text-align:left">转移——每次转移随行 trigger/guard/终结原因</td><td style="text-align:left">单机表 vs 消息队列（投递语义换运维与可对账性）；可变行+审计表已排除（第一章 1.4）</td><td style="text-align:left;white-space:nowrap">L2</td></tr><tr><td style="text-align:left">证据存储</td><td style="text-align:left">trajectory/policy 决策/verifier 结论/artifact 来历归档</td><td style="text-align:left">只存不判；不管实时呈现</td><td style="text-align:left">归档写入；对账/回放/评审读</td><td style="text-align:left">证据——归档独立于声称方</td><td style="text-align:left">与事件流合储 vs 分储（访问模式分离换一条归属线）</td><td style="text-align:left;white-space:nowrap">L2</td></tr><tr><td style="text-align:left">run manager</td><td style="text-align:left">单执行内核：准入/互斥/policy/limit/孤儿收敛</td><td style="text-align:left">不碰模型与工具；不长业务逻辑</td><td style="text-align:left">入口层唯一下游；run 记录与终态持有者</td><td style="text-align:left">转移+权限裁决点，交互收敛义务——三类决策有事件</td><td style="text-align:left">内核集中 vs 入口自治（单点与评审瓶颈换语义只实现一次）；Routing Matrix 第五章 5.11</td><td style="text-align:left;white-space:nowrap">L2</td></tr></tbody></table></div></body></html>

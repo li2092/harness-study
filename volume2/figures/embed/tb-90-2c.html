@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="../_base.css">
+<style>
+  .canvas{width:1320px;padding:24px 26px;background:var(--bg)}
+  .cont{font-family:var(--f-label);font-size:19px;font-weight:700;color:var(--t3);
+    letter-spacing:.08em;margin:0 0 12px 2px}
+  table{border-collapse:collapse;width:100%;background:var(--card);
+    font-family:var(--f-body);font-size:23px;line-height:1.6;color:var(--t2)}
+  th,td{border:1px solid var(--divider);padding:9px 11px;vertical-align:top;overflow-wrap:anywhere}
+  th{font-family:var(--f-head);font-weight:700;color:var(--purple-dark);
+    background:rgba(109,40,217,.08);border-bottom:2.5px solid var(--purple)}
+  tr:nth-child(even) td{background:rgba(26,20,40,.022)}
+  td b{color:var(--t1);font-weight:700}
+  td em{color:var(--purple-dark);font-style:normal;font-weight:600}
+  th code,td code{font-family:"JetBrains Mono","LXGW WenKai",monospace;font-size:.9em;
+    background:#efeae2;padding:1px 6px;border-radius:4px;color:var(--purple-dark)}
+</style></head>
+<body><div class="canvas"><div class="cont">（续上表）</div><table><thead><tr><th style="text-align:left">状态对象</th><th style="text-align:left">owner（唯一写者）</th><th style="text-align:left">存储（单机参考实现）</th><th style="text-align:left">关键字段</th><th style="text-align:left">读者</th><th style="text-align:left">删除语义</th><th style="text-align:left">崩溃后归宿</th></tr></thead><tbody><tr><td style="text-align:left">timer</td><td style="text-align:left">Control</td><td style="text-align:left"><code>timers</code></td><td style="text-align:left">id、run_id、fire_at、purpose、status</td><td style="text-align:left">Control（扫描）</td><td style="text-align:left">随 run</td><td style="text-align:left">进程死后由启动/周期扫描接管（7.7 节）</td></tr><tr><td style="text-align:left">event</td><td style="text-align:left">Evidence（各组件追加）</td><td style="text-align:left"><code>events</code></td><td style="text-align:left">见本文件 C 节</td><td style="text-align:left">全平面（只读）</td><td style="text-align:left"><b>永不更新、原则上不删</b>；保留策略 vol3</td><td style="text-align:left">未提交事务整体回滚，不留半行；应用层守事务边界——状态行与事件同事务落地（6.1 节、C 节纪律 3）</td></tr><tr><td style="text-align:left">policy decision</td><td style="text-align:left">Control</td><td style="text-align:left">并入 <code>events</code>（type=policy.decided）——第十一章裁决不独立表；推翻＝需独立于事件流的合规审计/长期保留</td><td style="text-align:left">principal、规则、输入摘要、决定、依据、enforcement point</td><td style="text-align:left">Evidence、审计</td><td style="text-align:left">同 event</td><td style="text-align:left">同 event</td></tr><tr><td style="text-align:left">belief/world model</td><td style="text-align:left">Execution（建模路径）</td><td style="text-align:left"><code>world_models</code>（派生工件表，在十一张实体链表之外；未实现前占位，模板见 K 节）</td><td style="text-align:left">model_version、history_cursor、provenance、certificate_scope、known_counterexamples</td><td style="text-align:left">Execution（规划）、Evidence</td><td style="text-align:left">随所属 conversation/task；版本不可变</td><td style="text-align:left"><b>derived belief artifact，不是真相</b>：崩溃后取最新已认证版本，不覆盖 observation（6.12 节）</td></tr></tbody></table></div></body></html>

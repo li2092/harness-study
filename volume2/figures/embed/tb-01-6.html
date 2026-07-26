@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="../_base.css">
+<style>
+  .canvas{width:1320px;padding:24px 26px;background:var(--bg)}
+  .cont{font-family:var(--f-label);font-size:19px;font-weight:700;color:var(--t3);
+    letter-spacing:.08em;margin:0 0 12px 2px}
+  table{border-collapse:collapse;width:100%;background:var(--card);
+    font-family:var(--f-body);font-size:26px;line-height:1.6;color:var(--t2)}
+  th,td{border:1px solid var(--divider);padding:12px 14px;vertical-align:top;overflow-wrap:break-word}
+  th{font-family:var(--f-head);font-weight:700;color:var(--purple-dark);
+    background:rgba(109,40,217,.08);border-bottom:2.5px solid var(--purple)}
+  tr:nth-child(even) td{background:rgba(26,20,40,.022)}
+  td b{color:var(--t1);font-weight:700}
+  td em{color:var(--purple-dark);font-style:normal;font-weight:600}
+  th code,td code{font-family:"JetBrains Mono","LXGW WenKai",monospace;font-size:.9em;
+    background:#efeae2;padding:1px 6px;border-radius:4px;color:var(--purple-dark)}
+</style></head>
+<body><div class="canvas"><table><thead><tr><th style="text-align:left">本卷</th><th style="text-align:left">Claude Code / Agent SDK</th><th style="text-align:left">OpenAI（Responses）</th><th style="text-align:left">LangGraph</th><th style="text-align:left">Temporal</th></tr></thead><tbody><tr><td style="text-align:left">Conversation</td><td style="text-align:left">session（jsonl）</td><td style="text-align:left">Conversation（原 Thread）</td><td style="text-align:left">thread</td><td style="text-align:left">—</td></tr><tr><td style="text-align:left">Run</td><td style="text-align:left">一次触发的 agentic 执行</td><td style="text-align:left">Response（原 Run）</td><td style="text-align:left">一次 graph invoke</td><td style="text-align:left">Workflow Execution</td></tr><tr><td style="text-align:left">Turn</td><td style="text-align:left">turn</td><td style="text-align:left">Item 序列的一段</td><td style="text-align:left">superstep</td><td style="text-align:left">Workflow Task（近似）</td></tr><tr><td style="text-align:left">Step / Tool Execution</td><td style="text-align:left">tool_use / tool_result 块</td><td style="text-align:left">Item</td><td style="text-align:left">node/task 执行</td><td style="text-align:left">Activity</td></tr></tbody></table></div></body></html>

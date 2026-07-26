@@ -1,0 +1,85 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="../_base.css">
+<style>
+  .canvas{width:1320px;padding:26px 28px;background:var(--bg)}
+  svg{display:block;width:100%;height:auto}
+  .box{fill:#fff;stroke:var(--divider);stroke-width:1.8;rx:9}
+  .box-rm{fill:var(--purple-muted);stroke:var(--purple-dark);stroke-width:2.2;rx:9}
+  .box-p{fill:rgba(6,122,91,.05);stroke:var(--green);stroke-width:2;rx:9}
+  .box-x{fill:none;stroke:var(--t3);stroke-width:1.6;stroke-dasharray:7 5;rx:9}
+  .n{font-family:var(--f-head);font-size:16.5px;font-weight:700;fill:var(--t1)}
+  .n-rm{fill:var(--purple-dark)} .n-p{fill:var(--green)}
+  .s{font-family:var(--f-body);font-size:13px;fill:var(--t3)}
+  .e{stroke:rgba(26,20,40,.45);stroke-width:2.2;fill:none;marker-end:url(#m)}
+  .e-up{stroke:var(--purple);stroke-width:2;fill:none;stroke-dasharray:7 5;marker-end:url(#mp)}
+  .lb{font-family:var(--f-body);font-size:13.2px;fill:var(--t2)}
+  .lb-p{fill:var(--purple)}
+</style></head>
+<body><div class="canvas">
+  <svg viewBox="0 0 1188 620" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="rgba(26,20,40,.55)"/></marker>
+      <marker id="mp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6d28d9"/></marker>
+    </defs>
+
+    <!-- 入口层 -->
+    <rect class="box" x="374" y="16" width="440" height="62"/>
+    <text class="n" x="394" y="42">入口层 · UI / API / IM / scheduler</text>
+    <text class="s" x="394" y="63">只产生意图；界面显示的一切都是投影</text>
+
+    <path class="e" d="M534,78 L534,120"/>
+    <text class="lb" x="416" y="104">提交意图</text>
+    <path class="e-up" d="M654,120 L654,78"/>
+    <text class="lb lb-p" x="668" y="104">投影 / 事件流</text>
+
+    <!-- run manager -->
+    <rect class="box-rm" x="374" y="120" width="440" height="62"/>
+    <text class="n n-rm" x="394" y="146">run manager</text>
+    <text class="s" x="394" y="167">准入 · 同会话互斥 · policy · limit</text>
+
+    <path class="e" d="M594,182 L594,224"/>
+    <text class="lb" x="612" y="208">派发</text>
+
+    <!-- agent loop 与执行侧 -->
+    <rect class="box" x="374" y="224" width="440" height="62"/>
+    <text class="n" x="394" y="250">agent loop</text>
+    <text class="s" x="394" y="271">组装 context → 调模型 → 调工具，循环到终答</text>
+
+    <rect class="box" x="866" y="224" width="182" height="62"/>
+    <text class="n" x="884" y="250">model adapter</text>
+    <text class="s" x="884" y="271">每次调用留档</text>
+    <rect class="box-x" x="1080" y="224" width="94" height="62"/>
+    <text class="n" x="1096" y="250">LLM</text>
+    <text class="s" x="1096" y="271">API</text>
+    <path class="e" d="M814,255 L860,255"/>
+    <path class="e" d="M1048,255 L1074,255"/>
+
+    <rect class="box" x="866" y="330" width="182" height="62"/>
+    <text class="n" x="884" y="356">tool executor</text>
+    <text class="s" x="884" y="377">先记账再动手</text>
+    <rect class="box-x" x="1080" y="330" width="94" height="62"/>
+    <text class="n" x="1096" y="356">沙箱</text>
+    <text class="s" x="1096" y="377">外部世界</text>
+    <path class="e" d="M700,286 L700,361 L860,361"/>
+    <path class="e" d="M1048,361 L1074,361"/>
+
+    <!-- 持久层 -->
+    <path class="e" d="M460,286 L460,452"/>
+    <text class="lb" x="352" y="380">状态读写</text>
+    <rect class="box-p" x="160" y="452" width="300" height="62"/>
+    <text class="n n-p" x="178" y="478">状态层（SQLite · WAL）</text>
+    <text class="s" x="178" y="499">真相只放一处 · 唯一写者</text>
+
+    <path class="e" d="M957,392 L957,420 L840,420 L840,452"/>
+    <text class="lb" x="972" y="416">每步留痕</text>
+    <rect class="box-p" x="560" y="452" width="360" height="62"/>
+    <text class="n n-p" x="578" y="478">事件流（append-only）</text>
+    <text class="s" x="578" y="499">机器可读 · 恢复扫描依据 · → UI 订阅</text>
+
+    <path class="e" d="M740,514 L740,548"/>
+    <text class="lb" x="756" y="538">归档</text>
+    <rect class="box-p" x="560" y="548" width="360" height="58"/>
+    <text class="n n-p" x="578" y="573">证据存储</text>
+    <text class="s" x="578" y="593">trajectory · policy 决策 · verifier 结论 · artifact 来历</text>
+  </svg>
+</div></body></html>

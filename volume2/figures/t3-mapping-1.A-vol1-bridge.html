@@ -1,0 +1,148 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="_base.css">
+<style>
+  .stage{margin-top:24px}
+  svg{display:block;width:100%;height:auto}
+  .lg{font-family:var(--f-label);font-size:13px;font-weight:700;fill:var(--t3);letter-spacing:.04em}
+  .colh{font-family:var(--f-head);font-size:16.5px;font-weight:800;fill:var(--t1)}
+  .lb{fill:#fff;stroke:var(--divider);stroke-width:1.5;rx:9}
+  .rb{fill:var(--card);stroke:var(--divider);stroke-width:1.8;rx:9}
+  .rb-rm{fill:var(--purple-muted);stroke:var(--purple-dark);stroke-width:2.6;rx:9}
+  .rb-cs{fill:var(--purple-light);stroke:var(--purple-dark);stroke-width:2;rx:9}
+  .n{font-family:var(--f-head);font-size:15.8px;font-weight:700;fill:var(--t1)}
+  .n-rm{fill:var(--purple-dark);font-size:16.5px;font-weight:800}
+  .s{font-family:var(--f-body);font-size:12.8px;fill:var(--t3)}
+  .s-rm{fill:var(--t2)}
+  .e-g{stroke:var(--green);stroke-width:2.4;fill:none;marker-end:url(#eg)}
+  .e-a{stroke:var(--amber);stroke-width:2.2;fill:none;marker-end:url(#ea)}
+  .e-p{stroke:var(--purple);stroke-width:2.2;fill:none;stroke-dasharray:8 5;marker-end:url(#ep)}
+  .ls-g{stroke:var(--green);stroke-width:3} .ls-a{stroke:var(--amber);stroke-width:3}
+  .ls-p{stroke:var(--purple);stroke-width:3;stroke-dasharray:8 5}
+
+  .notes{display:flex;gap:18px;margin-top:22px}
+  .nc{flex:1;border:1px solid var(--divider);border-left:4px solid var(--purple);
+    border-radius:8px;background:var(--card);padding:13px 17px;box-shadow:var(--shadow)}
+  .nc.warn{border-left-color:var(--amber)}
+  .nc h4{font-family:var(--f-head);font-size:17.5px;font-weight:700;color:var(--t1);margin-bottom:6px}
+  .nc p{font-family:var(--f-body);font-size:15.8px;color:var(--t2);line-height:1.6}
+  .nc b{color:var(--t1)} .nc .k{font-family:var(--f-head);font-weight:700;color:var(--purple-dark)}
+  .nc.warn .k{color:var(--amber)}
+</style></head>
+<body><div class="canvas"><div class="grid-bg"></div><div class="inner">
+  <span class="label-type">Harness Study · 第二卷 附录 A</span>
+  <h1>两卷接线：<span class="em">入门卷行装在本卷的落位</span></h1>
+  <div class="sub">入门卷按能力切出 8 件 runtime＋Safety 控制面＋四原则；本卷 1.4 按守约职责切出八个组件。名字重合的只有一部分——散在各件里的 routing、policy、注入、门禁被 run manager 收拢，trajectory 拆进两处，四原则换了个问法。</div>
+  <hr class="rule">
+
+  <div class="stage">
+  <svg viewBox="0 0 1188 716" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="eg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#067a5b"/></marker>
+      <marker id="ea" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b56a09"/></marker>
+      <marker id="ep" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6d28d9"/></marker>
+    </defs>
+
+    <!-- 图例 -->
+    <line class="ls-g" x1="40" y1="22" x2="86" y2="22"/><text class="lg" x="96" y="27">同名直连</text>
+    <line class="ls-a" x1="230" y1="22" x2="276" y2="22"/><text class="lg" x="286" y="27">职责收进 RUN MANAGER</text>
+    <line class="ls-p" x1="520" y1="22" x2="566" y2="22"/><text class="lg" x="576" y="27">拆分 / 换形态</text>
+
+    <text class="colh" x="40" y="74">入门卷 · 8 件＋控制面＋四原则（按能力切）</text>
+    <text class="colh" x="768" y="74">本卷 · 八组件＋坐标系（按守约职责切）</text>
+
+    <!-- 左列 -->
+    <g><rect class="lb" x="40" y="94" width="380" height="52"/>
+      <text class="n" x="54" y="115">Agent Loop</text>
+      <text class="s" x="54" y="135">同名直连 · 新约束：内存即易失（1.4）</text></g>
+    <g><rect class="lb" x="40" y="156" width="380" height="52"/>
+      <text class="n" x="54" y="177">Model Adapter &amp; Routing</text>
+      <text class="s" x="54" y="197">本体直连；routing 决策交给 run manager</text></g>
+    <g><rect class="lb" x="40" y="218" width="380" height="52"/>
+      <text class="n" x="54" y="239">Tool Registry &amp; ACI</text>
+      <text class="s" x="54" y="259">执行面直连；policy 决策交给 run manager（第十一章）</text></g>
+    <g><rect class="lb" x="40" y="280" width="380" height="52"/>
+      <text class="n" x="54" y="301">Context · Memory · Artifact</text>
+      <text class="s" x="54" y="321">落成状态层持久对象；context 是投影（第六、第十章）</text></g>
+    <g><rect class="lb" x="40" y="342" width="380" height="52"/>
+      <text class="n" x="54" y="363">Prompt Assets</text>
+      <text class="s" x="54" y="383">run manager 按配置注入，agent loop 消费（第十章）</text></g>
+    <g><rect class="lb" x="40" y="404" width="380" height="52"/>
+      <text class="n" x="54" y="425">Observation Surface</text>
+      <text class="s" x="54" y="445">成为事件流的输入侧</text></g>
+    <g><rect class="lb" x="40" y="466" width="380" height="52"/>
+      <text class="n" x="54" y="487">Trajectory · Event Stream</text>
+      <text class="s" x="54" y="507">拆进两处：事件流＋证据存储（第十三章）</text></g>
+    <g><rect class="lb" x="40" y="528" width="380" height="52"/>
+      <text class="n" x="54" y="549">Verifier</text>
+      <text class="s" x="54" y="569">证据存储供证＋run manager 门禁（第十三章）</text></g>
+    <g><rect class="lb" x="40" y="590" width="380" height="52"/>
+      <text class="n" x="54" y="611">Safety 控制面</text>
+      <text class="s" x="54" y="631">落成 run manager 的 policy/approval＋权限契约</text></g>
+    <g><rect class="lb" x="40" y="652" width="380" height="52"/>
+      <text class="n" x="54" y="673">控制论四原则（第九章）</text>
+      <text class="s" x="54" y="693">换向成本卷检验坐标系（1.3）：设计问改检验问</text></g>
+
+    <!-- 右列 -->
+    <g><rect class="rb" x="768" y="94" width="380" height="50"/>
+      <text class="n" x="782" y="115">agent loop</text>
+      <text class="s" x="782" y="134">循环与组装 · 被所有契约约束</text></g>
+    <g><rect class="rb" x="768" y="158" width="380" height="50"/>
+      <text class="n" x="782" y="179">model adapter</text>
+      <text class="s" x="782" y="198">每次调用完整留档，复用不重调</text></g>
+    <g><rect class="rb" x="768" y="222" width="380" height="50"/>
+      <text class="n" x="782" y="243">tool executor</text>
+      <text class="s" x="782" y="262">先落盘意图，再执行，再落盘结果</text></g>
+    <g><rect class="rb" x="768" y="286" width="380" height="50"/>
+      <text class="n" x="782" y="307">状态层</text>
+      <text class="s" x="782" y="326">真相只放一处 · 唯一写者</text></g>
+    <g><rect class="rb-rm" x="768" y="350" width="380" height="92"/>
+      <text class="n n-rm" x="782" y="376">run manager</text>
+      <text class="s s-rm" x="782" y="400">单执行内核：准入 · 互斥 · policy · limit（第五章）</text>
+      <text class="s s-rm" x="782" y="422">收走 routing / policy / 注入 / 门禁——只实现一次</text></g>
+    <g><rect class="rb" x="768" y="456" width="380" height="50"/>
+      <text class="n" x="782" y="477">事件流</text>
+      <text class="s" x="782" y="496">append-only · 历史永不改写</text></g>
+    <g><rect class="rb" x="768" y="520" width="380" height="50"/>
+      <text class="n" x="782" y="541">证据存储</text>
+      <text class="s" x="782" y="560">trajectory 与结论的归档处</text></g>
+    <g><rect class="rb-cs" x="768" y="584" width="380" height="50"/>
+      <text class="n" x="782" y="605">检验坐标系（1.3）</text>
+      <text class="s" x="782" y="624">六契约 × 四问：怎么证明系统没骗我</text></g>
+
+    <!-- 接线 -->
+    <path class="e-g" d="M420,120 C594,120 594,119 762,119"/>
+    <path class="e-g" d="M420,182 C594,182 594,183 762,183"/>
+    <path class="e-a" d="M420,190 C600,190 600,366 762,366"/>
+    <path class="e-g" d="M420,244 C594,244 594,247 762,247"/>
+    <path class="e-a" d="M420,252 C610,252 610,382 762,382"/>
+    <path class="e-p" d="M420,306 C594,306 594,311 762,311"/>
+    <path class="e-a" d="M420,368 C620,368 620,398 762,398"/>
+    <path class="e-p" d="M420,430 C620,430 620,473 762,473"/>
+    <path class="e-p" d="M420,486 C594,486 594,489 762,489"/>
+    <path class="e-p" d="M420,498 C620,498 620,537 762,537"/>
+    <path class="e-p" d="M420,548 C594,548 594,553 762,553"/>
+    <path class="e-a" d="M420,560 C640,560 640,414 762,414"/>
+    <path class="e-a" d="M420,616 C650,616 650,430 762,430"/>
+    <path class="e-p" d="M420,678 C620,678 620,609 762,609"/>
+  </svg>
+  </div>
+
+  <div class="notes">
+    <div class="nc">
+      <h4>怎么读</h4>
+      <p>左列是入门卷读者手里的行装，右列是 1.4 被契约逼出来的组件。<b>绿色一对一直连</b>；<b>琥珀色全部汇进 run manager</b>——收拢正是"单执行内核"的画法；<b>紫色是形态变了的</b>，<span class="k">别拿旧名字找新东西。</span></p>
+    </div>
+    <div class="nc warn">
+      <h4>清单外的新面孔</h4>
+      <p><b>run manager 与入口层</b>都不在入门卷清单里——按能力切分不出它们；按守约职责切，交互与权限契约逼它们出场（1.4）。<span class="k">入口层在本卷只剩两件事：适配意图、转发流。</span></p>
+    </div>
+    <div class="nc">
+      <h4>两条裁决</h4>
+      <p>入门卷的 <b>Evidence Graph</b> 由本卷第十三章继承扩展，<b>同名同物</b>；两卷术语冲突时，<span class="k">以附录 A 对照表为准。</span></p>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div><span class="dot"></span>《Harness Study · 架构与工程卷》附录 A 两卷接线 · SSOT：附录 A 术语对照表 · 案例已脱敏</div>
+  </div>
+</div></div></body></html>

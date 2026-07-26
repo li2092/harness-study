@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="../_base.css">
+<style>
+  .canvas{width:1320px;padding:24px 26px;background:var(--bg)}
+  .cont{font-family:var(--f-label);font-size:19px;font-weight:700;color:var(--t3);
+    letter-spacing:.08em;margin:0 0 12px 2px}
+  table{border-collapse:collapse;width:100%;background:var(--card);
+    font-family:var(--f-body);font-size:28px;line-height:1.6;color:var(--t2)}
+  th,td{border:1px solid var(--divider);padding:13px 17px;vertical-align:top;overflow-wrap:break-word}
+  th{font-family:var(--f-head);font-weight:700;color:var(--purple-dark);
+    background:rgba(109,40,217,.08);border-bottom:2.5px solid var(--purple)}
+  tr:nth-child(even) td{background:rgba(26,20,40,.022)}
+  td b{color:var(--t1);font-weight:700}
+  td em{color:var(--purple-dark);font-style:normal;font-weight:600}
+  th code,td code{font-family:"JetBrains Mono","LXGW WenKai",monospace;font-size:.9em;
+    background:#efeae2;padding:1px 6px;border-radius:4px;color:var(--purple-dark)}
+</style></head>
+<body><div class="canvas"><table><thead><tr><th style="text-align:left;white-space:nowrap">协调项</th><th style="text-align:left">规则</th><th style="text-align:left">失效反例</th></tr></thead><tbody><tr><td style="text-align:left;white-space:nowrap">收敛判据</td><td style="text-align:left">父显式定义（全成功／多数成功／关键子任务成功），并行产出在单点收敛写</td><td style="text-align:left">无单一收敛点 → infinite handoff loop（谁都不 own 任务）</td></tr><tr><td style="text-align:left;white-space:nowrap">输出信任</td><td style="text-align:left">child 回传默认不可信，经独立校验（校验器与被校验者不共享判断源）方采信</td><td style="text-align:left">内部即可信 → 检查器信任被检查者（MAST 验证类失效 23.5%）</td></tr></tbody></table></div></body></html>

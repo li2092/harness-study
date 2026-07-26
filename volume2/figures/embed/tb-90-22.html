@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="../_base.css">
+<style>
+  .canvas{width:1320px;padding:24px 26px;background:var(--bg)}
+  .cont{font-family:var(--f-label);font-size:19px;font-weight:700;color:var(--t3);
+    letter-spacing:.08em;margin:0 0 12px 2px}
+  table{border-collapse:collapse;width:100%;background:var(--card);
+    font-family:var(--f-body);font-size:28px;line-height:1.6;color:var(--t2)}
+  th,td{border:1px solid var(--divider);padding:13px 17px;vertical-align:top;overflow-wrap:break-word}
+  th{font-family:var(--f-head);font-weight:700;color:var(--purple-dark);
+    background:rgba(109,40,217,.08);border-bottom:2.5px solid var(--purple)}
+  tr:nth-child(even) td{background:rgba(26,20,40,.022)}
+  td b{color:var(--t1);font-weight:700}
+  td em{color:var(--purple-dark);font-style:normal;font-weight:600}
+  th code,td code{font-family:"JetBrains Mono","LXGW WenKai",monospace;font-size:.9em;
+    background:#efeae2;padding:1px 6px;border-radius:4px;color:var(--purple-dark)}
+</style></head>
+<body><div class="canvas"><table><thead><tr><th style="text-align:left">收尾方式</th><th style="text-align:left">信号</th><th style="text-align:left">判定</th><th style="text-align:left">说明</th></tr></thead><tbody><tr><td style="text-align:left">typed done</td><td style="text-align:left">明确的结束事件（带成功语义）</td><td style="text-align:left">成功</td><td style="text-align:left">唯一无条件算成功的一行</td></tr><tr><td style="text-align:left">legacy <code>[DONE]</code></td><td style="text-align:left">旧式哨兵字符串</td><td style="text-align:left">成功（兼容）</td><td style="text-align:left">仅为向后兼容保留，新协议用 typed done</td></tr><tr><td style="text-align:left">typed error</td><td style="text-align:left">流内错误帧（HTTP 200 之后）</td><td style="text-align:left">失败</td><td style="text-align:left">配套中继服务审计的 P0 现场：客户端不得跳过错误帧后推定完成</td></tr><tr><td style="text-align:left">EOF 无 terminal</td><td style="text-align:left">连接自然结束但从未见结束标记</td><td style="text-align:left">失败</td><td style="text-align:left">“循环跑完了”不是成功信号</td></tr><tr><td style="text-align:left">半帧</td><td style="text-align:left">最后一帧不完整</td><td style="text-align:left">失败</td><td style="text-align:left">按最后一个完整帧截断，缺尾不推定成功</td></tr><tr><td style="text-align:left">malformed</td><td style="text-align:left">帧格式错乱</td><td style="text-align:left">失败</td><td style="text-align:left">解析不了即失败，不 fail open</td></tr><tr><td style="text-align:left">非法 envelope</td><td style="text-align:left">信封字段非法/缺失</td><td style="text-align:left">失败</td><td style="text-align:left">协议违规，拒绝并留证</td></tr></tbody></table></div></body></html>
