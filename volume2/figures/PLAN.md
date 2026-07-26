@@ -2,12 +2,12 @@
 
 ## 进度（随批更新 · 压缩上下文后从这里接续）
 
-**已出 5 张，全部已接入正文并过 linter。** 全书 243 页，图目录页码自动汇总。
+**已出 7 张，全部已接入正文并过 linter。** 全书 244 页，图目录页码自动汇总。
 
 | 图 | 图型 | 文件 | 接入 |
 |---|---|---|---|
-| 1.5 六契约×四问检验矩阵 | matrix | `t1-matrix-1.5-contract-grid` | ✗ 待接（挂 1.5，见下方裁决） |
-| 3.4 十帧重放 | sequence | `t1-sequence-3.4-ten-frames` | ✗ 待接（第三章 L74 占位仍在） |
+| 1.5 六契约×四问检验矩阵 | matrix | `t1-matrix-1.5-contract-grid` | ✓（按裁决挂 1.5，1.0 只留轮廓叙述） |
+| 3.4 十帧重放 | sequence | `t1-sequence-3.4-ten-frames` | ✓ |
 | 5.2 run 七状态 | flow | `t1-flow-5.2-run-states` | ✓ |
 | 6.0 六级实体链 | layered | `t1-layered-6.0-entity-chain` | ✓ |
 | 8.2 四段账 | flow | `t1-flow-8.2-four-stage-ledger` | ✓ |
