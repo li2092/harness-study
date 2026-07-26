@@ -16,7 +16,7 @@ cp t1-flow-5.2-run-states.html t1-<型>-<节>-<slug>.html
 
 ## 命名
 
-`t<层>-<图型>-<节号>-<slug>`。层＝ `t1` Tier 1 / `t2` Tier 2；图型取 PLAN 的九种之一（`matrix` `flow` `sequence` `layered` `cardgrid` `comparison` `timeline` `tree` `analogy`）。
+`t<层>-<图型>-<节号>-<slug>`。层＝ `t1` Tier 1 / `t2` Tier 2；图型取 PLAN 的九种之一（`matrix` `flow` `sequence` `layered` `cardgrid` `comparison` `timeline` `tree` `analogy`）。附录图没有节号，`<节号>` 位置写 `appendix`。
 
 ## 样板（已定调，新图照抄结构）
 
@@ -56,7 +56,9 @@ cp t1-flow-5.2-run-states.html t1-<型>-<节>-<slug>.html
 *图 5.2 · run 的七个状态：卡在 running 不是状态，是缺陷*
 ```
 
-编号规则 `图 <章>.<节>`（编号取图的**主场节**，不是它落在哪一段）。图接进正文后，同步删掉该处的 `（配图占位：…）`，并把这一行补进 `99-appendix.md` 第五节图表清单。
+编号规则 `图 <章>.<节>`（编号取图的**主场节**，不是它落在哪一段）；附录图用 `图 附.1`。图接进正文后，同步删掉该处的 `（配图占位：…）`，并把这一行补进 `99-appendix.md` 第五节图表清单。
+
+`make_book.py` 的 `FIG_RE` 图号组是 `[^\s·]+`（2026-07-26 由 `[\d.]+` 放宽，否则"附.1"这类非纯数字编号进不了图目录）。
 
 **落位两条规矩**（10.3、15.3 两张踩出来的）：
 

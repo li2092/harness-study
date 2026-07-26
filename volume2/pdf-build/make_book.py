@@ -70,7 +70,7 @@ def strip_editorial(md):
 
 # 图片段 +（紧跟的）「*图 N.M · …*」斜体段 -> figure + figcaption，并收集图目录
 FIG_RE = re.compile(
-    r'<p><img src="([^"]+)"[^>]*>\s*</p>\s*<p><em>图\s*([\d.]+)\s*·\s*(.*?)</em></p>', re.S)
+    r'<p><img src="([^"]+)"[^>]*>\s*</p>\s*<p><em>图\s*([^\s·]+)\s*·\s*(.*?)</em></p>', re.S)
 figures = []
 def fig_sub(m):
     src, num, cap = m.group(1), m.group(2), m.group(3).strip()
