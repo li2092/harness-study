@@ -24,11 +24,11 @@ AutoGPT 那一波翻车给业界留下了一道清晰的工程命题：单纯依
 
 ### 4.2 2023–2025：术语未统一的"做但没名字"时期
 
-在 harness engineering 被正式命名之前，业界已经在做今天叫 harness 的事——只是用六个不同的名字指称同一类工程实践。这三年是 agent 工程史上最有意思的一段：实践已经在做、产品已经在跑，但没人能用同一套词讨论它。下面这张表把这六个名字按时间顺序排出来，每个名字配上当时实际在做什么、以及这个名字漏掉了什么：
+在 harness engineering 被正式命名之前，业界已经在做今天叫 harness 的事——只是用六个不同的名字指称同一类工程实践。这三年的特点是：实践已经在做、产品已经在跑，但没人能用同一套词讨论它。下面这张表把这六个名字按时间顺序排出来，每个名字配上当时实际在做什么、以及这个名字漏掉了什么：
 
 ![](../diagrams/t1-timeline-4-naming.png)
 
-*图 4.1 · 2026 命名收敛：两个月四人协奏*
+*图 4.1 · 2026 命名收敛：两个月四人独立背书*
 
 | 阶段 | 时间 | 流行术语 | 实际在做什么 | 这个名字的盲区 |
 |---|---|---|---|---|
@@ -55,9 +55,9 @@ AutoGPT 那一波翻车给业界留下了一道清晰的工程命题：单纯依
 
 > "You can now send JSON schema defining one or more functions to GPT 3.5 and GPT-4—those models will then return a blob of JSON describing a function they want you to call."
 
-这一句话的工程含义比表面看起来重得多。在此之前，让 LLM 调工具是这样的流程：在 system prompt 里告诉模型"你可以调用 `search(query)` 或 `calculate(expr)`，输出格式是 `ACTION: 工具名(参数)`"，模型生成一行 text，外面用 regex 解析。这个流程有一堆问题——模型可能漏字段、可能多字段、可能改格式（昨天用 `ACTION:` 今天用 `Action:`）、可能在解释性文本里插入看似 action 的字符串误导 parser。每一项问题都直接打击系统稳定性——而且失败方式还很隐蔽，不是 raise exception 而是"parser 抠出一个看似合法的工具名加参数，但参数其实有问题"。
+这一句话的工程含义比表面看起来重得多。在此之前，让 LLM 调工具是这样的流程：在 system prompt 里告诉模型"你可以调用 `search(query)` 或 `calculate(expr)`，输出格式是 `ACTION: 工具名(参数)`"，模型生成一行 text，外面用 regex 解析。这个流程有一堆问题——模型可能漏字段、可能多字段、可能改格式（昨天用 `ACTION:` 今天用 `Action:`）、可能在解释性文本里插入看似 action 的字符串误导 parser。每一项问题都直接打击系统稳定性——而且失败方式还很隐蔽，不是 raise exception 而是"parser 解析出一个看似合法的工具名加参数，但参数其实有问题"。
 
-function calling 把这件事变成了**结构化契约**：你给模型一个 JSON schema（包含 function 名字、参数列表、每个参数的类型和描述），模型返回的不再是"按格式写的 text"，而是一个对着 schema 专门微调过的 JSON 对象。这里要把两级跃迁分开说清楚。2023-06 这一级给的是**契约**不是**保证**——它靠微调实现，OpenAI 同期的官方文档就提醒模型仍可能生成不合法的 JSON、或幻觉出不存在的参数；真正的硬保证要到 2024-08 的 Structured Outputs（strict mode）才补上，那一级换成了 **constrained decoding** 的实现——在 token 生成时只允许那些会让最终输出符合 schema 的 token 被采样出来，违反 schema 的 token 概率被强制压到零。契约先行、保证补课，中间隔了一年多的工程演进——后面 5.3 讲 strict vs lenient schema 时还会回到这条线上。即便如此，2023-06 这一步已经把工具调用从"prompt 约定 + regex 解析"拉进了 API 一等公民的位置：结构化校验、不依赖 regex 的 parsing 从这里开始，类型安全的最后一块拼图由 strict mode 补齐。
+function calling 把这件事变成了**结构化契约**：你给模型一个 JSON schema（包含 function 名字、参数列表、每个参数的类型和描述），模型返回的不再是"按格式写的 text"，而是一个对着 schema 专门微调过的 JSON 对象。这里要把两级跃迁分开说清楚。2023-06 这一级给的是**契约**不是**保证**——它靠微调实现，OpenAI 同期的官方文档就提醒模型仍可能生成不合法的 JSON、或幻觉出不存在的参数；真正的硬保证要到 2024-08 的 Structured Outputs（strict mode）才补上，那一级换成了 **constrained decoding** 的实现——在 token 生成时只允许那些会让最终输出符合 schema 的 token 被采样出来，违反 schema 的 token 概率被强制压到零。契约先行、保证后补，中间隔了一年多的工程演进——后面 5.3 讲 strict vs lenient schema 时还会回到这条线上。即便如此，2023-06 这一步已经把工具调用从"prompt 约定 + regex 解析"拉进了 API 一等公民的位置：结构化校验、不依赖 regex 的 parsing 从这里开始，类型安全的最后一步由 strict mode 补齐。
 
 这件事的战略意义在哪？function calling 之前，agent 工程师必须把大量精力花在"让模型按格式说话"这件事上——写 prompt 的诀窍一半都是在教模型怎么生成可解析的文本。function calling 之后，这件事被 OpenAI 在模型侧解决了——工程师可以把精力转向更重要的事：tool registry 该怎么设计、policy 该怎么放、verifier 该怎么写、observation 该怎么序列化。**这次升级直接释放了 agent 工程整个领域的注意力**——业界开始有余力讨论 agent 工程的高阶问题，而不是仍然纠结在"怎么 parse 模型的 text"这件低层级的事情上。
 
@@ -67,13 +67,13 @@ function calling 把这件事变成了**结构化契约**：你给模型一个 J
 
 > "By popular demand, we've also added tool use, a new beta feature that allows Claude to integrate with users' existing processes, products, and APIs."
 
-为什么要把这两件事放一起做？这不是巧合，是工程战略级动作。tool use 让模型能调外部工具——但每次工具调用的结果都要塞回 context，调用十几次 context 就爆。**只有把 context 大幅扩展，tool use 才真正可用**——否则你给了模型调工具的能力却没给它消化工具结果的空间，等于半成品。Anthropic 2023-11 一起做这两件事，是工程上理解到了 **tool use 跟 context 管理是孪生问题**——后来这件事在 harness 8 件 runtime 机制里被显式拆开：5.3 Tool Registry 跟 5.4 Context 管理是相邻的两件，需要协同设计。Tool Registry 决定"哪些工具能调、调时带什么参数"，Context 管理决定"工具返回的大输出怎么进 context 不爆窗口"——两者必须协同，否则一边的进步会被另一边的限制压死。
+为什么要把这两件事放一起做？这不是巧合，是工程战略级动作。tool use 让模型能调外部工具——但每次工具调用的结果都要塞回 context，调用十几次 context 就爆。**只有把 context 大幅扩展，tool use 才真正可用**——否则你给了模型调工具的能力却没给它消化工具结果的空间，等于半成品。Anthropic 2023-11 一起做这两件事，是工程上理解到了 **tool use 跟 context 管理是孪生问题**——后来这件事在 harness 8 件 runtime 机制里被显式拆开：5.3 Tool Registry 跟 5.4 Context 管理是相邻的两件，需要协同设计。Tool Registry 决定"哪些工具能调、调时带什么参数"，Context 管理决定"工具返回的大输出怎么进 context 不爆窗口"——两者必须协同，否则一边的进步会被另一边的限制抵消。
 
 function calling 跟 tool use 这两件事打通后，到 2024 年中，行业基本接受了一个简化的 agent 公式：**agent = LLM + 工具 schema + 一些代码包在外面**。这个公式比 2022-2023 的"模型当函数用"已经进步了——它承认了工具是核心组件、承认了模型 API 里要有结构化的工具接口。但这"一些代码包在外面"还没人能精确描述是什么——是 LangChain？是自写的 Python 脚本？是 SWE-agent 的 trajectory 框架？是 Cursor 内部的某个 runtime？业界各家有各家的"包在外面"的实现，但没有统一名字、没有统一组件清单、没有统一控制论框架。每家自己说自己的实现像什么，互相之间无法精确比较。
 
 这个"还差一个名字"的状态一直持续到 2026 年 2 月。2026-02-05 Hashimoto 发表 *My AI Adoption Journey* 用了 "harness engineering" 这个词，把这件事正式命名——紧接着 Trivedy、Böckeler、Lopopolo 各自补上分解公式、控制论框架、agent-first 操作模型，四个人两个月时间，把这套工程实践从"做但没名字"推到"有工程实践的完整骨架"。
 
-### 4.4 2026 命名收敛 · 两个月四人协奏
+### 4.4 2026 命名收敛 · 两个月四人独立背书
 
 讲 harness engineering 这门工程实践怎么命名定下来的关键事件密集发生在 2026 年 2 月初到 4 月初，大约两个月时间。这两个月里四个人各自从不同视角写出关键文章——Hashimoto 用工程师身份命名、Lopopolo 用 OpenAI 内部实验背书、Trivedy 用 LangChain 框架阵营自我反思、Böckeler 用 Thoughtworks 咨询界控制论化——把 harness engineering 从"做但没名字"快速推到"有公式、有组件、有控制论框架"的工程实践的完整骨架。
 
@@ -123,11 +123,11 @@ Trivedy 文章里给出今天被引用最广的简洁公式：
 
 > "A harness is every piece of code, configuration, and execution logic that isn't the model itself."（harness 是一切不属于模型本身的代码、配置和执行逻辑。）
 
-这两句的工程含义在 §一三定义协奏一节已经拆过——第一句是**分解公式**把 agent 一刀切成两部分，第二句是**排除式定义**把责任边界钉死。这里要补的是 Trivedy 做了比公式化更进一步的事——他把 harness 拆成 5 项组件，第一次把"模型外面那层"具体化成可被工程师讨论的组件清单。
+这两句的工程含义在 §一三定义递进一节已经拆过——第一句是**分解公式**把 agent 一刀切成两部分，第二句是**排除式定义**把责任边界钉死。这里要补的是 Trivedy 做了比公式化更进一步的事——他把 harness 拆成 5 项组件，第一次把"模型外面那层"具体化成可被工程师讨论的组件清单。
 
 Trivedy 的 5 项组件是：**System Prompts**（系统提示词）/ **Tools, Skills, MCPs**（工具、技能、Model Context Protocol 集成）/ **Bundled Infrastructure**（filesystem、sandbox、browser 等运行环境）/ **Orchestration Logic**（subagent spawning、handoffs、model routing）/ **Hooks-Middleware**（compaction、continuation、lint checks）。这 5 项跟本教程后面要讲的 8 件 runtime 加 1 件 Safety 控制面不是一一对应——Trivedy 的切法粒度更粗，把本教程的 Model Adapter / Observation / Trajectory 都隐含在 "Bundled Infrastructure" 和 "Orchestration Logic" 里，把 Verifier 和 Safety 隐含在 "Hooks-Middleware" 里。但 Trivedy 的贡献是**第一次把 harness 当成可被组件化拆解的工程对象**——不再是模糊的"模型外面那层"，而是有 5 个具体责任分区的工程系统。
 
-LangChain 阵营出来的 Trivedy 用一篇 blog 把 harness 公式化，这件事工程意义大于公式本身——它意味着 framework 阵营已经放下"framework 就是一切"的执念，主动给 harness 让出位置。从 2022-10 LangChain 出来到 2026-03-10 Trivedy 这篇文章，整整三年半，framework 阵营从"agent 就是 chain"演化到"agent = model + harness · framework 只是 harness 的一种实现方式"。这种来自框架阵营自身的概念升级，比外部学者写 paper 批判 framework 不够，工程权威性高得多。
+LangChain 阵营出来的 Trivedy 用一篇 blog 把 harness 公式化，这件事工程意义大于公式本身——它意味着 framework 阵营已经不再主张 framework 覆盖全部职责，承认 harness 是独立的一层。从 2022-10 LangChain 出来到 2026-03-10 Trivedy 这篇文章，整整三年半，framework 阵营从"agent 就是 chain"演化到"agent = model + harness · framework 只是 harness 的一种实现方式"。这种来自框架阵营自身的概念升级，比外部学者写 paper 批判 framework 不够，工程权威性高得多。
 
 #### Böckeler 2026-04-02 · 咨询界的控制论框架化
 
@@ -141,7 +141,7 @@ Böckeler 在文章里把 Hashimoto / Trivedy 的概念升级为控制论形态�
 
 Böckeler 进一步给 harness 三个评价维度：**可维护性（maintainability）**——harness 本身的代码和配置能不能被工程师持续维护？**架构契合度（architecture fitness）**——harness 跟现有系统架构是否融合，还是个孤岛？**行为（behavior）**——agent 的实际行为是否在 harness 约束下符合预期？这三个维度直接把 harness 从"工程师做的事"升级为"可被外部 review 的工程对象"——咨询师可以拿这三个维度去评估客户的 agent 项目，工程师可以拿这三个维度去自评。这种"可被评价"的属性是任何工程对象从"手艺"走向"学科"的关键标志——没有评价标准就不能讨论 better / worse，没有 better / worse 就没法形成 best practices 和教学。
 
-#### 四人协奏的工程史含义
+#### 四人独立背书的工程史含义
 
 把这四件事按时间排开：2026-02-05 Hashimoto（HashiCorp · 个人 blog）命名加 28 字定义加工程师身份背书 → 2026-02-13 Lopopolo（OpenAI · 官方页）同期独立背书加 5 个月内部实验加 "Humans steer. Agents execute." tagline → 2026-03-10 Trivedy（LangChain · 公司博客）公式 Agent = Model + Harness 加 5 项组件拆解 → 2026-04-02 Böckeler（Thoughtworks · Martin Fowler 博客）控制论框架化加三维度评价。
 
@@ -160,7 +160,7 @@ Böckeler 进一步给 harness 三个评价维度：**可维护性（maintainabi
 
 **洞察一 · 每代约束层都在回答同一个问题——这一代算法的"不可控来源"是什么？**
 
-算法形态决定它需要什么样的工程层包围。符号 AI 不可控来源是"专家知识怎么编码、规则组合爆炸"，Knowledge Engineering 这套工具体系（rule set / inference engine / explanation system）专门回应这两个问题。经典 ML 不可控来源是"特征怎么造、数据分布漂移"，Feature Engineering 加 Cross-Validation 正好对应——前者解决特征构造，后者解决泛化能力测量。深度学习不可控来源是"怎么训得动、怎么收敛"，所以有 learning rate schedule、initialization tricks、gradient clipping、mixed precision training 等技术体系——这些没有正式命名为 "Training Engineering"，但实践上构成完整的工具链。强化学习不可控来源是"reward hacking、exploration 放飞"，Reward Engineering 加 Safe RL 正好对应——前者解决"reward function 怎么设计才不会被 agent 钻空子"，后者解决"训练过程怎么不让 agent 真的做出危险事"。这种"算法不可控来源 → 约束层职能"的对应关系不是事后回顾的描述，是工程实践层面真实的因果——**每一代算法的工程师都是被自己处理的不可控问题推着走，最后形成对应的工程体系**。
+算法形态决定它需要什么样的工程层包围。符号 AI 不可控来源是"专家知识怎么编码、规则组合爆炸"，Knowledge Engineering 这套工具体系（rule set / inference engine / explanation system）专门回应这两个问题。经典 ML 不可控来源是"特征怎么造、数据分布漂移"，Feature Engineering 加 Cross-Validation 正好对应——前者解决特征构造，后者解决泛化能力测量。深度学习不可控来源是"怎么训得动、怎么收敛"，所以有 learning rate schedule、initialization tricks、gradient clipping、mixed precision training 等技术体系——这些没有正式命名为 "Training Engineering"，但实践上构成完整的工具链。强化学习不可控来源是"reward hacking、exploration 失控"，Reward Engineering 加 Safe RL 正好对应——前者解决"reward function 怎么设计才不会被 agent 钻空子"，后者解决"训练过程怎么不让 agent 真的做出危险事"。这种"算法不可控来源 → 约束层职能"的对应关系不是事后回顾的描述，是工程实践层面真实的因果——**每一代算法的工程师都是被自己处理的不可控问题推着走，最后形成对应的工程体系**。
 
 ![](../diagrams/t2-matrix-4-generations.png)
 
@@ -172,13 +172,13 @@ Böckeler 进一步给 harness 三个评价维度：**可维护性（maintainabi
 
 Knowledge Engineering 从 1965 年 DENDRAL 项目起步到 1977 年 Feigenbaum 命名，滞后 12 年。MLOps 从 2010s 中期 ML 上生产实践到 2018-2020 命名稳定，滞后 3-5 年。Harness Engineering 从 2023-2024 SWE-Agent / Claude Code / Codex CLI / Cursor / Aider 实践积累到 2026-02 命名，滞后约 2 年。这个滞后看起来是"行业反应慢"，实际上是工程界自我保护机制——名字要等到足够多的实践案例积累后才能稳定。如果起得太早，名字会被后续实践推翻。比如 2021 年如果有人提"prompt engineering"作为整个 LLM 工程的统一名字，到 2023 function calling 出来后，这个名字就开始装不下工具调用这件事；到 2024 trajectory / verifier / ablation 等组件成熟，prompt engineering 这个名字彻底过窄。Hashimoto 2026 年才推 harness engineering，正是因为 2024-2025 这一段实践已经验证了"模型外面那层"的具体组件清单——名字这时候推上来才能稳定，不会被后续两年的实践推翻。
 
-这个洞察对教程读者的工程意义是：**当下一代算法出现时，不要急于给它的工程层起名字**。等业界跑两三年生产用例、积累足够多的踩坑案例后，命名自然会从工程师社区里浮上来。试图人为加速命名收敛通常会失败——名字必须长在足够厚的实践土壤上才能扎根。市场上每年都有人尝试推一个新的 "X engineering" 术语，绝大多数没站住，正因为它们起的时候实践土壤还不够厚。
+这个洞察对教程读者的工程意义是：**当下一代算法出现时，不要急于给它的工程层起名字**。等业界跑两三年生产用例、积累足够多的踩坑案例后，命名自然会从工程师社区里浮上来。试图人为加速命名收敛通常会失败——名字必须建立在足够厚的实践积累上才能稳定。市场上每年都有人尝试推一个新的 "X engineering" 术语，绝大多数没被业界接受，正因为它们起的时候实践积累还不够厚。
 
 **洞察三 · 术语的诞生不等于概念的诞生，但术语对学科形成是必要的**。
 
 DENDRAL 1965 年就在做今天叫 Knowledge Engineering 的事，但那 12 年里这件事没法被系统讨论——一个研究 DENDRAL 的人跟另一个研究 MYCIN 的人开会，发现两人都在做"把专家知识编码成规则"，但没有共同名字描述这件事，所以两个项目互相借鉴的速度很慢。1977 年 Feigenbaum 把这件事命名为 Knowledge Engineering 之后，从 DENDRAL 到 MYCIN 到 R1/XCON 的知识转移速度立刻加快——因为有了共同名字，工程师可以在 paper 标题、conference 名字、教材章节里用同一个词描述自己做的事。harness engineering 在 2026 年的命名收敛，本质上也是这件事的重演——给业界这两三年积累的实践共识一个能在 paper 标题、conference 名字、招聘 JD、教材章节里复用的统一名字。
 
-**命名是工程领域从手艺走向学科的标志**——没有名字，没法对比、没法教学、没法形成共同语言。这是为什么 Hashimoto 2026-02-05 那篇文章的工程史地位高于它的字数——它没说什么新东西（描述的实践业界已经做了两年），但它把这两年的实践命名了，让这件事从"每家自己暗中做"变成"业界共同语言"。从这个角度看，harness engineering 这门工程实践的真正生日是 2026-02-05，那一天之前业界做的事跟之后做的事在工程层面没差别，但在共同语言形成的意义上有根本区别——之前是各家做各家的手艺，之后是业界共享的工程实践。
+**命名是工程领域从手艺走向学科的标志**——没有名字，没法对比、没法教学、没法形成共同语言。这是为什么 Hashimoto 2026-02-05 那篇文章的工程史地位高于它的字数——它没说什么新东西（描述的实践业界已经做了两年），但它把这两年的实践命名了，让这件事从"每家自己暗中做"变成"业界共同语言"。从这个角度看，harness engineering 这门工程实践的真正起点是 2026-02-05，那一天之前业界做的事跟之后做的事在工程层面没差别，但在共同语言形成的意义上有根本区别——之前是各家做各家的手艺，之后是业界共享的工程实践。
 
 #### Harness 跟 MLOps 是同辈关系
 
@@ -186,7 +186,7 @@ DENDRAL 1965 年就在做今天叫 Knowledge Engineering 的事，但那 12 年�
 
 两者结构相似在几个维度上。**算法本体**——MLOps 管 trained ML model（一个训好的分类器、回归器、嵌入模型），Harness 管 LLM（一个预训练的语言模型加上多步执行能力）。**不可控来源**——MLOps 处理数据漂移加模型衰减加部署不一致，Harness 处理概率性输出加长任务漂移加工具失败。**奠基性论点**——MLOps 是 Sculley 2015 NeurIPS *Hidden Technical Debt in Machine Learning Systems* 那句"ML code is small part of total system"，Harness 是 Trivedy 2026-03 那句 "Agent = Model + Harness"。**命名滞后**——MLOps 滞后 3-5 年（实践 2014-2017 / 命名 2018-2020），Harness 滞后约 2 年（实践 2024 / 命名 2026）。
 
-两者最有意思的相似点是 **奠基性论点的结构同构**——Sculley 2015 那句"ML code is small part of total system" 和 Trivedy 2026 那句"Agent = Model + Harness" 在工程意义上是同一种命题——它们都在说"算法本体只是整件事的一小部分，剩下的部分本身是个独立工程实践"。这种"解构核心算法的中心位置"的命题，是约束层学科诞生时的标志性 framing。一门学科要成立，先要承认它要管的东西在已有学科里位置太边缘——MLOps 说"ML code 只占 5%"，harness engineering 说"model 只是 agent 的一部分"，两个工程实践都是从对核心算法的去中心化叙事中长出来的。
+两者最有意思的相似点是 **奠基性论点的结构同构**——Sculley 2015 那句"ML code is small part of total system" 和 Trivedy 2026 那句"Agent = Model + Harness" 在工程意义上是同一种命题——它们都在说"算法本体只是整件事的一小部分，剩下的部分本身是个独立工程实践"。这种"解构核心算法的中心位置"的命题，是约束层学科诞生时的标志性 framing。一门学科要成立，先要承认它要管的东西在已有学科里位置太边缘——MLOps 说"ML code 只占 5%"，harness engineering 说"model 只是 agent 的一部分"，两个工程实践都起源于对核心算法的去中心化叙事。
 
 #### 但同辈关系也有边界 · MLOps 跟 Harness 的根本不同
 
@@ -212,7 +212,7 @@ DENDRAL 1965 年就在做今天叫 Knowledge Engineering 的事，但那 12 年�
 
 ### 4.6 LangGraph 与"工程化 agent 工具"的涌现
 
-围绕命名收敛的同时，工程化 agent 工具集体进化——这件事的工程史含义不只是"出了一批好用的工具"，更是 harness engineering 这门工程实践赖以诞生的工程素材层。命名能在 2026 年初稳定下来，正是因为 2024-2025 这两年涌现了一批跨阵营的产品，把 harness 该长成什么样验证清楚了。
+围绕命名收敛的同时，工程化 agent 工具集体进化——这件事的工程史含义不只是"出了一批好用的工具"，更是 harness engineering 这门工程实践赖以诞生的工程素材层。命名能在 2026 年初稳定下来，正是因为 2024-2025 这两年涌现了一批跨阵营的产品，把 harness 该做成什么形态验证清楚了。
 
 #### LangGraph 的演化轨迹
 
@@ -276,7 +276,7 @@ LangGraph 演化的同时，跨阵营有一批代表产品在 2024-2025 这一�
 
 framework 这个词在软件工程里早就用熟了——Spring framework、React framework、Django framework。它隐含的关系是**开发者主动 · 框架被动**——开发者拿框架去写代码，框架提供 API、抽象、便利组件，但跑起来之后框架是个静态产物，所有运行时行为是开发者写的代码决定的。
 
-但 agent 跑起来之后这种关系是**反过来的**——agent 是主动的，工程系统要主动监视它的每一步、要在它即将做坏事时干预、要在它跑偏时阻断。这种"持续监视和介入"的职能 framework 这个词完全不暗示。所以 LangChain 之所以能叫 framework，正因为它在 agent runtime 这一层提供的是"被动 API"，而不是"主动监视和介入"。当业界发现需要主动监视和介入这层时，必须找一个能暗示"持续运行时主动性"的词——framework 这个词的隐喻盲区让它无法承担这个责任。
+但 agent 跑起来之后这种关系是**反过来的**——agent 是主动的，工程系统要主动监视它的每一步、要在它即将执行越界动作时干预、要在它跑偏时阻断。这种"持续监视和介入"的职能 framework 这个词完全不暗示。所以 LangChain 之所以能叫 framework，正因为它在 agent runtime 这一层提供的是"被动 API"，而不是"主动监视和介入"。当业界发现需要主动监视和介入这层时，必须找一个能暗示"持续运行时主动性"的词——framework 这个词的隐喻盲区让它无法承担这个责任。
 
 #### "scaffold"（脚手架）的隐喻盲区
 
@@ -286,7 +286,7 @@ scaffold 在建筑上的本义是**临时支撑**——盖楼时用，盖完拆�
 
 #### "agent system" / "agent infrastructure" 的隐喻盲区
 
-这两个词太泛——几乎可以装任何东西。"system" 一词在 IT 圈含义包山包海（operating system、distributed system、database system、recommendation system ...），"infrastructure" 也是（network infrastructure、storage infrastructure、cloud infrastructure ...）。当你说 "agent system" 时，听众脑子里浮现的可以是任何东西——agent 跑的 Python 进程？agent 用的工具集？agent 部署的 k8s 集群？agent 接的数据库？
+这两个词太泛——几乎可以装任何东西。"system" 一词在 IT 圈含义过宽（operating system、distributed system、database system、recommendation system ...），"infrastructure" 也是（network infrastructure、storage infrastructure、cloud infrastructure ...）。当你说 "agent system" 时，听众脑子里浮现的可以是任何东西——agent 跑的 Python 进程？agent 用的工具集？agent 部署的 k8s 集群？agent 接的数据库？
 
 工程术语的力量在于**它在每个工程师脑子里浮现的是同一个具体的东西**。"verifier" 这个词在每个工程师脑子里都是 "判定 agent 输出对错的代码"，"trajectory" 在每个工程师脑子里都是 "agent 每步动作和反馈的事件流文件"。但 "agent system" 没法形成共享心智模型——每个人脑子里的 agent system 是不一样的，可能小到一个 Python 脚本，也可能大到整个公司的 AI 平台。这种命名的泛化让它无法在工程师之间形成精确讨论，工程术语的根本作用就此失效。
 
@@ -304,11 +304,7 @@ Andrej Karpathy 在 2025 年提了两个相关术语，都没赢。
 
 **第一层精准 · "约束一个有自主意志的实体"**。马有自主意志——会乱跑、会被东西吓到、会犯困、会拒绝指令、会自己绕路。LLM 也有概率性的"自主"——同一份 prompt 跑两次可能给两个不同答案、模型可能在每步选错工具、模型可能"忘了"前面做过什么。其他 5 个候选词都不暗示"被约束对象有自主性"——framework 暗示开发者主动框架被动，scaffold 暗示静止支撑，infrastructure 暗示基础设施被动可用，context engineering 暗示数据处理，agentic engineering 把视角放在开发者一侧。只有 harness 这个词从头到尾在暗示**被约束的那一方有自己的脾气**。这一点跟 LLM 工程的实际经验完全吻合——任何写过 production agent 的工程师都会同意，跟 agent 协作的感觉就像驯马，不像写 React 组件。
 
-**第二层精准 · "约束工具是一整套不是一件"**。一套完整的马具不是单件，是多件配合的工具集合——reins（缰绳，方向控制）加 bit（口衔，停止控制）加 saddle（鞍，载荷接口）加 stirrups（脚蹬，骑手支撑）加 halter（笼头，整体控制接口）加 blinkers（眼罩，限制视野以减少干扰）。这跟 agent harness 的多件机制结构同构——tool policy 是 reins，verifier 是 bit，trajectory 是 saddle，observation surface 是 blinkers，Safety 控制面是 halter——agent 工程层不是一件而是一整套配合的机制。其他候选词都不暗示"多件机制配合"——framework 隐含"一个库"，scaffold 隐含"一组临时杆件"，infrastructure 隐含"一层底座"。harness 这个词从一开始就暗示"多件配合的工具集合"，这跟 8 件 runtime 加 1 件 Safety 的实际结构完全对应。
-
-![](../diagrams/t2-analogy-4-bridle.png)
-
-*图 4.3 · 马具五部件与五件 agent 机制的精准映射*
+**第二层精准 · "约束工具是一整套不是一件"**。一套完整的马具不是单件，是多件配合的工具集合——reins（缰绳）加 bit（口衔）加 saddle（鞍）加 stirrups（脚蹬）加 halter（笼头）加 blinkers（眼罩）。这跟 agent harness 的多件机制结构同构——agent 工程层不是一件而是一整套配合的机制。其他候选词都不暗示"多件机制配合"——framework 隐含"一个库"，scaffold 隐含"一组临时杆件"，infrastructure 隐含"一层底座"。harness 这个词从一开始就暗示"多件配合的工具集合"，这跟 8 件 runtime 加 1 件 Safety 的实际结构完全对应。
 
 **第三层精准 · "驯化是持续过程不是一次性事件"**。驯马师不是"装上 harness 就走人"——驯马师每天跟马打交道，根据马的脾气调整 harness 的扣眼松紧、根据天气调整缰绳的力度、根据训练阶段调整哪个工具加哪个工具减。这种"持续根据反馈调整"的工程纪律正是 Hashimoto 28 字定义的核心——anytime you find an agent makes a mistake, you take the time to engineer a solution。harness 这个词暗示了**这是一个工程师跟 agent 长期共处的关系**，不是一次性的项目交付。其他词都没这层暗示——framework 是"一次性引入的库"，scaffold 是"用完拆掉的杆"，infrastructure 是"建好了在那儿放着"。
 

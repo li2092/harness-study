@@ -8,9 +8,9 @@
 
 - 文中所有具体数值（token 占用阈值、单工具输出上限、工具数量等）都是**起步默认值**，按场景实测调整，不是普适常数。
 - 每个 Phase 标了正文对应章节（`↪`），需要展开原理时回正文对应位置 drill down。
-- 接**强模型**做主力。弱模型带不动多轮工具调用，会在 Phase 1 的 gate 上反复失败。
+- 接**强模型**做主力。弱模型跑不稳多轮工具调用，会在 Phase 1 的 gate 上反复失败。
 - 每个 Phase 末尾的完成判据（gate）尽量配**可运行检查**——一段脚本、一条断言、一个能跑的对照，不要只有文字描述。执行这份 spec 的是 agent，文字判据正是 agent 最容易"声称已满足"的东西（artifact-claim mismatch 的温床）；判据能跑，糊弄就没有空间。例：Phase 1 的 gate 至少配"fake provider 跑通一次完整 ReAct 循环 + tool_call/tool_result 配对断言"这样的硬检查。
-- 这份 spec 走**折中覆盖档**：通用 runtime + 场景收窄 + 成本结构三段（来自实践沉淀）+ 把脉 + 四原则自检 + 机制准入闸门。Harness Lab 五层、可组合性三轴这两块进阶内容只给判定线、不展开，需要时回正文。
+- 这份 spec 走**折中覆盖档**：通用 runtime + 场景收窄 + 成本结构三段（来自实践总结）+ 把脉 + 四原则自检 + 机制准入闸门。Harness Lab 五层、可组合性三轴这两块进阶内容只给判定线、不展开，需要时回正文。
 
 ---
 
@@ -107,7 +107,7 @@
 
 1. **响应解析层（假阴性）**：模型可能把调用写成正文文本标签（如 `<tool_call>…</tool_call>`）而没进结构化 `tool_calls` 字段，Adapter 只认结构化字段就当普通文本丢了。对策：解析层在结构化字段之外再兜一道文本标签正则提取。
 2. **请求参数层**：默认 `tool_choice:auto` 可调可不调。某回合必须走工具（必查库 / 必落盘）时把 `tool_choice` 设 `required` / `any` 或指定具体工具——**按回合按场景开，不全局常开**（长期 required 会逼模型在不该调时硬调制造噪声）。
-3. **prompt 装配层**：过长的中文 prompt 会让某些模型"懒得"调工具直接用文本作答。把"要触发工具调用"的指令短而靠前、长说明拆分。
+3. **prompt 装配层**：过长的中文 prompt 会让某些模型跳过工具调用直接用文本作答。把"要触发工具调用"的指令短而靠前、长说明拆分。
 
 `↪ 正文：Tool Registry & ACI（§5.3，P0）/ ObservationPack · Observation Surface（§5.6）/ Model Adapter 三成因（§5.2 末小节）/ Artifact（§5.4，P2）`
 
@@ -279,7 +279,7 @@ Phase 1 只上了 hard gate。这里按需补另两层：
   - **若判定是必须上**（>60 turn、子任务真独立可验）：再问控制流可不可预知——哪些子步并行、谁交叉验证谁、结果怎么聚合，开跑前就清楚？**可预知** → 把这段编排写成**确定性脚本**交运行时后台跑（dynamic workflow），模型推理只发生在叶子 agent 干活时，lead 上下文最后只剩一个汇总答案，省掉 lead 即兴编排那块最烧的 token、且编排可重跑可审计；**不可预知**（探索性、下一步要看上一步结果）→ 只能让 lead 即兴编排，回到 15× 成本预期。gate：编排脚本能脱离某次具体 run 重跑、每步 `hands_off` / `calls_tool` 进 trajectory。
   - **边界**：dynamic workflow 降的是编排成本、不松准入门槛——single agent 优先、N=10 ≥80% 别上、coding 强耦合别上 这几条不变。
   `↪ 正文：Multi-Agent 过度分解 + dynamic workflow（§5.1.5 末段 + 脚注 / §5.1.6）/ fork-join 并发（§6.6）/ 拓扑轴（§八）`
-- **dynamic harness · 副 harness 运行时路由**：§2.1"要不要造一个副 harness"之后的下一档——harness 跑起来后**按任务在多个副 harness 间动态选哪个**。先回答两件：① 你是不是真有 ≥2 个 5 维度本体齐全的副 harness（不齐 → 先把单个做齐，回 §2.1）；② 任务能不能靠"实体特征"而非"模糊文本"判该走哪个（判不出 → 还不到上路由的时候，单 harness 跑）。上了路由满足 3 条可验证纪律：routing 基于 task 实体特征 / 主 harness 只能 invoke 已挂载的副 harness 不能凭空造 / 每次 routing 决策写进 trajectory（写一个 task 验证 trajectory 里能查到"为什么走 A 不走 B"）。dynamic harness 跟上面的 dynamic workflow 是正交两件：前者管挂哪些工具/policy/verifier、后者管控制流怎么持有。**ReAct + dynamic harness + dynamic workflow** 这条组合是正文作者正在实践、仍在演进的方向，按当前实践给方向、不当定论。选边的主导维度是 reward 信号强弱——开放、无标定的弱 reward 任务偏 dynamic workflow（编排内建交叉验证顶替缺位的硬 verifier）；标准化、重复出现、Hard Gate 判得动的强 reward 任务（To B 核心交付的典型形态）偏 dynamic harness（机制固化 + 硬验证收口）。`↪ 正文：主↔副 routing 纪律（§8.7）/ dynamic harness（§5.1.6）`
+- **dynamic harness · 副 harness 运行时路由**：§2.1"要不要造一个副 harness"之后的下一档——harness 跑起来后**按任务在多个副 harness 间动态选哪个**。先回答两件：① 你是不是真有 ≥2 个 5 维度本体齐全的副 harness（不齐 → 先把单个做齐，回 §2.1）；② 任务能不能靠"实体特征"而非"模糊文本"判该走哪个（判不出 → 还不到上路由的时候，单 harness 跑）。上了路由满足 3 条可验证纪律：routing 基于 task 实体特征 / 主 harness 只能 invoke 已挂载的副 harness 不能凭空造 / 每次 routing 决策写进 trajectory（写一个 task 验证 trajectory 里能查到"为什么走 A 不走 B"）。dynamic harness 跟上面的 dynamic workflow 是正交两件：前者管挂哪些工具/policy/verifier、后者管控制流由谁持有。**ReAct + dynamic harness + dynamic workflow** 这条组合是正文作者正在实践、仍在演进的方向，按当前实践给方向、不当定论。选边的主导维度是 reward 信号强弱——开放、无标定的弱 reward 任务偏 dynamic workflow（编排内建交叉验证顶替缺位的硬 verifier）；标准化、重复出现、Hard Gate 判得动的强 reward 任务（To B 核心交付的典型形态）偏 dynamic harness（机制固化 + 硬验证收口）。`↪ 正文：主↔副 routing 纪律（§8.7）/ dynamic harness（§5.1.6）`
 - **Harness Lab 工作台（Observe-Score-Ablate-Tune-Iterate 五层）**：先回答"8 件 runtime + Safety 我项目里几件已经稳定？"≥6 件才考虑；harness 自己 pass rate 还跨周浮动 >10pp 时上 Ablate，跑出的信号 95% 是噪音。`↪ 正文：Harness Lab（§七）`
 - **跨厂商协议（A2A 等）**：当前阶段建议自己定义 JSON-RPC schema + 文档化作内部标准，不要把架构绑在还在 evolve 的外部 spec 上。`↪ 正文：交互边界轴（§八）`
 

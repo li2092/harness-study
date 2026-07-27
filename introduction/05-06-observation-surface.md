@@ -1,6 +1,6 @@
 # 5.6 Observation Surface · **三层定位 · self-evolution 基础设施层 + runtime feedback 层 + 作者工程实例化层**
 
-第六件机制是 agent 调用工具之后拿到的"环境反馈" —— 工具执行的输出、读到的文件内容、抓取的网页正文、运行测试的结果、看到的图片、生成的报告。这些反馈合起来组成 observation surface 这一层。前面 §5.5 末尾点过一句"指令该挂在最容易生效的载体上"——这句话往反方向延伸就到了 §5.6 的根本论点：**agent 看见环境的方式 · 跟人看 log 的方式根本不是一件事**。一个能跑的 production agent 跟一个能跑得稳、能跨 run 进化的 production agent 之间 · observation surface 这一层的成熟度往往是决定差别。
+第六件机制是 agent 调用工具之后拿到的"环境反馈" —— 工具执行的输出、读到的文件内容、抓取的网页正文、运行测试的结果、看到的图片、生成的报告。这些反馈合起来组成 observation surface 这一层。前面 §5.5 末尾点过一句"指令该挂在最容易生效的载体上"——这句话往反方向延伸就到了 §5.6 的根本论点：**agent 看见环境的方式 · 跟人看 log 的方式根本不是一件事**。一个能跑的 production agent 跟一个能跑得稳、能跨 run 进化的 production agent 之间 · observation surface 这一层的成熟度往往是决定性差别。
 
 为什么 observation 不是 logging？两层论点叠加。第一层论点来自读者——observation 的读者是模型 · log 的读者是人。模型读 observation 要靠 token 序列 · 进 context 窗口 · 跟 prompt 跟历史 turn 抢预算 · 单条 observation 5000 行的 grep 输出直接塞进 context · 几轮之后整个 context 就爆了；log 的读者是 oncall 工程师 · 出问题时 grep 关键字找根因 · 不需要进任何窗口预算。两类读者对同一份数据的处理需求完全不同 · 把 observation 当 log 写就是混淆了读者画像。第二层论点来自时机——observation 在 agent 当前 turn 内就要被读 · 影响下一步的决策；log 在事后才被人读 · 影响下一轮迭代的设计。前者是 runtime feedback loop 的一部分 · 后者是 outer loop 的工程审计材料。
 
@@ -12,11 +12,11 @@
 
 把这两件事合起来 · §5.6 实际上有**三层定位**——
 
-- **第一层 · self-evolution 基础设施层**：observation surface 是跨 run self-evolution 的输入侧基础设施 · AHE / Continual Harness / Voyager / Reflexion / ERL 这些 2026 业界主流路径都建立在这一层。任何追求 long-term capability 增长的 harness 都需要先把这一层打稳。
+- **第一层 · self-evolution 基础设施层**：observation surface 是跨 run self-evolution 的输入侧基础设施 · AHE / Continual Harness / Voyager / Reflexion / ERL 这些 2026 业界主流路径都建立在这一层。任何追求 long-term capability 增长的 harness 都需要先把这一层做扎实。
 - **第二层 · runtime feedback 层**：observation surface 在单次 run 内做 stub/body 分离 / 多模态 / 跟 trajectory 协同三件 · 这是 v0.3 §5.4 已经锁定的 P1 业界共识——Trivedy "Bundled Infrastructure" / Augment Code "Feedback Loops" / SWE-agent .traj / Anthropic Claude vision / OpenAI GPT-4V 都做这件事。
 - **作者本地 harness 件工程实例化层**：ObservationPack 抽象 / MechanismEvent 四态分类（Activated / Skipped / Blocked / Error）/ StepSnapshot 22 字段化结构 / decision-point vs execution-point 的区分纪律 / absence-of-event 作为第五信号 / ContentPart 五类多模态抽象——这些是作者沿 AHE / Voyager / Reflexion 等业界 self-evolution 主流方向做的具体工程实例化 · **全部是 harness 内部件**。本节只展开 harness 件实例化部分 · 明标"作为本教程作者的实践案例 · 不作业界 day-1 必备"。harness 件之上还可对接一套 meta-工作台（作者本地实例化叫 Harness Lab 工作台 · 类比 W&B 之于 ML 实验追踪 / GitLab CI 之于 DevOps）做跨任务跨配置的系统化调优——但这是 bonus 进阶路径不是 self-evolution 唯一形态 · 工作台本身在后面 Harness Lab 章节展开 · 本节不展开。
 
-三层之间不是并列关系是承载关系——self-evolution 基础设施层踩在 runtime feedback 层之上（没有 single-run observation 就没有 cross-run trajectory 可学）· 作者本地工程实例化层是这两层在作者实际工程语境下的具体落地。这三层都是 **harness 内部件** · 跨 run self-evolution 是 harness 自身能力 · 不需要外部工作台才能跑。三层合起来印证一件事——observation surface 这一机制的设计驱动从来不是"把工具输出存下来给人 debug" · 是"把 agent 跟环境的交互建模成既能喂当前推理也能喂跨 run 优化引擎的双向数据流"。后面九子节按"observation vs logging 的差别 + stub/body 分离 → 多模态 observation → observation 跟 trajectory 协同 → schema 设计 → 常见误区 → 业界实现对照 → self-evolution 基础设施层（NEW）→ 作者本地工程实例化层 → 起步建议"展开。前六子节属基础两层 · 第七子节专门讲 self-evolution · 第八子节讲作者实例化 · 第九子节给四维度起步建议。
+三层之间不是并列关系是承载关系——self-evolution 基础设施层建立在 runtime feedback 层之上（没有 single-run observation 就没有 cross-run trajectory 可学）· 作者本地工程实例化层是这两层在作者实际工程语境下的具体落地。这三层都是 **harness 内部件** · 跨 run self-evolution 是 harness 自身能力 · 不需要外部工作台才能跑。三层合起来印证一件事——observation surface 这一机制的设计驱动从来不是"把工具输出存下来给人 debug" · 是"把 agent 跟环境的交互建模成既能喂当前推理也能喂跨 run 优化引擎的双向数据流"。后面九子节按"observation vs logging 的差别 + stub/body 分离 → 多模态 observation → observation 跟 trajectory 协同 → schema 设计 → 常见误区 → 业界实现对照 → self-evolution 基础设施层（NEW）→ 作者本地工程实例化层 → 起步建议"展开。前六子节属基础两层 · 第七子节专门讲 self-evolution · 第八子节讲作者实例化 · 第九子节给四维度起步建议。
 
 ![](../diagrams/t1-layered-5.6-observation.png)
 
@@ -40,7 +40,7 @@ agent 跑工具调用的反馈数据有一个特殊性——大小分布两极�
 
 stub/body 物理分离从这件大小分布两极化里推出来——stub 是小摘要进 context（id / 类型 / 摘要 / size / 截断预览 / 关键 metadata · 通常 200 字符上下）· body 是完整内容进 ArtifactStore 等持久存储（让 agent 在后续 turn 通过 `read_observation(obs_id)` 主动取完整 body 而不进入开头那个固定的 context 预算）。这件物理结构让 agent 在大反馈到来时有"先看摘要 · 决定要不要进一步读"的工程能力 · 不被迫一次性把所有数据塞进 context。
 
-body 全存的成本顾虑有一个简单的刀法：**按 run 结局分级**而不是一刀切采样。失败 run 的 observation body 100% 全保真——复盘和 self-evolution 的数据价值几乎全部集中在失败里；成功 run 跑完归档时 body 可以按 1/N 抽样留底（run 进行中 body 都在 · 这条分级管的是跨 run 留存）。这条分级还有个工程便利：run 结束时 verifier 的判定本来就有 · 存储策略直接挂在判定结果上 · 不需要任何新机制。
+body 全存的成本顾虑有一个简单的分级办法：**按 run 结局分级**而不是一刀切采样。失败 run 的 observation body 100% 全保真——复盘和 self-evolution 的数据价值几乎全部集中在失败里；成功 run 跑完归档时 body 可以按 1/N 抽样留底（run 进行中 body 都在 · 这条分级管的是跨 run 留存）。这条分级还有个工程便利：run 结束时 verifier 的判定本来就有 · 存储策略直接挂在判定结果上 · 不需要任何新机制。
 
 业界对这件分离层已经形成基础共识。Trivedy 2026-03 的 harness framework 把 filesystem / sandbox / browser 等列为 harness 必备组件—— observation 不是抽象概念 · 它必须落到具体的 sandbox / artifact store 等物理基础设施上。Augment Code 把这一层归为 "Feedback Loops"。这件分离层的工程价值不只是节省 token——更重要的是让"agent 自主决定信息深度"成为可能：stub 让 agent 看到一份反馈的轮廓 · body 让 agent 在需要更深时主动取。少了 stub/body 分离的 harness · agent 要么淹没在原始数据里 · 要么因为截断完全失去信息——两端都是常见误区。
 
@@ -66,7 +66,7 @@ OTel GenAI semantic conventions 是 2026 业界正在收敛的开放标准 · �
 
 observation 的 schema 设计决定一件事——observation 能不能被自动 evaluator 读。HAL（Holistic Agent Leaderboard）[^hal-2026]跑 21730 rollouts × 9 model × 9 benchmark 把"评测从周量级压到小时量级"——这件量级跨越的基础是 observation schema 必须结构化到能直接喂自动 evaluator 不需要人读 log。free-form 自然语言的 observation log 是评测自动化的根本障碍——人看得懂但 evaluator 跑不动。
 
-schema 设计层面有四件事必须想清楚。第一件是字段的"哪些信号是 anomaly 触发器"——比如 token 用量超过 ceiling / reasoning 累积超过阈值 / 工具反复调用同一参数 / plan 反复翻来覆去都是常见的 anomaly。第二件是字段的"哪些信号是 cross-run 累积"——比如 cache hit % / batch size / artifact 引用数等需要跨 run 累积才能看出趋势的指标。第三件是字段的"哪些信号要进 prompt cache"——稳定的 schema 字段名跟字段顺序是 prompt cache 的必要条件。第四件是字段的"哪些信号能脱敏后再持久化"——PII / credential 必须在 observation 写出前脱敏 · 不能在事后 grep 时再清。
+schema 设计层面有四件事必须想清楚。第一件是字段的"哪些信号是 anomaly 触发器"——比如 token 用量超过 ceiling / reasoning 累积超过阈值 / 工具反复调用同一参数 / plan 反复改写都是常见的 anomaly。第二件是字段的"哪些信号是 cross-run 累积"——比如 cache hit % / batch size / artifact 引用数等需要跨 run 累积才能看出趋势的指标。第三件是字段的"哪些信号要进 prompt cache"——稳定的 schema 字段名跟字段顺序是 prompt cache 的必要条件。第四件是字段的"哪些信号能脱敏后再持久化"——PII / credential 必须在 observation 写出前脱敏 · 不能在事后 grep 时再清。
 
 本教程作者沿这件业界方向做的本地工程实例化叫 StepSnapshot——把每 turn 的 observation 结构化为 22 个字段 · 包含 turn count / input tokens / output tokens / cache hit % / artifact references / model selection rationale / batch aggregation flags 等。22 字段不是固定数——是作者在工程实践里收敛出来的一个具体切分 · 业界其他 harness 可能用 15 字段 / 30 字段或别的切分。关键不是字段数 · 是 schema 要做到"每个字段对应一类可被自动 evaluator 读的信号"· 这样 observation 才能从单次 run 的 runtime feedback 升级为跨 run self-evolution 的输入。
 
@@ -78,7 +78,7 @@ observation 过载常见在没做 stub/body 分离的 harness 里。一个 grep 
 
 observation 失真是另一端——用粗暴 truncate 截断丢信息。比如一个 web fetch 返回 50K 字符 · 工程师在 tool wrapper 里写 `if len(content) > 4096: content = content[:4096]` · 这条粗暴 truncate 看起来解决了过载 · 实际上让 agent 错过后半段关键信息——agent 不知道有后半段被截了 · 推理时把截断后的前 4K 字符当全部内容用。判定条件是看 truncate 后有没有给 agent 提示——好的 stub 必须含 `truncated: true / size: 50000 / preview_truncated_at: 4096` 这类元信息让 agent 知道"有更多内容可以 read_observation 取"· 不默默丢失。
 
-两端常见误区的工程化对策都是 stub/body 分离——stub 带 truncated 标记跟 size 元信息不默默丢失 / body 进 ArtifactStore 完整保留 / agent 可通过 read_observation 主动取完整 body。这件结构同时解决两端——既不过载又不失真。一个常见的二次常见误区是只做 truncate 不存 body——读起来不过载 · 但 body 丢了之后 agent 想取也取不到 · 实际上还是失真。stub/body 分离的关键不是 stub · 是 body 必须可寻址持久存储。
+两端常见误区的工程化对策都是 stub/body 分离——stub 带 truncated 标记跟 size 元信息不默默丢失 / body 进 ArtifactStore 完整保留 / agent 可通过 read_observation 主动取完整 body。这件结构同时解决两端——既不过载又不失真。一个二次常见误区是只做 truncate 不存 body——读起来不过载 · 但 body 丢了之后 agent 想取也取不到 · 实际上还是失真。stub/body 分离的关键不是 stub · 是 body 必须可寻址持久存储。
 
 observation 还有一类隐性常见误区是没做脱敏。工具返回里可能含 credential / PII（API key / 用户邮箱 / 个人身份证号 / 银行账户）· 这些数据进 observation 就进 context · 进 context 就进 trajectory · 进 trajectory 就跨 run 持久化。这件链条是 PII 泄漏的根因之一——脱敏必须在 observation 入口层做 · 不能等到事后 grep log 时再清。这条纪律跟后续 Safety 控制面那节是配套议题——observation 入口是 PII 第一道防线。
 
@@ -88,7 +88,7 @@ observation 还有一类隐性常见误区是没做脱敏。工具返回里可�
 
 差异在 wire format 跟 storage backend——共同点是几条业界共识。第一条是 observation 必须作为 trajectory 的一等组成不是 log。第二条是 stub/body 分离是 production-grade observation 的物理基础。第三条是多模态 observation 是 2026 默认能力 · 不是 add-on。第四条是 observation 的 schema 必须结构化能直接喂自动 evaluator。这四条业界共识就是 §5.6 的基础层。
 
-业界还在演进的部分是 self-evolution 输入侧的 observation 抽象——OpenInference / Langfuse / Helicone / OTel GenAI semconv 都还没收敛到统一规范。这件未收敛不是业界懒——是 self-evolution 这件事本身在 2026 还在快速演进 · observation 作为它的输入侧基础设施一起在演进。下面一节展开 self-evolution 这件事跟 observation 的关系。
+业界还在演进的部分是 self-evolution 输入侧的 observation 抽象——OpenInference / Langfuse / Helicone / OTel GenAI semconv 都还没收敛到统一规范。这件未收敛不是业界没做——是 self-evolution 这件事本身在 2026 还在快速演进 · observation 作为它的输入侧基础设施一起在演进。下面一节展开 self-evolution 这件事跟 observation 的关系。
 
 #### 5.6.7 observation surface 作为 self-evolution 基础设施层（NEW）
 
@@ -110,7 +110,7 @@ observation surface 在跨 run 视角下扮演的角色是 self-evolving agent �
 
 第五条是 Self-Generated Experience（自生成经验）路径。Self-Play SWE-RL（SSR）[^ssr-2026]让单个 LLM 在 bug injector 跟 solver 两个角色之间 alternate · agent 给真实 codebase 注入 bug · 然后训练自己修这些 bug（SWE-bench Verified +10.4 分）。AgentEvolver[^agent-evolver-2026]走 self-questioning / self-navigating / self-attributing 自主生成任务 · MemGen[^memgen-2026]走 generative latent memory · 都属 agent 用自己生成的经验作自我提升信号这一路径。这一路径的共同 framing 是减少对人工标注数据的依赖 · 让 agent 从自己的产出里学。同一思路也用在安全对齐而非提能力上——FATE[^fate-2026]让 agent 在自己跑出的失败轨迹上做 on-policy self-evolution（配 Pareto-Front Policy Optimization 平衡安全跟有用性）· 在 AgentDojo / AgentHarm / ATBench 上把 Qwen3-8B 的 attack success rate 相对降约 33.5% · harmful compliance 相对降约 82.6%。这说明 self-evolution 的优化目标不限于能力 · 安全对齐同样能拿 agent 自己的轨迹做训练信号。
 
-五条路径的共同点很清楚——它们都建立在"agent 能读到自己的 observation 历史"这件事上。没有结构化的 observation surface · 这五条路径全部跑不起来。所以 observation surface 不只是 runtime feedback layer 的一部分 · 它是 self-evolving harness 的输入侧基础设施层——五条路径都是 harness 自身具备的 self-evolution 能力 · 不依赖外部工作台。这一层定位让 observation surface 在本卷 8+1 框架里从沿用章节升级为重头戏章。harness 件之上还可对接 meta-工作台做跨任务跨配置的系统化优化（作者本地实例化叫 Harness Lab 工作台 · 在后面 Harness Lab 章节展开）· 但工作台是 bonus 进阶路径 · 不是 self-evolution 唯一形态——harness 自身可独立 self-evolve · 也可对接工作台 · 两件不互斥都是合法路径。
+五条路径的共同点很清楚——它们都建立在"agent 能读到自己的 observation 历史"这件事上。没有结构化的 observation surface · 这五条路径全部跑不起来。所以 observation surface 不只是 runtime feedback layer 的一部分 · 它是 self-evolving harness 的输入侧基础设施层——五条路径都是 harness 自身具备的 self-evolution 能力 · 不依赖外部工作台。这一层定位让 observation surface 在本卷 8+1 框架里从沿用章节升级为重点章。harness 件之上还可对接 meta-工作台做跨任务跨配置的系统化优化（作者本地实例化叫 Harness Lab 工作台 · 在后面 Harness Lab 章节展开）· 但工作台是 bonus 进阶路径 · 不是 self-evolution 唯一形态——harness 自身可独立 self-evolve · 也可对接工作台 · 两件不互斥都是合法路径。
 
 #### 5.6.8 作者本地 harness 件工程实例化层
 

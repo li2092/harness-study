@@ -13,7 +13,7 @@
 
 对话产品的直觉词汇只有两个："会话"和"消息"。这两个词撑不住一个运行时——第五章整章讲的 run 在这套词汇里没有位置，第八章要对账的工具执行更没有。运行时的实体链有六级，每一级都由一类必须区分的东西逼出来：
 
-![](figures/embed/tb-06-1.png)
+![](../diagrams/tb-06-1.png)
 
 第五级的两条裁决合起来是一项结构决定，来路要交代。本卷的桌面案例项目在后续一轮内部工程审计里，把统一状态链写成 Task→Run→Step→Attempt→Action——attempt 承载同一步的多次网络或模型尝试，立的约束是失败尝试的输出不得混入下一次尝试【经验，桌面案例项目内部审计，2026-07】。这条约束本卷全盘接受，承载方式不同：模型侧每次真实调用记一行 invocation，失败的调用也成行，序号与状态就是尝试的账；工具侧由 Effect Ledger 的 attempt_no 承载，"尝试可多次、结果只记一次"在工作制品 B 里早已是不变量——记账在 invocation，"失败输出不混入下一尝试"的执行约束则由 step 域的 context 组装承载。
 
@@ -27,7 +27,7 @@
 
 State Registry v1 至此交付（工作制品 A），本章末尾随信念工件升 v2。这一节手里多了全卷的名词表：从此"消息在吗"这类问题，先问的是"哪一级、哪张表、哪个 scope"。开场那条被抢占的半轮消息也有了答案：messages 表里的一行，run_id 加 turn_no 定位——它当初的"消失"，只因为它只活在内存投影里，从未落到自己的载体上（6.3 节）。
 
-![](figures/t1-layered-6.0-entity-chain.png)
+![](../diagrams/t1-layered-6.0-entity-chain.png)
 
 *图 6.0 · 六级实体链：全卷共用的一份词表*
 
@@ -59,7 +59,7 @@ State Registry v1 至此交付（工作制品 A），本章末尾随信念工件
 
 恢复要有锚点，锚点就是 checkpoint。对它的朴素想象是"把一切存下来"；一切存不下来，因为有几样东西根本不归数据库管。清单直接给：
 
-![](figures/embed/tb-06-2.png)
+![](../diagrams/tb-06-2.png)
 
 业界有一套值得细看的产品契约。Anthropic 的 Agent SDK 把"状态存哪、怎么恢复"写成了文档：session 以 jsonl（每行一条 JSON 记录）追加落盘，continue、resume、fork 三种恢复语义齐备；官方一句定性把边界划得很诚实——"session 持久化的是对话，不是文件系统"【规范/官方文档，Agent SDK 文档 2026-07 版】。
 
@@ -91,7 +91,7 @@ resume 一个 interrupted 的 run，恢复的是什么？朴素答案"恢复一�
 
 落法是把"恢复什么"从默认改成逐项声明：approval、delegation、credential 各自是否随 checkpoint 保存、是否随 resume 恢复、恢复前是否重验——每项显式写进 Lifetime Matrix（交付工作制品 I），安全默认值是不隐式恢复。第五章转移表里 waiting 回到 running 那行 guard 写着"授权仍有效（需重验）"，埋的就是这条；完整规则在第十一章 11.6 节。
 
-![](figures/t2-timeline-6.11-three-lifetimes.png)
+![](../diagrams/t2-timeline-6.11-three-lifetimes.png)
 
 *图 6.11 · 三条生命周期：寿命天然不等，resume 不是三条线的总开关*
 

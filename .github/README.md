@@ -53,7 +53,7 @@ What appears once an agent is actually deployed to office work, contract review,
 
 In most of these cases, the cause is not in the prompt. Past a certain point, further investment in prompt iteration yields rapidly diminishing returns. What actually determines whether an agent is stable is the layer around the model — in English, the **harness**. A harness is not LangChain or any particular SDK — those are frameworks. The harness is the structure you build on top of a framework for a particular task: how the model is mounted, how tools are managed, how context accumulates, where artifacts land, how things are verified, how safety is enforced, what happens when something fails.
 
-This project — Harness Study — exists to take that layer around the model as an engineering object in its own right and explain it systematically. **The project is organized into volumes.** The introductory volume — which walks the full skeleton once — is complete; further volumes will be per-chapter and per-module expansions, more focused and more detailed, in planning.
+This project — Harness Study — exists to take that layer around the model as an engineering object in its own right and explain it systematically. **The project is organized into volumes.** The introductory volume — which walks the full skeleton once — and the Architecture & Engineering volume (vol. 2, Chinese) — which assembles the runtime mechanisms into a semantically correct, interruptible, recoverable, verifiable runtime — are complete; vol. 3 (production engineering & governance) is at the outline stage.
 
 <p align="center">
   <img src="../diagrams/t1-comparison-1-gap-en.png" alt="What the model does is single-step, side-effect-free prediction; what the task needs is multi-step, stateful, side-effecting execution — the harness is the engineering layer in between" width="800">
@@ -77,7 +77,8 @@ The project is written on the assumption that some of its readers are AI themsel
 ## 3. Current Status
 
 - ✓ **Introductory volume**: the manuscript is complete; chapters + 50 diagrams are now in [`introduction.en/`](../introduction.en/); final review in progress.
-- ⏳ **Expansion volumes to follow**: in planning.
+- ✓ **Architecture & Engineering volume (vol. 2, Chinese)**: complete — 15 chapters plus a working-artifact compendium and a quick-reference appendix in [`volume2/`](../volume2/); Chinese edition only for now.
+- ⏳ **Further expansion volumes**: vol. 3 (production engineering & governance) at outline stage.
 
 ---
 

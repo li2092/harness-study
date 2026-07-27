@@ -6,35 +6,35 @@
 
 ## 节号目录
 
-![](figures/embed/tb-90-1a.png)
+![](../diagrams/tb-90-1a.png)
 
-![](figures/embed/tb-90-1b.png)
+![](../diagrams/tb-90-1b.png)
 
-![](figures/embed/tb-90-1c.png)
+![](../diagrams/tb-90-1c.png)
 
 正文节序不是严格 A→Z：L 之后接 Q、R、S，再回到 M、N、O、P，然后从 T 排到 Z。这是逐章增补的先后；节号不改，各章按字母引用，查节以本表为准。
 
-## A. State Registry v2（第六章 6.0 交付、章末升 v2——大纲 v5.4 自第一章下沉）
+## A. State Registry
 
 用法：每个持久状态对象一行。评审时逐行问四个问题——还有谁在写它？版本字段在哪？删除它意味着什么？进程在写它的半路被杀，重启后它处于什么状态？答不出的格子就是缺口。
 
-![](figures/embed/tb-90-2a.png)
+![](../diagrams/tb-90-2a.png)
 
-![](figures/embed/tb-90-2b.png)
+![](../diagrams/tb-90-2b.png)
 
-![](figures/embed/tb-90-2c.png)
+![](../diagrams/tb-90-2c.png)
 
 三条全表规则：每行记录一律带 `schema_version`；除顶层（conversation）外每行带完整父链外键，允许为空的层级显式置空——event 行以全量冗余 correlation 承载（C 节）；每行登记 **scope**（会话/项目/全局）——作用域是归属的一部分，注释自述不算数（6.2 节）。
 
 三条裁决注（6.0 节）：attempt 不设独立实体——模型侧 invocation 行即 attempt（失败调用也成行），工具侧 effects.attempt_no 承载，跨层共享 retry budget 出现时升格；turn/compaction 摘要/policy decision 三者不设独立表（分别为字段承载、messages 特型行——第十章已裁决沿特型行，policy decision 已由第十一章裁决并入 events，见本表 policy decision 行）；lease/执行权为进程内授权对象，不入本表（6.0 节、第八章）。
 
-## B. Effect Ledger v2（第一章登记结构，第八章主场；v2 随第八章升级）
+## B. Effect Ledger
 
 一行 = 一次 Tool Execution 的账。四段模型：intent → attempt → result → outcome。
 
 **字段**：
 
-![](figures/embed/tb-90-3.png)
+![](../diagrams/tb-90-3.png)
 
 **状态机**：`intended → attempting → result_recorded → outcome_verified`；异常两分支——`intended/attempting → unknown →（对账）→ 调和终局`（intent 无 result，8.6 节），及 `result_recorded →（outcome 与 result 不符）→ 对账事件 → 调和终局`（8.10 节）；调和终局记入 reconciliation_status（retried/queried/compensated/manual 之一）。
 
@@ -51,13 +51,13 @@
 
 **四类处置表**（Reconciliation Table——intent 无 result 的调和裁决，第八章 8.6 正文表的登记版）：
 
-![](figures/embed/tb-90-4.png)
+![](../diagrams/tb-90-4.png)
 
-## C. Event Schema v2（第一章登记结构，第十三章主场——v2 随第十三章升级：correlation 八级补全＋detector/certificate 事件）
+## C. Event Schema
 
 **信封字段**（每条事件必带）：
 
-![](figures/embed/tb-90-5.png)
+![](../diagrams/tb-90-5.png)
 
 **事件类型 v1**（按对象分组；`*` 号是恢复扫描的关键锚点）：
 
@@ -78,108 +78,108 @@
 3. 崩溃容忍按载体分。DB 型事件表由事务原子性兜底，不出半行；应用层守的是事务边界——状态行与事件同事务落地（6.1 节）。文件型事件日志（入门卷 6.3 节的 JSONL）才有半行问题：进程可能死在写半行时，恢复按最后一个完整事件截断，丢尾行不算数据损坏。append-only ≠ crash-safe，两件事分开保证。
 4. 内部 schema 稳定优先；OTel GenAI semantic conventions 截至 2026-07 仍为 Development 状态【规范/官方文档】，只做导出映射不做内部依赖（第十三章、第三卷 17.2 节）。
 
-## D. Runtime Trust Boundary v1（第十一章 11.4 填充——模板自第一章，v1 随第十一章填）
+## D. Runtime Trust Boundary
 
 每条信任边界一行，登记四件事。评审用法：逐行问"跨这条边界时信任怎么变、失败会怎样、拿什么对账"。
 
-![](figures/embed/tb-90-6.png)
+![](../diagrams/tb-90-6.png)
 
-## E. Entry-to-Kernel Routing Matrix v1（第五章 5.11 交付——大纲 v5.4 自第一章下沉）
+## E. Entry-to-Kernel Routing Matrix
 
 规则：后四列凡不指向内核（run manager / Execution Kernel），即为入口捷径缺口。评审用法：拿被评系统逐行照填，空格或"入口自实现"即语义分叉；第五章破坏实验场景 4 的 contract test 按本表逐行验证（同一 cancel 从每个入口发起，必须路由到转移表同一行）。
 
-![](figures/embed/tb-90-7.png)
+![](../diagrams/tb-90-7.png)
 
-## F. Intervention Point Map v1（第十一章 11.7 填充，assemble 细节第十章——大纲 v5.4 自第一章下沉）
+## F. Intervention Point Map
 
-![](figures/embed/tb-90-8.png)
+![](../diagrams/tb-90-8.png)
 
 三处分别留证，不能以一处代替另外两处。
 
-## G. Component Register v1（第四章交付，第十五章评审对照物）
+## G. Component Register
 
 八组件卡完整六栏。正文（第四章）只展开样张与取舍，本表为登记全文；各深潜章升级本表对应行。
 用法（评审侧）：逐行问三件事——这张卡在被评系统里叫什么？它的职责有没有唯一 owner？违约在 trajectory 里有没有事件？答不出的行就是缺口，记入评审的残余风险清单（第十五章）。
 
-![](figures/embed/tb-90-9a.png)
+![](../diagrams/tb-90-9a.png)
 
-![](figures/embed/tb-90-9b.png)
+![](../diagrams/tb-90-9b.png)
 
-## H. Run 状态转移表 v1（第五章交付，第十四章参考实现按表执行）
+## H. Run 状态转移表
 
 用法：代码中改 `run.status` 的唯一路径（内核 transition 函数）按本表执行；表外转移拒绝并落 `error.raised`。触发事件为语义名，落盘一律走 C 节 `run.*` 事件类型，payload 携 trigger/guard/actor/terminal_reason。评审时逐行问：这条转移在被评系统里由哪段代码执行、事件落在哪。
 
-![](figures/embed/tb-90-10a.png)
+![](../diagrams/tb-90-10a.png)
 
-![](figures/embed/tb-90-10b.png)
+![](../diagrams/tb-90-10b.png)
 
 四条表级规则：终态（completed/failed/cancelled）之间无任何行——终态不许互转，判错追加更正事件；terminal_reason 逐值挂类（第五章 5.4）——task_failed→业务失败，infra_failure、unrecoverable→基础设施失败，user_cancelled、preempted→用户取消，policy_rejected、budget_exceeded、queue_expired、hitl_expired→策略拒绝（后两值为时限耗尽子类，终态走 cancelled——拦下的是继续等待，与 run 出错分开）；本表变更即 schema 变更，随 state_machine_version 迁移（第五章 5.10）；waiting 崩溃后不回 waiting——它经 row 15 进 interrupted，出边只有 row 16（→queued）与 row 17（→failed），表里不设 interrupted→waiting 回路是有意的：回到 queued 重跑至审批点、再次挂起，等于让审批重来一次，旧授权不跨崩溃延续，恢复即重验（第十一章 11.6）。看门狗（row 8，进程在、run 卡死→直接终态）与启动扫描（row 15，进程没了、run 可能可救→interrupted 交恢复裁决）是两条不同的行，不得合并。
 
-## I. Lifetime Matrix v1（第六章 6.11 交付——checkpoint/resume 携带物逐项声明）
+## I. Lifetime Matrix
 
 规则：未列入本表的携带物默认"不保存、不恢复"；新增携带物先登记再实现。安全默认值是不隐式恢复。
 
-![](figures/embed/tb-90-11.png)
+![](../diagrams/tb-90-11.png)
 
-## J. Projection Contract v1（第六章 6.3 交付）
+## J. Projection Contract
 
 适用对象：context（给模型的投影）、UI（给人的投影）、导出视图（trajectory/trace 的读侧）。
 
-![](figures/embed/tb-90-12.png)
+![](../diagrams/tb-90-12.png)
 
-## K. Belief/World Model Registry v0（第六章 6.12 交付模板，第八章/第十三章消费）
+## K. Belief/World Model Registry
 
 规则：derived belief artifact，任何版本不覆盖 observation；反例必须能触发状态表示与转移规则的共同修订（6.12 节破坏实验口径）。
 
-![](figures/embed/tb-90-13.png)
+![](../diagrams/tb-90-13.png)
 
-## L. 恢复语义表与 durability 选型记录 v1（第七章交付）
+## L. 恢复语义表与 durability 选型记录
 
-### L1. 四操作×四后果（第七章 7.8 正文表的登记版；第九章断线重连、第十一章授权重验回指）
+### L1. 四操作×四后果
 
-![](figures/embed/tb-90-14.png)
+![](../diagrams/tb-90-14.png)
 
 ### L2. durability 选型记录
 
-![](figures/embed/tb-90-15.png)
+![](../diagrams/tb-90-15.png)
 
 规则两条：任一路线都必须回答 Diagrid 三问（失败检测/恢复触发/跨实例协调），框架不管的自己建；恢复过程自身落事件（第七章 L 级自检口径）。
 
-## Q. Context Assembly Spec v1（第十章 10.1 交付，第十四章参考实现按它组装）
+## Q. Context Assembly Spec
 
 用法：一次 invocation 的 context 不是"塞历史"，是按本规格组装出的一份投影。评审用法：拿被评系统的 context 组装逐条问——每个成分能指回哪个持久对象？按什么排序？总量卡在多少预算？
 
-![](figures/embed/tb-90-16.png)
+![](../diagrams/tb-90-16.png)
 
 规则：组装是确定性过程，同样的持久态与同样的 policy 组装出同样的视图（resume 可重建，10.8 节）。两类时变成分不在这套版本坐标里——带 TTL 的 memory 随时间失效，JIT retrieval 拉进来的外部正文随源头改动。它们不参与 replay 一致性："同一份"承诺的范围，是版本坐标覆盖得到的那部分。系统约束不进可压缩段（工作制品 R 纪律三）。
 
-## R. Compaction Contract v1（第十章 10.3/10.4 交付）
+## R. Compaction Contract
 
 用法：压缩是事务不是摘要。四条纪律逐条可检查，缺一条就有一类坏账。
 
-![](figures/embed/tb-90-17.png)
+![](../diagrams/tb-90-17.png)
 
 三方耦合登记（10.3 节）：压缩改前缀→打断 prompt cache（成本）；resume→必须认准同一 compaction_version（10.8 节）；崩溃→失败回退纪律兜。压缩改视图、不改历史（第六章 6.6，transcript 原文事务提交前不裁）。
 
-## S. Memory Provenance v1（第十章 10.5 交付；工作制品 A memory 行的字段实化）
+## S. Memory Provenance
 
 规则：memory 是跨会话的长期记忆，无来历的 memory 是没人认领的真相源（主线二）。每条带四样，缺来历即污染源。单机参考实现可不实现 memory——本表是"若做 memory 必须带什么"的契约。
 
-![](figures/embed/tb-90-18.png)
+![](../diagrams/tb-90-18.png)
 
-## M. Tool Contract v1（第八章 8.11 交付，第十五章评审逐工具索要）
+## M. Tool Contract
 
 用法：每个有副作用的工具一份契约，填不出的栏即缺口。三层校验的登记载体——schema 层管结构（工具入口）、语义层管前置条件（工具实现）、编排层管时机（内核），层次错位的校验是漏。
 
-![](figures/embed/tb-90-19.png)
+![](../diagrams/tb-90-19.png)
 
-## N. Plan Lease 与 Counterexample Event Contract v1（第八章 8.12 交付）
+## N. Plan Lease 与 Counterexample Event Contract
 
 规则：多步计划自带适用前提，前提失效计划失效；resume/重试/实例迁移不得只恢复动作队列而漏掉租约校验（第七章恢复语义接线）。
 
 ### N1. Plan Lease
 
-![](figures/embed/tb-90-20.png)
+![](../diagrams/tb-90-20.png)
 
 失效条件三条：任一真实 observation 与预测不符；history cursor 前移而模型未重新认证；policy/authority 变化。任一命中即废止剩余动作队列，不逐步降级执行。
 
@@ -187,65 +187,65 @@
 
 信封沿工作制品 C（事件信封）；专属字段：
 
-![](figures/embed/tb-90-21.png)
+![](../diagrams/tb-90-21.png)
 
 两条消费规则：反例写入工作制品 K 的 known_counterexamples 栏，可触发 refuted_by 吊销链；反例是控制流事件——落盘同时触发废止与重新建模，只记日志不改控制流视为违约（第十三章证据边消费）。
 
-## O. Stream Terminal Table v1（第九章 9.4 交付，第十四章 stream protocol 按表实现）
+## O. Stream Terminal Table
 
 用法：流式响应的每一种收尾方式一行，判"成功交付"还是"失败关闭"。规则：默认 fail closed——没有明确读到"成功结束"信号的，一律判失败；`finish_reason` 是模型停止原因，不是传输成功提交点，不得单凭它判成功。评审用法：拿被评系统的流逐行照填，判成功的格子必须指出"成功在哪一刻、凭什么信号提交"。
 
-![](figures/embed/tb-90-22.png)
+![](../diagrams/tb-90-22.png)
 
 配套一条提交点规则（9.4）：传输"成功"在完整内容写入下游之后提交，不在响应头（2xx）到达时提交；熔断许可带世代号、half-open 只发单个探测——与工作制品 B 提交点纪律、第五章 5.7 租约（工作制品 I 的 lease 行）同构。
 
-## P. Interaction Semantics Table v1（第九章 9.5 交付）
+## P. Interaction Semantics Table
 
 用法：四个常被混用的词各一行，钉清它对 run 做什么、走第五章转移表哪一行、半轮内容归哪。规则：disconnect 不触碰 run 状态（不进转移表）；其余三词各对应唯一一条转移；四词不得互相冒充。
 
-![](figures/embed/tb-90-23.png)
+![](../diagrams/tb-90-23.png)
 
-## T. Principal & Delegation Registry v1（第十一章 11.1 交付）
+## T. Principal & Delegation Registry
 
 用法：登记谁在行使权力、权力从谁委托来。评审用法：拿被评系统的每个动作问"哪个 principal 发起、scope 多大、谁授的、到期没"。
 
 **principal 五类**：
 
-![](figures/embed/tb-90-24.png)
+![](../diagrams/tb-90-24.png)
 
 **委托记录**（每次委托一行）：
 
-![](figures/embed/tb-90-25.png)
+![](../diagrams/tb-90-25.png)
 
-## U. Authority Lifecycle Matrix v1（第十一章 11.6 交付——主线五收口）
+## U. Authority Lifecycle Matrix
 
 规则：授权不随状态自动恢复。resume/fork/replay 重建状态与执行，绝不静默复活旧授权；确需跨恢复保留的，显式列入本表并在变化后重验。与工作制品 I（Lifetime Matrix）的授权行同源，本表补授予与失效语义。评审用法：拿被评系统每一项跨恢复保留的授权，逐条问"它显式列进契约了吗、resume/fork 后重验了吗"——没列进契约却在恢复后仍生效的，就是授权白搭车。
 
-![](figures/embed/tb-90-26.png)
+![](../diagrams/tb-90-26.png)
 
 一句话：状态可以回卷，授权不能白搭车（7.8 节 state continuity 推不出 authority continuity）。
 
-## V. Common-mode Failure Matrix v1（第十一章 11.5 交付）
+## V. Common-mode Failure Matrix
 
 规则：纵深防御只在各层执行点与失效模式独立时成立。逐层填六列，共享同一件的层不算独立层。评审用法：数被评系统多层防御共享几个 parser/classifier，共享的那个即假底。
 
-![](figures/embed/tb-90-27.png)
+![](../diagrams/tb-90-27.png)
 
 填法：`fail-open` 且共享依赖非空的层，是纵深防御里最先该补的假底。
 
-## W. Parent-Child Run Contract v1（第十二章 12.8 交付——subagent=child run，契约沿父链继承）
+## W. Parent-Child Run Contract
 
 规则：subagent 是 child run，不是新物种。多 agent 不引入第七类契约，是前十一章那六份在父子与并行下的递归组合。逐契约给单 agent 形态、父子继承规则、失效反例；再补协调专属的两项（收敛判据、输出信任）。评审用法：拿被评系统逐格问"这份契约在父子之间怎么继承"，答不出的那一格就是多 agent 破了的那一格。
 
-![](figures/embed/tb-90-28.png)
+![](../diagrams/tb-90-28.png)
 
 协调专属两项：
 
-![](figures/embed/tb-90-29.png)
+![](../diagrams/tb-90-29.png)
 
 填法：六契约行任一格答不出"父子怎么继承"，或协调两项缺"单点收敛"与"独立校验"，即多 agent 的破口。双层控制流（节点内自治 loop vs 跨节点编排 graph）是本表的运行前提——编排层确定，父才谈得上"可观测、可收敛、可校验"。
 
-## X. Evidence Graph v1（第十三章 13.8 交付——对账边＋认识论七边）
+## X. Evidence Graph
 
 规则：证据面是一张图。对账边回答"动作、结果、artifact、完成声明怎么对上"；认识论七边回答"系统为什么相信当前模型、什么证据推翻了它"——后者补给可执行 Belief/World Model（工作制品 K），不另造平行图谱。评审用法：拿被评系统的完成声明，沿边反查到 outcome 证据；拿它的模型判断，沿边反查到 grounds 与 certifies，问 certifies 有没有 scope。
 
@@ -253,23 +253,23 @@
 
 认识论七边（可执行信念，Schema Harness/MODA 载体）：
 
-![](figures/embed/tb-90-30.png)
+![](../diagrams/tb-90-30.png)
 
-## Y. Detector Test Record v1（第十三章 13.6 交付——检测器必须证明自己会触发）
+## Y. Detector Test Record
 
 规则：报警器坏了不会响，是证据面最隐蔽的失效。每个检测器登记一条 sabotage 验证记录，定期喂已知坏样本、验证它真的触发。评审用法：问被评系统每个报警器"最后一次被验证确实会响是什么时候"，答不上来的按未自证处理。
 
-![](figures/embed/tb-90-31.png)
+![](../diagrams/tb-90-31.png)
 
 配套 absence 检测：为关键机制登记"期望出现的事件"，声明态与运行态对账，缺席即告警（`absence.detected` 事件，工作制品 C）。
 
-## Z. Model Certificate v1（第十三章 13.8 交付——backtest 绿不等于泛化）
+## Z. Model Certificate
 
 规则：完整历史 backtest 只证模型解释了已见样本（retrodictive consistency），不证未见状态上的 generalization。certificate 不接受只写 backtest=green，至少并列五类测试＋scope。评审用法：拿被评系统的模型证书，查它有没有 held-out 与 planner-adversarial 两栏——只有 full-history replay 的证书，是把历史拟合当泛化。
 
-![](figures/embed/tb-90-32.png)
+![](../diagrams/tb-90-32.png)
 
-素材：一个公开 model-based harness 项目（实名待第六章终稿裁决）的公开 retained trajectories 里有大 final world model＋多份 level-specific 候选程序，说明"代码化"带来 inspectability、却不自动带来最小描述或泛化。引用纪律照 research/volume2/10（不引自述分数、不写 runtime 已开源、无 license 不复制代码）。
+素材：一个公开 model-based harness 项目（实名待第六章终稿裁决）的公开 retained trajectories 里有大 final world model＋多份 level-specific 候选程序，说明"代码化"带来 inspectability、却不自动带来最小描述或泛化。引用纪律照 Schema Harness 调研档（不引自述分数、不写 runtime 已开源、无 license 不复制代码）。
 
 ## 变更记录
 
@@ -289,3 +289,4 @@
 | v2.6 | 2026-07-24 | 新增 W（Parent-Child Run Contract v1，父子 run 契约表：六契约×单 agent 形态/父子继承规则/失效反例＋收敛判据与输出信任两项协调专属）——subagent=child run、契约沿父链继承的登记形态 | §十二 |
 | v2.7 | 2026-07-24 | C 升 v2：correlation 八级补全（信封加 invocation_id/effect_id/artifact_id，child 事件带父 run_id ＝第十二章跨 agent 因果链兑现）＋新增 detector/certificate 事件（detector.probed/absence.detected/certificate.issued/model.refuted）；新增 X（Evidence Graph v1，对账边＋认识论七边）/Y（Detector Test Record v1，检测器 sabotage 验证）/Z（Model Certificate v1，五类测试＋scope，backtest 绿≠泛化） | §十三 |
 | v2.8 | 2026-07-26 | I 表补 prompt asset 两行——塑形片段随 checkpoint 记版本号或内容哈希、按记录版本重建（状态生命周期），系统约束片段不保存不恢复、恢复时取当前版（授权生命周期）；A 表 invocation 行 prompt_asset_ref 相应补版本要求。兑现 §10.8 新列的第三类时变成分处置 | §十 |
+| v2.1 | 2026-07-27 | 出版清理：26 个节标题剥离编辑过程括注（交付章/升版史/大纲下沉）与 v0/v1/v2 版本后缀，L1 小节同款；交付章与版本信息由节号目录（tb-90-1）与各章正文承载；tb-90-1 交付章列同步去"（v5.4 自第一章下沉）"编辑语 | 用户 2026-07-27 裁决（附录标题含审核内容与版本） |

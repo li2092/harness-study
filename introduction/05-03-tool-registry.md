@@ -1,6 +1,6 @@
 # 5.3 Tool Registry & ACI · **P0**
 
-第三件机制 Tool Registry 是 harness 跟工具世界之间的契约层——它把每件可被 agent 调用的"工具"封装成一个统一形态的可调用对象，让 agent 能用、harness 能管、policy 能控、audit 能查。ACI（Agent-Computer Interface）是这一机制的设计学维度——它强调**工具是给 agent 用的不是给人用的**，所以工具的命名、参数、返回、错误形态都要按 agent 的认知方式而不是人的认知方式来设计。这两件合起来回答一个工程问题：**怎么让概率性的模型在面对一组工具时尽量调对、调对的时候不闯祸、闯祸了能被工程系统兜住**。这件事看起来跟 5.2 Adapter 一样是"工程细节"，但实际上是 To B agent 落地最容易出问题的一件——agent 80% 的失败案例都跟工具调用相关（不存在的工具、错的参数、不该调的时候调、该调时不调）。
+第三件机制 Tool Registry 是 harness 跟工具世界之间的契约层——它把每件可被 agent 调用的"工具"封装成一个统一形态的可调用对象，让 agent 能用、harness 能管、policy 能控、audit 能查。ACI（Agent-Computer Interface）是这一机制的设计学维度——它强调**工具是给 agent 用的不是给人用的**，所以工具的命名、参数、返回、错误形态都要按 agent 的认知方式而不是人的认知方式来设计。这两件合起来回答一个工程问题：**怎么让概率性的模型在面对一组工具时尽量调对、调对的时候不越界、越界了能被工程系统拦住**。这件事看起来跟 5.2 Adapter 一样是"工程细节"，但实际上是 To B agent 落地最容易出问题的一件——agent 80% 的失败案例都跟工具调用相关（不存在的工具、错的参数、不该调的时候调、该调时不调）。
 
 #### 5.3.0 本节首次出现的术语
 
@@ -52,7 +52,7 @@ Tool Registry 在 agent 每次发起 tool_call 时做三件事，按顺序串行
 
 *图 5.8 · 每次 tool_call 串行做的三件事*
 
-这套五字段是教学版的最小集——生产级实现里 Tool 接口会比这多。业界对 Claude Code 的源码调研显示，CC 的 Tool type 有九个字段：name、description、prompt（工具的"使用说明书"会被注入到 system prompt 让模型了解什么时候该用它）、inputSchema（zod 类型校验）、outputSchema（可选）、call（实际执行函数）、shouldDefer（标记工具是否可以延迟加载——配合一个 ToolSearchTool 在工具数多时按需加载 schema 节省约 8K token）、isEnabled（运行时启用判断）、isConcurrencySafe（决定这个工具能不能跟其他工具并发执行）。多出来的字段里，prompt、shouldDefer、isConcurrencySafe 这三个全都不是工具自己跑起来要的——它们是 Tool Registry 层做调度时要的：prompt 让 Registry 把工具说明书注入 system prompt、shouldDefer 让 Registry 做工具延迟加载、isConcurrencySafe 让 Registry 决定并发批次。意思是说——一个工具的元数据职责远比"我叫什么、我吃什么参数、我吐什么"要宽，工具元数据是 Registry 调度的依据。
+这套五字段是教学版的最小集——生产级实现里 Tool 接口会比这多。业界对 Claude Code 的源码调研显示，CC 的 Tool type 有九个字段：name、description、prompt（工具的"使用说明书"会被注入到 system prompt 让模型了解什么时候该用它）、inputSchema（zod 类型校验）、outputSchema（可选）、call（实际执行函数）、shouldDefer（标记工具是否可以延迟加载——配合一个 ToolSearchTool 在工具数多时按需加载 schema 节省约 8K token）、isEnabled（运行时启用判断）、isConcurrencySafe（决定这个工具能不能跟其他工具并发执行）。多出来的字段里，prompt、shouldDefer、isConcurrencySafe 这三个全都不是工具自己跑起来要的——它们是 Tool Registry 层做调度时要的：prompt 让 Registry 把工具说明书注入 system prompt、shouldDefer 让 Registry 做工具延迟加载、isConcurrencySafe 让 Registry 决定并发批次。意思是说——一个工具的元数据职责远比"工具名、入参、返回"要宽，工具元数据是 Registry 调度的依据。
 
 Registry 这一层做调度时还有一个具体的设计模型可以直接用——Tool Batch 四模式。第一种是 parallel_read：只读、无副作用、无路径冲突的工具默认走并发批，read_file、grep、glob、list_dir、web_search、web_fetch 都在这一档。第二种是 sequential_write：写文件、修改工作区、变更状态的工具默认串行，write_file、edit_file、shell_exec、git_* 还有任何标 DANGEROUS 的都属于这一档——不是因为不能并发，是因为并发的不可预测性远大于工程收益。第三种是 barrier：权限确认、危险操作、批次切换、模型需要基于上一批观察重新决策这四种场景需要明确停下来做一次"切换点"决策。第四种是 background_sidecar：交给一个轻量旁路 agent 跑的任务，跟主线程独立。这个模型背后有一个工具调度主线翻转——"sub-agent 当作复杂任务第一手段"这条直觉是错的，正确的主线是"单 agent 批量工具执行 → ObservationPack 回注 → 必要时才启用轻量 sidecar"。三个理由：只读工具并发比起启动 sub-agent 更便宜更快更可控；很多任务根本不是"需要另一个 agent"是"需要同时读多个东西"；sub-agent 会带来安全边界、上下文隔离、结果汇总三层复杂度，多数任务承担不起这三层成本。
 
@@ -72,13 +72,13 @@ Tool Registry 第一件事是 schema 校验，但校验严格性有两种取舍�
 
 **lenient schema** 的做法是：参数不完全符合 schema 也尝试运行——多余字段忽略、缺字段填默认值、类型不对尝试转换。优点是更宽容——agent 偶尔拼错一个字段不至于整个调用挂掉、降低 agent 一直 retry 的概率。缺点是脏数据进系统——execute 拿到形状不对的参数，可能跑出非预期的副作用，错了也不清楚是参数错还是逻辑错。
 
-现代工业级 harness 大多倾向 strict 不倾向 lenient——理由是 strict 让"agent 调对的"跟"调错的"边界清晰，错就是错对就是对；lenient 让边界模糊，"勉强能跑"的调用最终都是技术债。OpenAI 2024-08 起 function calling 提供 strict mode（设 strict: true 开启 · 保证 structured output 符合 JSON Schema），Anthropic tool use、DeepSeek V4 等也都提供 strict 校验能力。要点是：模型侧 strict 多是 opt-in 的能力，"走不走 strict"本身是 harness 的工程选择——而工业级 harness 大多选择走。如果你做的是 PoC 或快速原型 lenient 可能更顺手，但任何要上 production 的 harness 都应该走 strict——schema 设计的成本一次性付清，比一直处理 lenient 的尾巴问题划算。
+现代工业级 harness 大多倾向 strict 不倾向 lenient——理由是 strict 让"agent 调对的"跟"调错的"边界清晰，错就是错对就是对；lenient 让边界模糊，"勉强能跑"的调用最终都是技术债。OpenAI 2024-08 起 function calling 提供 strict mode（设 strict: true 开启 · 保证 structured output 符合 JSON Schema），Anthropic tool use、DeepSeek V4 等也都提供 strict 校验能力。要点是：模型侧 strict 多是 opt-in 的能力，"走不走 strict"本身是 harness 的工程选择——而工业级 harness 大多选择走。如果你做的是 PoC 或快速原型 lenient 可能更顺手，但任何要上 production 的 harness 都应该走 strict——schema 设计的成本一次性付清，比一直处理 lenient 的遗留问题划算。
 
 但 strict 不是免费——它要求 schema 设计本身做得好。schema 设计的几条要点：字段名要清楚不歧义（不要把"path"和"filepath"混用）、必填字段要少（每个必填都是 agent 一个潜在失败点）、枚举值要列全（让 agent 知道有哪些合法选择）、嵌套深度要浅（深嵌套 agent 容易拼错）、错误返回要 actionable（告诉 agent 哪里错了怎么改）。schema 设计好 + strict 校验，配起来才能让 agent 的工具调用稳定。
 
 strict 这条路线有一条通用工程纪律——schema normalization 必须 fail-closed。意思是 harness 启动时对每个 tool schema 做规范化（把 `$defs` 内联进 `$ref` 引用、把可选字段显式标 null vs undefined、把 enum 值类型对齐），这一步要么完整通过要么直接拒绝注册——不能让模型自己在 strict 模式下面对一个不完整的 schema 反复试错。fail-closed 的工程逻辑是——一两次工具调用失败浪费 token 是小事，模型在 strict 模式下反复试错把整个 trajectory 带偏才是大事。常见的实施失败是 normalization 漏了某个工具的 `$ref` 解析或 `$defs` 内联，模型反复发出格式错误的工具调用、被 strict gate 拒绝、再重发、再被拒绝，整个 trajectory 在几轮内把 token 烧光最终任务失败。lenient 模式下这条纪律可以放松一些，strict 模式下不能——任何一个 `$defs` / `$ref` / `oneOf` / `anyOf` 的边界处理漏一个，整个工具集就废一个。
 
-schema 的生命周期还有一条配套纪律：**禁止热改**。tool schema 是注入进 context 的——一个长 run 跑到一半 registry 里的 schema 热更新了，模型脑子里的工具和 registry 校验的工具就不是同一个东西，调用会以最难排查的方式失败（模型按旧 schema 拼参数、strict gate 按新 schema 拒绝，看起来像模型突然变笨了）。判定线：schema 变更要么换一个新 tool name（旧名保留到退役期结束），要么只在 run 边界生效，绝不在 run 中途热改；退役工具先转 deprecated——registry 拒绝调用并在错误返回里指路新工具（这本身就是一条 actionable error），观察一个周期再物理删除。
+schema 的生命周期还有一条配套纪律：**禁止热改**。tool schema 是注入进 context 的——一个长 run 跑到一半 registry 里的 schema 热更新了，模型 context 里的工具和 registry 校验的工具就不是同一个东西，调用会以最难排查的方式失败（模型按旧 schema 拼参数、strict gate 按新 schema 拒绝，看起来像模型的调用能力突然退化）。判定线：schema 变更要么换一个新 tool name（旧名保留到退役期结束），要么只在 run 边界生效，绝不在 run 中途热改；退役工具先转 deprecated——registry 拒绝调用并在错误返回里指向新工具（这本身就是一条 actionable error），观察一个周期再物理删除。
 
 #### 5.3.5 关键取舍 2 · Policy 解耦到独立配置层
 
@@ -106,7 +106,7 @@ Tool Registry 第三件事是失败处理——工具执行出错时，错误信
 
 ToolPolicy 字段族里最关键的一件是 `requires_confirmation`——这件工具调用前是不是必须经过人工审批？这个 bool 字段直接决定一类 agent 是"放心让它自动跑的"还是"必须人在回路的"。
 
-OpenAI 2023-06-13 function calling 公告里就明确写了这件事——"对带真实世界影响的行为（如发邮件、发帖、采购）在执行前向用户确认"。这条原则在 2026 年的工业级 harness 里已经是标准做法。**哪些工具应该默认 requires_confirmation = true**？工程经验给的几条标准：第一类是**有外部副作用且不可撤销**的——发邮件（发出去收不回）、发帖（公开发表）、采购（产生订单）、`git push` 到 remote（污染共享历史）、删数据库记录。这一类工具一旦执行就改变外部世界状态，agent 错了人也救不回来。第二类是**对核心系统状态有写权限**的——写关键配置文件、改用户权限、改账号绑定、修改生产数据库。第三类是**有资源开销大幅升级风险**的——启动一个大计算任务、调用按量付费的高成本服务、占用 GPU 资源。
+OpenAI 2023-06-13 function calling 公告里就明确写了这件事——"对带真实世界影响的行为（如发邮件、发帖、采购）在执行前向用户确认"。这条原则在 2026 年的工业级 harness 里已经是标准做法。**哪些工具应该默认 requires_confirmation = true**？工程经验给的几条标准：第一类是**有外部副作用且不可撤销**的——发邮件（发出去收不回）、发帖（公开发表）、采购（产生订单）、`git push` 到 remote（污染共享历史）、删数据库记录。这一类工具一旦执行就改变外部世界状态，agent 错了人也撤不回来。第二类是**对核心系统状态有写权限**的——写关键配置文件、改用户权限、改账号绑定、修改生产数据库。第三类是**有资源开销大幅升级风险**的——启动一个大计算任务、调用按量付费的高成本服务、占用 GPU 资源。
 
 跟 `requires_confirmation` 配对的工程机制是**审批缓存**——用户批准过的同类参数模式后续可以自动通过，减少 agent 跑长任务时被频繁打断。但缓存有边界：通常只在 session 级生效（一次任务结束就清），避免授权范围在跨任务时被滥用；缓存粒度也要细——批准"写 docs/ 目录"不等于批准"写 src/ 目录"，参数匹配要精确。这套 confirmation + caching 组合是 To B agent 既能跑得自动又能保住安全的工程基础。
 
@@ -120,7 +120,7 @@ Skill-RA（Skill Retrieval-Augmented）是对这个问题的工程化回应—�
 
 但 Skill-RA 不是免费——它有自己的工程代价。第一是 **检索本身可能错**——embedding 检索可能漏掉一个相关但描述不够直白的工具，classifier 可能分错类别。如果 agent 需要的关键工具不在 select_for 返回的子集里，agent 就用不上这个工具——这是个隐性失败模式，不容易发现。第二是**检索系统本身要维护**——embedding 模型选哪个、索引怎么更新、新工具加入怎么进 index、rule 怎么写都是工作量。第三是 **agent 的工具感知能力受限**——agent 不知道 harness 里实际有多少工具、是否漏了某些可能有帮助的工具，跟"全量注入"那种 agent 能看到完整工具 menu 的体验不一样。
 
-Skill-RA 的实际边界是这样的——**工具数量 ≤ 20 个时不需要**（全量注入更稳），**工具数量 ≥ 50 个时几乎必须**（不做 Skill-RA context 受不了），**中间 20-50 是看情况**（看具体任务结构、单次推理的 token 预算、agent 选错率的容忍度）。Anthropic 2025-10 推出的 Skills 功能（2025-12-18 升级为 open standard）把 Skill 定义、metadata、加载协议标准化——它是 Skill-RA 这类"按需激活能力子集"思路的代表实现之一（侧重渐进披露式的能力组织，不只是 select_for 那种检索式选择）。SWE-Agent / OpenAI Custom GPT 等也各有自己的 Skill-RA 实现。这件事属于"工具数量增长后才暴露的工程问题"——很多 harness 早期不考虑、跑到 30 个工具后突然发现 context 不够用，回头补 Skill-RA 代价高。如果预判工具会长到 50+ 个，早期就设计 Skill-RA 是合理的工程预防。
+Skill-RA 的实际边界是这样的——**工具数量 ≤ 20 个时不需要**（全量注入更稳），**工具数量 ≥ 50 个时几乎必须**（不做 Skill-RA context 装不下），**中间 20-50 是看情况**（看具体任务结构、单次推理的 token 预算、agent 选错率的容忍度）。Anthropic 2025-10 推出的 Skills 功能（2025-12-18 升级为 open standard）把 Skill 定义、metadata、加载协议标准化——它是 Skill-RA 这类"按需激活能力子集"思路的代表实现之一（侧重渐进披露式的能力组织，不只是 select_for 那种检索式选择）。SWE-Agent / OpenAI Custom GPT 等也各有自己的 Skill-RA 实现。这件事属于"工具数量增长后才暴露的工程问题"——很多 harness 早期不考虑、跑到 30 个工具后突然发现 context 不够用，回头补 Skill-RA 代价高。如果预判工具会长到 50+ 个，早期就设计 Skill-RA 是合理的工程预防。
 
 #### 5.3.9 常见误区 · tool description 写给人不写给 agent
 
@@ -142,7 +142,7 @@ Tool Registry 这一机制最常见的误区是 **tool description 用面向人�
 
 起步建议从四个维度展开。**注意什么**——Tool Registry 最大的坑是 ACI 没做对，工具数量到 20-30 个时突然发现 agent 调对率掉，追根究底都是 description 不够、schema 没设计好、错误返回没 actionable；从 day 1 就要按 ACI 原则写每件工具的 description，不要复用现有 API 文档。**怎么设计**——Tool 五字段（name / description / input_schema / execute / policy）每件都按 ACI 标准做；schema 走 strict mode；policy 独立配置不写死在 tool 实现里；错误返回内部走 raw、外部数据接入走 sanitized；requires_confirmation 标记真实世界副作用工具；工具数量预判 ≥ 50 个时早期设计 Skill-RA。**怎么测试**——每件工具的 ACI 质量用 "agent 不看 description 只看 name 能不能猜出工具用途" 这个测试来判定，猜不出说明 name 不够清楚；schema 完备性用 "故意给错参数看 agent 错误反馈是否 actionable" 测；policy 边界用 "故意越界访问看是否被拦下" 测。**写什么 prompt**——agent 的 system prompt 应该有一段 tool 使用通用指引（"调工具前先 reason 这是不是合适的工具"、"调失败别立刻重试，先看错误信息再调整参数"），而不是只列工具 description。Skill-RA 启用时 system prompt 要告诉 agent "你看到的工具列表是按当前任务动态选的，可能还有别的工具没列出，需要的话可以问"。
 
-Tool Registry & ACI 这一机制看起来跟 Adapter 一样是工程细节，但它是 agent 在真实业务里能干活的实际工具表面——agent 调对工具任务才能完成，调错工具 agent 跟没 agent 没区别。这件事做不好，再强的模型、再聪明的 Agent Loop、再细致的 verifier 都拯救不了一个 80% 时间在调错工具的 agent。这就是为什么这一机制是 P0——没它 harness 跑不出有用的 agent。
+Tool Registry & ACI 这一机制看起来跟 Adapter 一样是工程细节，但它是 agent 在真实业务里能干活的实际工具表面——agent 调对工具任务才能完成，调错工具 agent 跟没 agent 没区别。这件事做不好，再强的模型、再聪明的 Agent Loop、再细致的 verifier 都弥补不了一个 80% 时间在调错工具的 agent。这就是为什么这一机制是 P0——没它 harness 跑不出有用的 agent。
 
 #### 业界归位卡片 · §5.3 涉及的实现层
 

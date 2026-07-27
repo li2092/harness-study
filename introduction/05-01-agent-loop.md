@@ -22,7 +22,7 @@
 
 实际上 Agent Loop 是**agent 的思考结构**——它定义模型在 inference 时按什么形态组织自己的推理，而不是把模型嵌进什么形态的 Python 代码。这两个层次差得很远。Yao 2022 提的 ReAct[^react-yao-2022] 不是"反复调模型的循环"——它是 thought-action-observation 三元组：模型先以自然语言写出它怎么想（thought），再决定做一个结构化的动作（action），再观察这个动作的真实结果（observation）。三元组是一种**把模型推理过程外化成可审查轨迹**的设计选择，目的是让 agent 跑完之后人类工程师能逐轮看清楚"它每一步在想什么、做了什么、看到了什么"。换一种 Agent Loop——比如 plan-execute 或 reflexion——换的是模型怎么组织自己的推理（先大计划再分步执行 / 每隔 N 轮反思一次再继续），不是循环代码块的写法。
 
-要把"思考结构"这一层讲透，需要回到一个更根本的问题：**为什么大模型用 next-token prediction 这种单步范式做不完一个真实任务？**大模型本身是个Token预测器——给一段输入，预测下一段输出，整个过程在一次 GPU 前向传播里完成，没有任何中间机制能让它"先停下来想一下再继续"。但真实任务——查资料、调工具、改文件、对比文档、给结论——是多步的、有状态的、可能某一步失败要重来的。单步预测和多步执行之间存在根本张力：单步预测一次错了就是错了；多步执行允许在中间步骤通过观察新证据修正前一步的判断。Agent Loop 是工程层面把这两件事接起来的产物——用循环把模型变成可累加的执行体，用三元组让中间步骤可观测可校正。
+要把"思考结构"这一层讲透，需要回到一个更根本的问题：**为什么大模型用 next-token prediction 这种单步范式做不完一个真实任务？**大模型本身是个 token 预测器——给一段输入，预测下一段输出，整个过程在一次 GPU 前向传播里完成，没有任何中间机制能让它"先停下来想一下再继续"。但真实任务——查资料、调工具、改文件、对比文档、给结论——是多步的、有状态的、可能某一步失败要重来的。单步预测和多步执行之间存在根本张力：单步预测一次错了就是错了；多步执行允许在中间步骤通过观察新证据修正前一步的判断。Agent Loop 是工程层面把这两件事接起来的产物——用循环把模型变成可累加的执行体，用三元组让中间步骤可观测可校正。
 
 为了把这层结构讲到位，借两个跨域类比把它内化。第一个是 Boyd 在 1960 年代提的**OODA 环**（Observe-Orient-Decide-Act）。OODA 最初是冷战空战环境的产物：一个飞行员一秒钟做不完一次完整的决策——空战场面变化太快，他必须把决策拆成小循环逼近，每一秒钟跑一个完整的 Observe-Orient-Decide-Act 循环，循环之间用新观察校正旧判断，循环跑得比对手快就能"进入对方决策圈"——对方还没出招就被反制。OODA 里关键不是单步多聪明，而是**循环本身比单步更可靠**——单步可能失误，但循环里有 Observe 这一步在不断收集新证据校正上一步的判断。Agent Loop 借的就是这个机制：一次 next-token prediction 可能错，但一个 thought-action-observation 循环能用下一轮的 observation 校正上一轮的 thought，错误不会无限累积。OODA 的边界要点出来——OODA 强调的是"速度比对手快"（reaction time），Agent Loop 强调的是"轨迹比单步可审"（auditability），两者的循环动机不同：OODA 追求决策时效，Agent Loop 追求推理透明。这个差异不矛盾，是两种循环各自在自己领域里解决的不同问题。
 
@@ -32,7 +32,7 @@
 
 这种"Agent Loop ≠ while 循环"的观点在已发表的生产级实现里有具体证据可看。业界对 Claude Code 的源码调研显示，CC 的 inner loop 不是一个简单的 while 块——它是 async generator 拼成的事件流水线，单轮承载十步以上的小机制：四级压缩串行检查、token blocking 预算、系统 prompt 装配、流式采样、工具边流边执行、错误恢复、stop hooks 评估、token 预算 continuation、attachment 注入。源码层面用一个 State struct 跨迭代携带十个字段，并在主循环里显式标注了七个 continue 站点和十一个 terminal exit 点，每个站点都标了 transition reason。意思是说——"循环何时继续、何时终止"在这套生产代码里是 first-class 设计对象，不是"while True 加一个 break"。这跟前面讲的 thought-action-observation 三元组刚好对得上：三元组是模型层的思考结构，inner loop 是这个结构在工程层的可审化产物。
 
-生产级 loop 还有一条容易被教学示例省略的路径：**中断与插话（steering）是 loop 状态机的一等输入**。agent 跑长任务时用户中途改向不是异常是常态——状态机除了 continue / terminate，还要有一条"吸收外部输入、再继续"的转移路径。工程上中断点只能放在 turn 边界：tool_call 与 tool_result 的配对必须完整（下一小节会讲这条协议级不变量），在半个 turn 处硬切等于亲手制造幻觉的温床。判定线很直接：预期超过几分钟的任务必须支持无损中断——中断后 context、artifact、trajectory 三者状态一致，恢复时 agent 不需要猜刚才发生了什么。Claude Code 的消息队列、Codex 的 CancellationToken 全程可取消，都是这条路径的生产实现。
+生产级 loop 还有一条容易被教学示例省略的路径：**中断与插话（steering）是 loop 状态机的一等输入**。agent 跑长任务时用户中途改向不是异常是常态——状态机除了 continue / terminate，还要有一条"吸收外部输入、再继续"的转移路径。工程上中断点只能放在 turn 边界：tool_call 与 tool_result 的配对必须完整（下一小节会讲这条协议级不变量），在半个 turn 处硬切会直接诱发模型幻觉。判定线很直接：预期超过几分钟的任务必须支持无损中断——中断后 context、artifact、trajectory 三者状态一致，恢复时 agent 不需要猜刚才发生了什么。Claude Code 的消息队列、Codex 的 CancellationToken 全程可取消，都是这条路径的生产实现。
 
 #### 5.1.2 一次 ReAct 调用的具体形态
 
@@ -105,7 +105,7 @@ ReAct 原论文（Yao et al. 2022）背后有八条隐性假设。这些假设�
 
 "CoT 必须写在输出文本里"这一条，o1 / R1 / Claude thinking 让推理 token 走独立通道（"reasoning content"字段）。模型在产生工具调用之前可以先有一段独立的 thinking——不出现在最终 output 里但出现在 reasoning channel 里。从模型效率上讲是好事（thinking 不占输出字数预算），但有个副作用：**外部 verifier 拿不到 thinking 完整内容**——OpenAI 只给摘要、Anthropic 部分给、有些供应商完全不给。这就让"思考要外化成可审查轨迹"这个 ReAct 原始设计意图反而**更难做到**：以前 thought 写在 output 里，trajectory 完整可读；现在 thought 在 reasoning channel 里，trajectory 可能丢失关键推理步。所以这一条不是失效在方法论层，是失效在工程实现层——意图还在，工程实现退化了。
 
-"不能 long-horizon plan"这一条，Claude Opus 4.5 在 SWE-bench Verified 上能稳定调 50+ 个工具不掉链，比 2022 年 GPT-3 的 10 步上限好一个数量级。但这是**受控环境**——SWE-bench 任务结构相对规整，工具集小且语义清晰，且有测试做即时反馈。换到**开放任务**（比如复盘一份 200 页合同找所有异常条款、做一份月度审计报告），50 步之后偏差就开始累积——模型可能"忘记"了第 3 步的关键发现，可能跳过某些应该做的步骤，可能在中后段出现 trajectory drift。"能 plan" 不等于"能 plan 到完"。这条假设的失效是有条件的——任务结构越规整、verifier 越靠谱，long-horizon 越可行；任务越开放、反馈越延迟，long-horizon 越脆。
+"不能 long-horizon plan"这一条，Claude Opus 4.5 在 SWE-bench Verified 上能稳定调 50+ 个工具，比 2022 年 GPT-3 的 10 步上限好一个数量级。但这是**受控环境**——SWE-bench 任务结构相对规整，工具集小且语义清晰，且有测试做即时反馈。换到**开放任务**（比如复盘一份 200 页合同找所有异常条款、做一份月度审计报告），50 步之后偏差就开始累积——模型可能"忘记"了第 3 步的关键发现，可能跳过某些应该做的步骤，可能在中后段出现 trajectory drift。"能 plan" 不等于"能 plan 到完"。这条假设的失效是有条件的——任务结构越规整、verifier 越靠谱，long-horizon 越可行；任务越开放、反馈越延迟，long-horizon 越脆。
 
 **仍成立的一条**：无 verifier 时模型自我纠错容易变成自我说服。这条机制层面没被任何技术进步推翻——你让模型自己评自己，没有外部 ground truth 校准，它倾向给自己更高分。这不是模型故意作弊，是 reasoning 链的内在动力学：模型一旦在 reasoning 中说服自己"我对了"，下一步 reasoning 就以"我对了"为前提继续推。OpenAI o1 的"思考更长就更对"已经被实验证伪——thinking budget 越大、reasoning 越长，模型也更容易构造出说服自己的虚假证据链。怎么构造一个不被 agent 自己 reasoning 影响的客观判定器，是 verifier 设计的中心问题——给 agent 一个不可被 agent 推理污染的外部 ground truth，是 agent 工程最难也最重要的一件事，这件事单独在后续 verifier 那一段详写。
 
@@ -113,7 +113,7 @@ ReAct 原论文（Yao et al. 2022）背后有八条隐性假设。这些假设�
 
 #### 5.1.4 十六个进化方向收敛到五条主流
 
-ReAct 2022 之后三年里，学术界和工业界至少出了十五条声称"超越 ReAct"的方向：Plan-and-Solve、Plan-and-Act、State Machine 化、Speculative Look-ahead、Reflexion、Verifier-Driven、Predictability-Driven、CodeAct、Tree of Thoughts、DSPy 类 declarative framework、Skill-Based Hierarchical、Long-context 路线、Reasoning Model + Tool Use 路线、Memory-Augmented、Multi-agent、Agentic RL Post-Training [ref: react-evolution-doc]。
+ReAct 2022 之后三年里，学术界和工业界至少出了十六条声称"超越 ReAct"的方向：Plan-and-Solve、Plan-and-Act、State Machine 化、Speculative Look-ahead、Reflexion、Verifier-Driven、Predictability-Driven、CodeAct、Tree of Thoughts、DSPy 类 declarative framework、Skill-Based Hierarchical、Long-context 路线、Reasoning Model + Tool Use 路线、Memory-Augmented、Multi-agent、Agentic RL Post-Training [ref: react-evolution-doc]。
 
 这十六条不平等。有些是上面表里某条假设失效后的自然填空（比如 Reasoning Model + Tool Use 是 "CoT as text" 失效后的接续），有些是学术 paper 试一次没工程化（比如 Tree of Thoughts 论文出来后两年没看到大规模生产化），有些是工程方便但方法论上没新东西（比如部分 multi-agent 系统）。2024-2026 真正积累出动能、有 SOTA 数据 + 多家工程化复现的，只有五条。下面把这五条的内在机制讲透——读完之后你看到任何新的 "Beyond ReAct" 方向都可以判断它属于这五条里的哪一条的细化，或者根本就是研究阶段的探索。
 
@@ -123,7 +123,7 @@ ReAct 2022 之后三年里，学术界和工业界至少出了十五条声称"�
 
 **第一条 · Reasoning Model + Tool Use**。OpenAI o1 / DeepSeek R1 / Anthropic Claude Opus 4 把 "thinking budget" 当成核心参数——模型在产生工具调用之前先有一段独立的推理过程，开发者可以调"想多久"（thinking tokens 数量）。这跟原始 ReAct 把 thought 写在输出文本里相比是工程升级，但更重要的是**认知架构升级**——模型在 plan 阶段拿到的算力可以远超它 act 阶段拿到的算力。原始 ReAct 里 thought 跟 action 共享一个 output budget（CoT 写得越长可用于 action 的字符就越少），而 reasoning model 把这两个 budget 拆开，相当于在 inference 时给"想"和"做"两个独立的资源池。这条方向落地很扎实，2024-2026 几乎所有新 agent 都默认走——你今天看到的 agent 论文如果没用 reasoning model 而是用纯 CoT 模型，大概率是 2024 年之前的工作。
 
-**第二条 · Verifier + Reward + Process Supervision**。SWE-bench Verified[^swe-bench-verified] 给了一个能跑测试的 ground truth——agent 解出 GitHub issue 后跑测试看通过率，测试通过 = 任务成功，干净客观。SWE-TRACE[^swe-trace-2026] 类 process reward 路径给了"看中间步骤而不只看最终输出"的 reward signal——不只看 agent 最后做对没，还看它中间每一步走得合不合理。这条方向是 agent 工程从"prompt 调参"走向"用数据训"的关键开关——**没有 verifier，你拿不到 reward；没有 reward，你只能靠手感调 prompt**。但 verifier 设计本身有三种典型病：**答案泄漏**（verifier 见过 ground truth，等于在评一个它已经知道答案的考试）、**reward hacking**（agent 学会糊弄 verifier 的判定规则但没真做对任务）、**artifact-claim mismatch**（agent 声明"已完成"但产物里实际上没有声明的东西）。这三种各有不同对策，是 §5.8 verifier 那一段的中心议题，设计 verifier 本身就是一门工程。
+**第二条 · Verifier + Reward + Process Supervision**。SWE-bench Verified[^swe-bench-verified] 给了一个能跑测试的 ground truth——agent 解出 GitHub issue 后跑测试看通过率，测试通过 = 任务成功，干净客观。SWE-TRACE[^swe-trace-2026] 类 process reward 路径给了"看中间步骤而不只看最终输出"的 reward signal——不只看 agent 最后做对没，还看它中间每一步走得合不合理。这条方向是 agent 工程从"prompt 调参"走向"用数据训"的关键开关——**没有 verifier，你拿不到 reward；没有 reward，你只能靠手感调 prompt**。但 verifier 设计本身有三种典型缺陷：**答案泄漏**（verifier 见过 ground truth，等于在评一个它已经知道答案的考试）、**reward hacking**（agent 学会糊弄 verifier 的判定规则但没真做对任务）、**artifact-claim mismatch**（agent 声明"已完成"但产物里实际上没有声明的东西）。这三种各有不同对策，是 §5.8 verifier 那一段的中心议题，设计 verifier 本身就是一门工程。
 
 **第三条 · Plan-and-Execute / Plan-and-Act**。Plan-and-Act[^plan-and-act-2025] 这篇正式工作把 plan 阶段和 execute 阶段显式拆开——plan 阶段产 5-15 步骨架，execute 阶段对每一步做 thought-action-observation。机制层面这等于承认"思考"和"行动"用同一个模型可能既不经济又不擅长——plan 需要的是全局视野和顺序推理能力（适合更强的模型，比如 o1-pro），execute 需要的是工具调用熟练度和单步执行能力（适合更便宜的工具调用模型，比如 GPT-4o-mini）。明确拆开之后两层各自优化：plan 用大而精的模型只在任务开始时跑一次，execute 用便宜模型跑很多次但每次都简单。在 long-horizon 任务上 plan-and-execute 的成功率明显高于 vanilla ReAct——因为 plan 阶段先把全局骨架建立起来，execute 阶段每一步都在骨架约束下不会大偏。
 
@@ -131,11 +131,11 @@ ReAct 2022 之后三年里，学术界和工业界至少出了十五条声称"�
 
 **第五条 · Context Engineering / Compaction**。Manus / Factory.ai / Morph 等一批工程团队在做的事：1M context 装得下但用不好，所以要在 Agent Loop 里加一个 compaction 子步骤——每隔 N 步把已有 trajectory 压缩成摘要 + 关键 artifact，让下一步推理面对的有效上下文密度高。这条方向不是新算法，是**新工程纪律**——不是有新 paper 提了新算法，是工程师在生产环境里反复踩坑后总结出的"必须做但论文里没人写"的做法。但收益稳定，特别是合同审核、长流程审批、月度报告生成这种几十步的 To B 场景——20 步之后做一次 compaction 把 trajectory 压成 1K tokens 摘要 + 5 个关键 artifact，agent 在后续步骤里推理质量明显回升。这条方向跟 §5.4 Context / Memory / Artifact 那一段紧密配合——Context Engineering 是 Agent Loop 层的工程纪律，跟 Context / Memory / Artifact 那一段的存储层组件是配套关系。
 
-其余各条的命运可以快速过：DSPy 类 declarative framework 仍小众（声音大、生产案例少）；Predictability-Driven 缺工程化复现；Tree of Thoughts / LATS 多分支搜索算力代价 5-20x 但开放任务收益不稳定；Memory-Augmented 在 long-conversation chatbot 里有效但在 agent 工程里被 Context Engineering 部分覆盖；State Machine 化是 Workflow 这条路的一个名字；Speculative Look-ahead 在 latency 敏感场景有用但工程化复杂；Multi-agent 单独有常见误区问题（下面 5.1.5 详写）；Agentic RL Post-Training 是研究方向（OpenAI o3 / DeepSeek R1 已经在做，但开发者侧 API 还没暴露训练接口）；Reflexion 的 reflection 层在 5.1.2 / 5.1.3 已经拆过——有靠谱 verifier 才用得起来，工程上是 Verifier 路线的伴生件而不是独立路线；CodeAct 把 action 空间换成可执行代码，已被主流 coding agent 吸收为默认形态，不再作为独立路线演进。读到一篇新论文时可以拿这五条当 anchor——如果新方向能套进某条，能套得对它就是这条的细化；如果套不进任何一条，多半还在研究阶段没工程化。
+其余各条的走向可以快速过：DSPy 类 declarative framework 仍小众（声音大、生产案例少）；Predictability-Driven 缺工程化复现；Tree of Thoughts / LATS 多分支搜索算力代价 5-20x 但开放任务收益不稳定；Memory-Augmented 在 long-conversation chatbot 里有效但在 agent 工程里被 Context Engineering 部分覆盖；State Machine 化是 Workflow 这条路的一个名字；Speculative Look-ahead 在 latency 敏感场景有用但工程化复杂；Multi-agent 单独有常见误区问题（下面 5.1.5 详写）；Agentic RL Post-Training 是研究方向（OpenAI o3 / DeepSeek R1 已经在做，但开发者侧 API 还没暴露训练接口）；Reflexion 的 reflection 层在 5.1.2 / 5.1.3 已经拆过——有靠谱 verifier 才用得起来，工程上是 Verifier 路线的伴生件而不是独立路线；CodeAct 把 action 空间换成可执行代码，已被主流 coding agent 吸收为默认形态，不再作为独立路线演进。读到一篇新论文时可以拿这五条当 anchor——如果新方向能套进某条，能套得对它就是这条的细化；如果套不进任何一条，多半还在研究阶段没工程化。
 
 #### 5.1.5 常见误区 · Multi-Agent Over-Decomposition
 
-讲完进化方向，要面对一个在 To B 落地讨论里非常普遍的迷思：**很多人默认 "agent 不够强 → 拆 multi-agent 就够强"**。这个直觉听起来合理——一个 agent 做不了的事，让多个 agent 各管一段不就行了？但实际工程数据推翻了这个假设。
+讲完进化方向，要面对一个在 To B 落地讨论里非常普遍的误区：**很多人默认 "agent 不够强 → 拆 multi-agent 就够强"**。这个直觉听起来合理——一个 agent 做不了的事，让多个 agent 各管一段不就行了？但实际工程数据推翻了这个假设。
 
 Anthropic 2025 公开过一篇内部反思[^anthropic-multi-agent-research]：他们做 multi-agent research 系统时发现，相对单 agent，并行多 agent 在某些研究任务上确实更快——**但 token 成本大幅上升：都相对普通 chat，单 agent 约烧 4 倍 token，multi-agent 约烧 15 倍**。原文还有一句很硬的话："don't use multi-agent for coding tasks"（不要把 multi-agent 用在编程任务上）。这种明确的负面建议在大厂工程 blog 里不常见——它的分量来自 Anthropic 自己量化了 token 成本之后给出的结论，而不是先验偏好。
 
@@ -153,9 +153,9 @@ Anthropic 2025 公开过一篇内部反思[^anthropic-multi-agent-research]：�
 
 判断要不要用 multi-agent，**三个条件必须同时满足**：第一，任务能被自然拆成可独立验证的子任务（不是被你强拆的——强拆的特征是"听起来能拆但每个子任务要别的子任务结果才能判定对错"）；第二，子任务并行收益（节省的 wall-clock time）≥ orchestration 开销（lead agent 多花的 token cost）；第三，每个 sub-agent 有独立的 verifier 能判子任务自己对错——没有独立 verifier 就只能 lead 自己评，又退化成 lead 一个人做的成本。
 
-三条缺一条，单 agent + 工程优化几乎一定更划算。合同审核就是典型反例——你以为可以拆"sub-agent A 看条款一致性、sub-agent B 查合规、sub-agent C 标风险点"，但实际上三个 sub-agent 的判断会**高度耦合**：一个风险点可能来自一致性问题，合规判定也要依赖一致性结果，三者你中有我我中有你。强拆之后 lead agent 反而要花更多精力去裁决三个 sub-agent 的不一致结论——结果不是省 token 而是烧更多 token。这种场景**单 agent + 工程加固**（更好的 context engineering + 更细的 verifier 分层 + 更强的 long-horizon plan）几乎一定更划算。
+三条缺一条，单 agent + 工程优化通常更划算。合同审核就是典型反例——你以为可以拆"sub-agent A 看条款一致性、sub-agent B 查合规、sub-agent C 标风险点"，但实际上三个 sub-agent 的判断会**高度耦合**：一个风险点可能来自一致性问题，合规判定也要依赖一致性结果，三者你中有我我中有你。强拆之后 lead agent 反而要花更多精力去裁决三个 sub-agent 的不一致结论——结果不是省 token 而是烧更多 token。这种场景**单 agent + 工程加固**（更好的 context engineering + 更细的 verifier 分层 + 更强的 long-horizon plan）几乎一定更划算。
 
-这条 orchestration 失控的风险在生产级实现里其实有显式工程对策。Codex CLI 的源码给 sub-agent spawn 设计了三个工具——单个 spawn、批量 spawn（一次并发起最多 64 个）、wait 轮询——但所有 spawn 入口都强制走一道深度检查 `exceeds_thread_spawn_depth_limit()`：sub-agent 再 spawn sub-sub-agent 时深度超限直接拒绝。这等于在工程层把"agent 不能无限嵌套"做成了硬约束。这个细节侧面证实了 multi-agent over-decomposition 不是一条容易踩的坑——它是一条**生产级 harness 工程师已经掉过坑然后专门加防御**的常见误区。读者第一次设计 multi-agent 时直接复用"深度上限"这条工程纪律，能省掉自己再踩一次坑的成本。
+这条 orchestration 失控的风险在生产级实现里其实有显式工程对策。Codex CLI 的源码给 sub-agent spawn 设计了三个工具——单个 spawn、批量 spawn（一次并发起最多 64 个）、wait 轮询——但所有 spawn 入口都强制走一道深度检查 `exceeds_thread_spawn_depth_limit()`：sub-agent 再 spawn sub-sub-agent 时深度超限直接拒绝。这等于在工程层把"agent 不能无限嵌套"做成了硬约束。这个细节侧面证实了 multi-agent over-decomposition 不是一条纸面上的坑——它是一条**生产级 harness 工程师已经掉过坑然后专门加防御**的常见误区。读者第一次设计 multi-agent 时直接复用"深度上限"这条工程纪律，能省掉自己再踩一次坑的成本。
 
 
 #### 5.1.6 怎么选 · 四问决策流程
@@ -196,21 +196,21 @@ Skill-Based 起步成本不低——定义 Skill schema、维护 Skill library�
 
 这个三层 hybrid 是把 plan、ReAct、verifier 三件**静态**搭在一起。实践里还有一个更主动的方向——**让 harness 跟编排都随任务动态适配，而不是拿一套静态配置跑所有任务**。这个方向把 ReAct 当内核思维保留（单步探索、看反馈再走，开放任务上它最稳），外面补两件动态能力。一件是 **dynamic workflow**——任务里控制流可预知的部分（哪些子步并行、谁交叉验证谁、结果怎么聚合）提前写成确定性脚本交运行时编排，模型推理只发生在叶子干活时，既省掉 ReAct 每步现想编排的开销、又让编排可复现（前面讲 multi-agent 误区那节的脚注点过这种形态，Claude Code 2026 的 dynamic workflows 是业界一个信号）。另一件是 **dynamic harness**——harness 不是一套配置通吃，而是按任务动态调起对应的**副 harness**（每个副 harness 是某个领域的特化单元，自带后面§八要展开的 5 维度本体：领域实体、属性、关系规则、状态机、操作集），这件任务该挂哪些工具、走哪档 policy、配哪层 verifier，随领域切换。三者合起来的判断是：纯靠 ReAct 自主探索，在控制流可预知、领域可特化的特定任务上会浪费 LLM 能力（每步都现想，慢且不稳）；配上按任务调起的副 harness 加可预知部分的 workflow 脚本，LLM 的能力才在这类任务上真正释放出来。**ReAct + dynamic harness + dynamic workflow** 这条组合本书作者正在实践、仍在演进——这里按当前实践给方向，不当成定论。
 
-这两件动态能力各自瞄准的场景不一样，选边的判别维度是**任务的 reward 信号强弱**[^anthropic-effective-agents]——强 reward 指产出能被机器判定收口（测试通过、schema 校验这类后面 verifier 那章要展开的 Hard Gate）或者有标定数据可对账；弱 reward 指开放性产出、没有 ground truth。**弱 reward 场景偏 dynamic workflow**：个性化、非标准化、没有数据标定的问题（开放调研、方案探索、诊断分析），流程没法提前固化，硬 verifier 也判不动，只能靠模型智能现场分解——这正是需要高自由度的地方。dynamic workflow 以工具形态出现，自由度一点不少（要不要用、编排脚本怎么写，都是 agent 现场决定），但准确性多了两道来源——确定性脚本防编排漂移；编排结构里内建交叉验证、对抗评审，拿多视角共识顶替缺位的硬 verifier[^weak-reward-rl]。**强 reward 场景偏 dynamic harness**：任务标准化、重复出现、有明确验收标准——To B 核心交付（合同审核、报告生成、工单处理）多数长这样。这类场景里模型自由度反而是负资产（不可审计、不可复现），准确性来自把领域知识固化进副 harness：领域 verifier、prompt assets、收窄的操作集整体打包，按任务路由，硬验证收口[^harness-routing-2026]。作者当前的实践判断收成一句话：**弱 reward 场景用 dynamic workflow，强 reward 场景用 dynamic harness**——前者用结构性共识在没有标定的地方构造准确性，后者用机制固化在有标定的地方锁死准确性。两者依旧正交，强 reward 的副 harness 内部照样可以跑确定性 workflow——这条判别给的是主导维度，不是二选一。
+这两件动态能力各自瞄准的场景不一样，选边的判别维度是**任务的 reward 信号强弱**[^anthropic-effective-agents]——强 reward 指产出能被机器判定收口（测试通过、schema 校验这类后面 verifier 那章要展开的 Hard Gate）或者有标定数据可对账；弱 reward 指开放性产出、没有 ground truth。**弱 reward 场景偏 dynamic workflow**：个性化、非标准化、没有数据标定的问题（开放调研、方案探索、诊断分析），流程没法提前固化，硬 verifier 也判不动，只能靠模型智能现场分解——这正是需要高自由度的地方。dynamic workflow 以工具形态出现，自由度一点不少（要不要用、编排脚本怎么写，都是 agent 现场决定），但准确性多了两道来源——确定性脚本防编排漂移；编排结构里内建交叉验证、对抗评审，拿多视角共识顶替缺位的硬 verifier[^weak-reward-rl]。**强 reward 场景偏 dynamic harness**：任务标准化、重复出现、有明确验收标准——To B 核心交付（合同审核、报告生成、工单处理）多数长这样。这类场景里模型自由度反而是负资产（不可审计、不可复现），准确性来自把领域知识固化进副 harness：领域 verifier、prompt assets、收窄的操作集整体打包，按任务路由，硬验证收口[^harness-routing-2026]。作者当前的实践判断收束成一句话：**弱 reward 场景用 dynamic workflow，强 reward 场景用 dynamic harness**——前者用结构性共识在没有标定的地方构造准确性，后者用机制固化在有标定的地方锁死准确性。两者依旧正交，强 reward 的副 harness 内部照样可以跑确定性 workflow——这条判别给的是主导维度，不是二选一。
 
 #### 5.1.7 进阶方向 · 弱 reward 的智能上限与 learning by doing
 
 上一段的判别维度还留着一个更深的问题没答：弱 reward 场景的**智能上限**从哪来？把目标往 AGI 方向推，这个问题会变成主要矛盾——AGI 的应用面以弱 reward 为主、训练面以强 reward 为基座（o1 / R1 这代推理模型的能力是在数学、代码这些最强 reward 的域里练出来再泛化的），两者之间的迁移和弱 reward 域的准确性保持是核心未解问题。已有的实证大致划出了迁移的边界：能跨域带走的是"先想再答"这个元策略，带不走的是训练信号本身——而且对预训练覆盖稀疏的长尾域（多数行业的开放性产出恰好在这里），迁移是否成立没有直接证据。
 
-用人类的视角说就是一句话——**"我都没做过，我哪知道。"**没有标定数据的开放问题，人不是靠读完所有书就会做的，是做了才会的；agent 也一样，弱 reward 域智能的最后来源只能是 **learning by doing**。这不是直觉安慰，是业界 2025 年的方向性判断：Silver 与 Sutton 在《Welcome to the Era of Experience》里把它说成了时代切换[^era-of-experience]——人类数据红利见顶，下一代 agent 的能力主要来自自身经验流的学习；四个支柱里跟本节判别维度直接相关的是 reward 那一支：**reward 应该从环境经验里接出来（grounded rewards），而不是来自人类预判**——后者给 agent 性能造成"不可穿透的天花板"。这给弱 reward 判别补了一块重要拼图：**"做"本身是 reward 的来源之一**。agent 真的连上环境去执行，执行反馈、错误率、用户后续行为这些接地信号就会自己涌出来——原本判不动的任务，有一部分会在"做"的过程里长出传感器。
+用人类的视角说就是一句话——**"我都没做过，我哪知道。"**没有标定数据的开放问题，人不是靠读完所有书就会做的，是做了才会的；agent 也一样，弱 reward 域智能的最后来源只能是 **learning by doing**。这不是直觉安慰，是业界 2025 年的方向性判断：Silver 与 Sutton 在《Welcome to the Era of Experience》里把它说成了时代切换[^era-of-experience]——人类数据红利见顶，下一代 agent 的能力主要来自自身经验流的学习；四个支柱里跟本节判别维度直接相关的是 reward 那一支：**reward 应该从环境经验里接出来（grounded rewards），而不是来自人类预判**——后者给 agent 性能造成"不可穿透的天花板"。这给弱 reward 判别补了一块重要拼图：**"做"本身是 reward 的来源之一**。agent 真的连上环境去执行，执行反馈、错误率、用户后续行为这些接地信号就会自己涌出来——原本判不动的任务，有一部分会在"做"的过程里自己生成评估信号。
 
-顺着 learning by doing 往工程上推，Tree of Thoughts / LATS 这类**树状探索**就该重新提上日程。本节前面刚说过这类方法"To B 业务流程几乎都不合算"——那个判断没变，但它的语境是强 reward 加成本敏感：有硬 verifier 收口时，5-20x 算力换 10-15% 准确率多数时候不值。弱 reward 加智能上限的语境下，价值结构变了，原因有两个。第一，**探索本身就是数据生产**——树上每个分支 rollout 都是真实经验，沉淀进技能库、记忆层之后是跨任务复用的资产（Voyager 用 automatic curriculum 加不断生长的技能库证明过这条路[^voyager]），成本要按"本次命中 + 经验沉淀"双重收益算。第二，**多样性在弱 reward 域是资产不是浪费**——RLVR 类训练有收窄输出分布的实证倾向（pass@k 反转：训练后的模型采样次数少时赢、采样次数多时反被 base model 反超[^pass-at-k]），开放任务需要的恰是多路径发散，先发散、后共识。但树状探索成立有一个不能跳过的前提：**MCTS 的核心从来不是树，是回传的价值信号**——selection、expansion、simulation 走完，最后那步 backpropagation 需要每个节点有评估值，而弱 reward 域缺的恰恰是它。树是骨架，传感器是血液：节点评估用生成式 verifier 加异源评审面板当软价值[^genrm-poll]，分支优先级用学习进度、不确定性当探索先验，叶子的最终判定落回前面讲的结构性共识。传感器造不出来，树就只是更贵的瞎走。
+顺着 learning by doing 往工程上推，Tree of Thoughts / LATS 这类**树状探索**就该重新提上日程。本节前面刚说过这类方法"To B 业务流程几乎都不合算"——那个判断没变，但它的语境是强 reward 加成本敏感：有硬 verifier 收口时，5-20x 算力换 10-15% 准确率多数时候不值。弱 reward 加智能上限的语境下，价值结构变了，原因有两个。第一，**探索本身就是数据生产**——树上每个分支 rollout 都是真实经验，沉淀进技能库、记忆层之后是跨任务复用的资产（Voyager 用 automatic curriculum 加不断生长的技能库证明过这条路[^voyager]），成本要按"本次命中 + 经验沉淀"双重收益算。第二，**多样性在弱 reward 域是资产不是浪费**——RLVR 类训练有收窄输出分布的实证倾向（pass@k 反转：训练后的模型采样次数少时赢、采样次数多时反被 base model 反超[^pass-at-k]），开放任务需要的恰是多路径发散，先发散、后共识。但树状探索成立有一个不能跳过的前提：**MCTS 的核心从来不是树，是回传的价值信号**——selection、expansion、simulation 走完，最后那步 backpropagation 需要每个节点有评估值，而弱 reward 域缺的恰恰是它。树只是搜索结构，节点评估信号才是它能跑起来的前提：节点评估用生成式 verifier 加异源评审面板当软价值[^genrm-poll]，分支优先级用学习进度、不确定性当探索先验，叶子的最终判定落回前面讲的结构性共识。评估信号造不出来，树就只是更贵的盲目探索。
 
 这条线推到头，会发现它跟**主动性**合流了。树的每一步——选哪个分支、何时展开、何时收手、何时把问题抛回给人——正是主动性的全部内容。换句话说，主动性不是 agent 的一种性格，是**探索策略**：学习进度信号让 agent 优先追"还学得动"的目标（MAGELLAN 把绝对学习进度当目标采样的优先级，自动剔掉不可能的和已掌握的两端[^magellan-alp]），不确定性信号让它主动去补信息缺口，而"向用户提一个澄清问题"本身就是树上的一个动作节点——低置信时主动问，比自信地走错便宜得多。三件事在树搜索这个框架里各占一个组件：**智能 = 探索深度 × 经验沉淀，准确性 = 节点评估信号，主动性 = 探索策略**。
 
-这一小节给的是方向不是定论。树状探索在弱 reward 域的工程化——节点评估怎么造、经验怎么入库不被污染、主动的门槛设在哪——每一件都还在演进，业界的实证多数停在 2025-2026 的预印本。入门卷到这里把问题和判别维度立起来就够了；展开卷会把"给弱 reward 域造验证信号"的全部已知手段逐件过一遍。
+这一小节给的是方向不是定论。树状探索在弱 reward 域的工程化——节点评估怎么造、经验怎么入库不被污染、主动的门槛设在哪——每一件都还在演进，业界的实证多数停在 2025-2026 的预印本。入门卷到这里把问题和判别维度交代清楚就够了；展开卷会把"给弱 reward 域造验证信号"的全部已知手段逐件过一遍。
 
-Agent Loop 这一机制是 P0——任何 harness 不可能没有 inner loop 这层就跑起来。但选哪个 loop、配几层、跟谁组合，这是工程权衡而不是技术正确性问题——本节给的 5 个候选 + 四问决策是建立这个权衡能力的最小工具集。后续 8 件 runtime 机制每一件都会跟 Agent Loop 这件配合：Tool Registry 的工具调度受 Agent Loop 形态影响，Verifier 嵌入 Agent Loop 的位置决定 reflection 怎么触发，Trajectory 的事件序列形态由 Agent Loop 决定结构，Safety 控制面在 Agent Loop 的每个决策点都要打 hook。Agent Loop 不是孤立组件，是整个 harness 的执行节奏控制器。
+Agent Loop 这一机制是 P0——任何 harness 不可能没有 inner loop 这层就跑起来。但选哪个 loop、配几层、跟谁组合，这是工程权衡而不是技术正确性问题——本节给的 5 个候选 + 四问决策是建立这个权衡能力的最小工具集。后续 8 件 runtime 机制每一件都会跟 Agent Loop 这件配合：Tool Registry 的工具调度受 Agent Loop 形态影响，Verifier 嵌入 Agent Loop 的位置决定 reflection 怎么触发，Trajectory 的事件序列形态由 Agent Loop 决定结构，Safety 控制面在 Agent Loop 的每个决策点都要打 hook。Agent Loop 不是孤立组件，是整个 harness 的执行内核。
 
 ---
 

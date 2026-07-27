@@ -23,7 +23,7 @@ OpenAI Codex 的 execpolicy 把命令分三档——allow / prompt / forbidden�
 
 反过来，把软层当硬层是最常见的假边界。hook 静默 fail-open 就是一例——配套中继服务的一次审计里，hook 命令返回非 0、HTTP 非 2xx、或网络失败时，默认放行且不留审计【经验】：一道被寄予"安全"厚望的闸，失败时却是开着的。approval（请人签字）也要摆正位置：它是高风险动作的风险决策点，给每个动作都套上就成了摆设——什么都弹窗，用户会习惯性全点通过，闸形同虚设。硬软层级收进工作制品，评审时逐层问"这层是模型外强制、还是尽力而为"。
 
-![](figures/t2-comparison-11.2-hard-soft.png)
+![](../diagrams/t2-comparison-11.2-hard-soft.png)
 
 *图 11.2 · 硬边界与软提示：强制点离模型有多远*
 
@@ -67,7 +67,7 @@ resume、fork、replay 三种操作重建的是状态与执行，绝不能顺手
 
 权力真正被行使的地方是三个干预点——assemble（组装 context，决定模型看见什么，细节第十章）、model（决定这次可用哪些工具）、execute（是否授权并真正执行）——三处各自留证，不能以一处代替另外两处。runtime 必须为每个权限决策产出一条 policy decision 证据（这类决策并入事件流，不单列表）。三干预点交付为工作制品 F（Intervention Point Map，干预点图）的填充，五平面到组件的落位表随正文交付、另供第十五章评审取用。
 
-![](figures/t1-layered-11.7-five-planes.png)
+![](../diagrams/t1-layered-11.7-five-planes.png)
 
 *图 11.7 · 五平面与三个干预点：把权力关系落成结构*
 

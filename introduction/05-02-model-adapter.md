@@ -8,7 +8,7 @@
 
 **Adapter 工程模式** —— **Adapter 设计模式**（软件设计模式之一 · 在两个不兼容接口之间放一个翻译层让上层代码不用关心底层细节 · Java / C# / Python 标准设计模式 · agent harness 里用它隔离模型供应商差异）。**完整接口形态术语** —— **completion**（模型完成一次推理后的产出 · 包含输出文本、工具调用、token 使用量、终止原因等字段 · 各家 SDK 字段名略有差异）。**streaming**（模型边推理边把 token 流式返回的协议 · SSE 是常见格式 · 各家具体字段和事件名略有差异）。
 
-**Routing 调度术语** —— **failover**（主 provider 出错时自动降级到备用 provider · 触发条件包括 4xx 客户端错误、5xx 服务端错误、timeout、rate limit）。**escalation**（根据任务难度或当前进度从轻量模型升级到强模型 · Flash 觉得搞不定就升到 Pro · 是 routing 里跟成本最相关的决策）。**cost optimization**（routing 时根据当前预算或任务成本敏感度主动选更便宜的 provider 或同 provider 内更便宜的模型）。**capability flag**（标记每个 provider / 模型支持哪些能力的布尔字段 · 比如 supports_tool_use / supports_vision / supports_streaming · 让 harness 在调用前判断当前 provider 是否支持所需能力）。**capability matching**（routing 时按当前任务需要的 capability flag 反查谁能干 · 比如任务需要 vision 就只选支持 vision 的模型）。**circuit breaker**（熔断器 · 软件工程经典模式 · 某 provider 连续失败 N 次时自动切到备用并停止再尝试主 provider 一段时间 · 防止失败级联）。
+**Routing 调度术语** —— **failover**（主 provider 出错时自动降级到备用 provider · 触发条件包括 4xx 客户端错误、5xx 服务端错误、timeout、rate limit）。**escalation**（根据任务难度或当前进度从轻量模型升级到强模型 · Flash 判定任务超出自身能力就升到 Pro · 是 routing 里跟成本最相关的决策）。**cost optimization**（routing 时根据当前预算或任务成本敏感度主动选更便宜的 provider 或同 provider 内更便宜的模型）。**capability flag**（标记每个 provider / 模型支持哪些能力的布尔字段 · 比如 supports_tool_use / supports_vision / supports_streaming · 让 harness 在调用前判断当前 provider 是否支持所需能力）。**capability matching**（routing 时按当前任务需要的 capability flag 反查谁能干 · 比如任务需要 vision 就只选支持 vision 的模型）。**circuit breaker**（熔断器 · 软件工程经典模式 · 某 provider 连续失败 N 次时自动切到备用并停止再尝试主 provider 一段时间 · 防止失败级联）。
 
 **多 provider 抽象的两条路** —— **最小公分母**（lowest common denominator · 多 provider 抽象策略之一 · 接口只暴露所有 provider 都支持的能力 · 优点简单兼容性最好 · 缺点丢掉各家的差异化能力）。**全特性暴露 + capability flag**（另一种策略 · 接口完整暴露所有 provider 的能力 · capability flag 让上层判断当前 provider 是否支持某能力 · 优点保留差异化能力 · 缺点接口复杂上层判断负担大 · 生产 harness 大多选这条）。
 
@@ -18,7 +18,7 @@ Adapter 边界这一机制跟前面 §5.1 末尾讲的协议层不变量是同�
 
 模型 API 看起来都是"传 prompt 拿 completion"的简单形态，但每家供应商在细节上都有自己的方言。tool calling 字段名 OpenAI 叫 `tool_calls` / Anthropic 在 message content blocks 里放 `tool_use` 类型 / Google Gemini 叫 `function_call` 嵌在 candidate 里 / 国产模型有的字段名是 `function_call` 跟 OpenAI 旧版对齐有的自己另立一套。token 计费口径更乱——cache hit 算不算 input token、reasoning token 算不算 output token、cached image input 怎么计费，各家定义各不相同；同一段对话发给 OpenAI 跟 Anthropic 算出来的总成本可能差出可观一块，不是因为价格差，是因为口径差。reasoning content 通道分裂也很严重——OpenAI o1 / o3 只给摘要不给完整 thinking、Anthropic Claude thinking 部分给、DeepSeek R1 全给、Qwen 系列各版本不一样。stream 协议名义上都是 SSE 但事件名 / 数据切分粒度 / 终止信号格式不同，写一份 stream parser 给 OpenAI 用拿到 Anthropic 上跑会挂掉。
 
-如果 harness 业务代码直接 import openai 或 anthropic SDK 调模型 API，这些差异会污染到业务代码的每一处。换一家模型需要把所有调用点改一遍——业务代码里出现 `response.choices[0].message.tool_calls` 这种带 provider 烙印的字段访问，换 Anthropic 就要改成 `response.content[0].input` 这种完全不同的访问路径。更难的是模型 API 自己也会升级——Anthropic 从 2023 到 2026 大版本升级过两次 tool use 接口、OpenAI 把 function calling 改名 tool calling 还顺手改了字段结构、各家陆续加 prompt caching / reasoning channel / vision / parallel tool call 等新 capability，每次升级 SDK 都要改。**没有 Adapter 边界，模型 API 一升级整个 harness 跟着改**——这就是 Adapter 这一机制存在的工程必要性。
+如果 harness 业务代码直接 import openai 或 anthropic SDK 调模型 API，这些差异会污染到业务代码的每一处。换一家模型需要把所有调用点改一遍——业务代码里出现 `response.choices[0].message.tool_calls` 这种 provider 专有的字段访问，换 Anthropic 就要改成 `response.content[0].input` 这种完全不同的访问路径。更难的是模型 API 自己也会升级——Anthropic 从 2023 到 2026 大版本升级过两次 tool use 接口、OpenAI 把 function calling 改名 tool calling 还顺手改了字段结构、各家陆续加 prompt caching / reasoning channel / vision / parallel tool call 等新 capability，每次升级 SDK 都要改。**没有 Adapter 边界，模型 API 一升级整个 harness 跟着改**——这就是 Adapter 这一机制存在的工程必要性。
 
 #### 5.2.2 核心接口形状 · 一个最小 ModelAdapter 长什么样
 
@@ -52,11 +52,11 @@ Claude Code 绑定的是 Claude 一族模型，看起来是"只用一家"的极�
 
 当 harness 要支持多个 provider（不论是为 failover、为 A/B 模型对比、为成本优化、还是为 capability matching），多 provider 抽象就成为必须解决的设计问题。这里有两条工程路径——最小公分母 vs 全特性暴露 + capability flag——各自的利弊在工业级 harness 设计里讨论了好几年。
 
-**最小公分母（lowest common denominator）路径**：Adapter 接口只暴露所有 provider 都共有的能力。比如所有 provider 都有 content / tool_calls / usage / finish_reason 四个基础字段，那 Adapter 接口就只暴露这四个。reasoning 这种只有 reasoning model 才有的字段不放进接口，prompt caching 这种只有 Anthropic 大力推的能力也不放进接口。优点是接口最简单、所有 provider 实现都干净、上层代码不需要做能力判断。缺点是**所有 provider 的差异化能力都丢了**——你用 Anthropic 就拿不到 prompt caching 收益、用 OpenAI o1 就拿不到 reasoning channel、用 Gemini 就拿不到 2M context 优势。最小公分母在保证兼容性的同时把每家最值得用的特性都阉割了。
+**最小公分母（lowest common denominator）路径**：Adapter 接口只暴露所有 provider 都共有的能力。比如所有 provider 都有 content / tool_calls / usage / finish_reason 四个基础字段，那 Adapter 接口就只暴露这四个。reasoning 这种只有 reasoning model 才有的字段不放进接口，prompt caching 这种只有 Anthropic 大力推的能力也不放进接口。优点是接口最简单、所有 provider 实现都干净、上层代码不需要做能力判断。缺点是**所有 provider 的差异化能力都丢了**——你用 Anthropic 就拿不到 prompt caching 收益、用 OpenAI o1 就拿不到 reasoning channel、用 Gemini 就拿不到 2M context 优势。最小公分母在保证兼容性的同时把每家最值得用的特性都裁掉了。
 
 **全特性暴露 + capability flag 路径**：Adapter 接口暴露完整字段集（包括 reasoning / cache / vision 等各家差异化能力），通过 capability flag 让上层代码判断当前 provider 是否支持某能力。`adapter.capabilities.supports_reasoning` 这个 bool 字段标记当前 provider 是否支持 reasoning channel，上层代码在用 reasoning 之前先判断这个 flag。优点是**各 provider 的差异化能力都保留**——你用 Anthropic 时 prompt caching 自动可用，用 reasoning model 时 thinking channel 自动可用。缺点是接口复杂、上层代码每次用差异化能力前要做 capability check、Adapter 实现要处理"如果当前 provider 不支持这个 capability，传进来怎么办"的兼容性。
 
-生产 harness 大多选第二条——全特性暴露 + capability flag。理由是：harness 存在的目的本来就是发挥每家模型的最大能力，不是把每家阉割到最小公分母再统一。最小公分母虽然简单但放弃了 harness 的核心价值；全特性暴露虽然接口复杂但保留了能让 agent 在每家模型上都跑出最好效果的工程空间。LiteLLM、Pydantic AI 等开源多 provider 库都走第二条路径，Claude Code、Codex CLI 这种单 provider 但内部仍有 Adapter 的产品也走第二条路径（即使只暴露一家 capability flag 仍然有用——业务代码可以根据 capability flag 决定要不要用 prompt caching / reasoning）。
+生产 harness 大多选第二条——全特性暴露 + capability flag。理由是：harness 存在的目的本来就是发挥每家模型的最大能力，不是把每家裁到最小公分母再统一。最小公分母虽然简单但放弃了 harness 的核心价值；全特性暴露虽然接口复杂但保留了能让 agent 在每家模型上都跑出最好效果的工程空间。LiteLLM、Pydantic AI 等开源多 provider 库都走第二条路径，Claude Code、Codex CLI 这种单 provider 但内部仍有 Adapter 的产品也走第二条路径（即使只暴露一家 capability flag 仍然有用——业务代码可以根据 capability flag 决定要不要用 prompt caching / reasoning）。
 
 #### 5.2.5 关键设计取舍 3 · 统一计费口径在 Adapter 层归一化
 

@@ -26,7 +26,7 @@
 
 四种手段里，压缩是风险最高的一种——它动的是历史本身。下一节单说它。
 
-![](figures/t2-cardgrid-10.2-four-moves.png)
+![](../diagrams/t2-cardgrid-10.2-four-moves.png)
 
 *图 10.2 · 给窗口腾地方的四种手段：三类解空间，各担各的账*
 
@@ -54,7 +54,7 @@
 
 **配对修复**：第六章 6.7 节立过 tool_call 与 tool_result 必须成双，压缩不许把一对拆成两半（摘要吞了 result、留下孤儿 call，下一次模型调用会当场报错）。契约要求压缩后扫一遍配对，落单的要么一起压、要么一起留。第六章那个按数组末尾 pop() 弹掉 tool result 的反例，是回滚版；压缩版的病根一样，药也一样——配对是原子单位，谁都不许拆。
 
-![](figures/t1-flow-10.3-compaction-txn.png)
+![](../diagrams/t1-flow-10.3-compaction-txn.png)
 
 *图 10.3 · 压缩是一个事务：四条纪律各守事务的哪一刻*
 

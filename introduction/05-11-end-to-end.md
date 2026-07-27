@@ -1,6 +1,6 @@
 # 5.11 中型端到端流程示例 · 17 turn 修 logging bug
 
-要把 8 件 runtime + Safety 控制面在跨 turn / 跨 run 层面的协作讲清楚 · 单 turn 微型流程不够——需要一个有真实复杂度的任务展开。下面示例任务是 "修一个 Python 项目的并发 logging bug 并提交 PR" —— bug 描述 "logger.emit() 在多线程下偶尔丢消息" · agent 要 定位 → 写测试复现 → 修 → 跑测试 → 跑 lint → commit → push → 创建 PR。任务长度约 17 turn —— 这是 single-agent 任务长度的典型生产区间（前面 Safety 常见误区 AP12 段讲过 30 turn 内单 agent 单进程足够 · 这个示例落在该区间）。
+要把 8 件 runtime + Safety 控制面在跨 turn / 跨 run 层面的协作讲清楚 · 单 turn 微型流程不够——需要一个有真实复杂度的任务展开。下面示例任务是 "修一个 Python 项目的并发 logging bug 并提交 PR" —— bug 描述 "logger.emit() 在多线程下偶尔丢消息" · agent 要定位 → 写测试复现 → 修 → 跑测试 → 跑 lint → commit → push → 创建 PR。任务长度约 17 turn —— 这是 single-agent 任务长度的典型生产区间（前面 Safety 常见误区 AP12 段讲过 30 turn 内单 agent 单进程足够 · 这个示例落在该区间）。
 
 ![](../diagrams/t1-timeline-5.11-17turn.png)
 
@@ -185,7 +185,7 @@ End of run.
 
 这个示例把 8 件 runtime + Safety 控制面在跨 turn 协作的几个关键观察点显式画出。
 
-**Prompt Assets 的稳定前缀（P0 system + P1 task）跨 turn 复用 · 动态部分（P2 memory / P3 tools 子集 / context summary）每 turn 按需更新** —— prompt 装配不是每 turn 从头重做 · 但也不是「一份 hash 跨 turn 不变」：能命中 prompt cache 的是 system + task 这段稳定前缀；memory / tools / summary 一变 · system_prompt_hash 就跟着变（前面 Context 那章讲过 · compaction 改写中段会让 cache 失效）。所以那个 hash 的角色是「这一 turn prompt 的完整指纹」进 trajectory 供 replay 与审计 · 不是跨 turn 不变的 cache key。
+**Prompt Assets 的稳定前缀（P0 system + P1 task）跨 turn 复用 · 动态部分（P2 memory / P3 tools 子集 / context summary）每 turn 按需更新** —— prompt 装配不是每 turn 从头重做 · 但也不是"一份 hash 跨 turn 不变"：能命中 prompt cache 的是 system + task 这段稳定前缀；memory / tools / summary 一变 · system_prompt_hash 就跟着变（前面 Context 那章讲过 · compaction 改写中段会让 cache 失效）。所以那个 hash 的角色是"这一 turn prompt 的完整指纹"进 trajectory 供 replay 与审计 · 不是跨 turn 不变的 cache key。
 
 **Agent Loop 决策框架（ReAct mode）显式在每个 model call 之前展开** —— thought 段是 agent 推理的外化 · 不是隐藏在 model call 里。这件外化让 trajectory 可读 · 也是前面 Observation Surface / Trajectory 两章讲的 evolver loop 能消费 trajectory 做 self-evolution 的前提（trajectory 含 thought 就含决策依据）。
 
@@ -195,7 +195,7 @@ End of run.
 
 **Verifier 三层按 turn 类型选择性启动** —— Hard Gate 每个工具调用 turn 都跑（文件存在 / 命令 exit code 等）· Outcome Judge 只在 task 结束 turn 启动一次（Turn 17）· PRM 全程累加 step score（每个 model call 都打分）。三层按场景配 · 不是每 turn 三层都跑。
 
-**Safety 控制面 4 层每 turn 都穿过但通常隐身** —— Turn 2/3/4/5/7/9/13/15 等常规工具调用（workspace-write 模式下）都过 4 层但都 pass · 读者看不到 Safety 显式存在；Turn 16 git push 触发 network egress + ask rule + Hook 同时 require user approval 三件叠加 · Safety 4 层完整介入显式可见。这种"通常隐身 · 关键 case 显式" 的 pattern 是 Safety 控制面工程化的核心 — Safety 不应该让 user 每个工具调用都被打断 · 但关键 high-impact 操作必须可见。
+**Safety 控制面 4 层每 turn 都穿过但通常隐身** —— Turn 2/3/4/5/7/9/13/15 等常规工具调用（workspace-write 模式下）都过 4 层但都 pass · 读者看不到 Safety 显式存在；Turn 16 git push 触发 network egress + ask rule + Hook 同时 require user approval 三件叠加 · Safety 4 层完整介入显式可见。这种"通常隐身 · 关键 case 显式" 的 pattern 是 Safety 控制面工程化的核心——Safety 不应该让 user 每个工具调用都被打断 · 但关键 high-impact 操作必须可见。
 
 ![](../diagrams/t1-sequence-5.11-turn16.png)
 

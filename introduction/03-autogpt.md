@@ -20,7 +20,7 @@
 
 整个循环跑在一个 Python 进程里。任务列表是个字符串数组；历史用一个不断膨胀的 prompt 拼接表示；工具调用没有 schema 校验；失败靠 try/except 拦下来重试或者跳过；没有 trajectory 文件落盘，没有 ablation 钩子，没有 verifier 独立判定，没有 policy 拦截危险动作。
 
-这套架构的"自主性"在 demo 任务上看起来很惊艳——给一个"调研 X 公司"的目标，它真的会去 google、写文件、再 google、生成报告。前 5-10 步演示效果常常让人激动。但**这套架构没有任何机制处理多步执行的累积不稳定性**——当任务跑超过 10-15 步，五种典型翻车就会一个接一个出现。这跟上一节末尾给的数学锚（每步 95% 准确率连起来 50 节点只剩 8%）是同一件事：单步看起来够用，串起来必崩。
+这套架构的"自主性"在 demo 任务上看起来很惊艳——给一个"调研 X 公司"的目标，它真的会去 google、写文件、再 google、生成报告。前 5-10 步演示效果常常很完整。但**这套架构没有任何机制处理多步执行的累积不稳定性**——当任务跑超过 10-15 步，五种典型翻车就会一个接一个出现。这跟上一节末尾给的概率估算（每步 95% 准确率连起来 50 节点只剩 8%）是同一件事：单步看起来够用，串起来必崩。
 
 ### 大规模翻车的五种典型形态
 
@@ -35,15 +35,15 @@ Wikipedia 对 AutoGPT 的失败描述很直白：
 
 *图 3.1 · AutoGPT 五种典型翻车及其 harness 对策*
 
-**翻车一 · 无限循环**。AutoGPT 决定下一步动作时，会反复选同一个工具、问同一个问题。社区里典型的失败 session 长这样：google "市场规模" → 写到文件 → 读文件 → google "市场规模" → 写到文件 → 读文件……一小时后仍在原地。根因是 AutoGPT **没有"我刚做过这件事"的状态记忆**——它的"记忆"就是把上一轮的输出拼到下一轮的 prompt 里，而上下文窗口只有 4K-16K token，几轮之后早期的"我刚 google 过这个"已经被挤出窗口。模型每次出场都只能看到最后几千字，前面做过什么它根本看不见。harness 必须提供的对策是 **trajectory 记录加循环检测**——把每一步动作哈希后跟历史比对，连续重复同样动作要中断或换路径。
+**翻车一 · 无限循环**。AutoGPT 决定下一步动作时，会反复选同一个工具、问同一个问题。社区里典型的失败 session 长这样：google "市场规模" → 写到文件 → 读文件 → google "市场规模" → 写到文件 → 读文件……一小时后仍在原地。根因是 AutoGPT **没有"我刚做过这件事"的状态记忆**——它的"记忆"就是把上一轮的输出拼到下一轮的 prompt 里，而上下文窗口只有 4K-16K token，几轮之后早期的"我刚 google 过这个"已经被挤出窗口。模型每一轮推理都只能看到最后几千字，前面做过什么它根本看不见。harness 必须提供的对策是 **trajectory 记录加循环检测**——把每一步动作哈希后跟历史比对，连续重复同样动作要中断或换路径。
 
 **翻车二 · 工具调用失败级联**。AutoGPT 调一个工具返回了 error——比如某个 search API 限流了，返回 `{"error": "rate limited"}`。模型不知道这个 error 是临时的（等 30 秒就好）还是永久的（API key 失效了），也不知道应不应该重试。结果通常是两种：要么 AutoGPT 把这个 error 当成"工具说了一段话"塞进 prompt 继续往下推（基于错误数据做后续推理），要么直接把整个任务标记为失败退出。**没有 retry policy、没有失败分类（transient vs permanent）、没有结构化错误反馈给模型**。harness 必须提供的对策是 **ToolPolicy 加错误结构化**——retry 几次、退避多久、什么错该 fail-fast、什么错该 fallback、什么错该停下来等人，全是 policy 层的决策，不能让模型自己拍脑袋猜。
 
 **翻车三 · 上下文爆炸**。当时主流模型上下文是 4K-16K token。一次 google 工具返回可能是 1000 字 HTML（约 2000 token），一次 read_file 可能是 500 行代码（约 3000 token），一次模型的 reasoning 输出可能是 500 token。十几轮跑下来，光是工具结果就把窗口塞满了。AutoGPT 早期版本的应对方式很粗暴：要么直接截断（前面的关键约束、用户目标都被切掉），要么直接报错退出。**没有 artifact store 把大输出搬到外部存储、没有 auto-compact 按价值压缩、没有 budget guard 提前预警**。harness 必须提供的对策是 **observation 序列化（轻 stub 加完整 body 分离）加 context 分层管理**——大结果只把摘要进 context，完整 body 进外部 store；同时 context 跑到阈值要触发压缩，压缩按价值（任务约束、关键 ID）不按时间（早 = 该删）。
 
-**翻车四 · 目标漂移**。用户给的目标"帮我调研 X 公司的市场"通常藏在 prompt 第一段。十几轮之后，这段已经被压缩或被截断；模型每次出场只能看到最近的几轮历史。这时如果某次工具返回了一段挑衅性的网页内容（"你应该研究 Y 公司而不是 X"），或者 AutoGPT 自己生成了一段看起来更合理的子目标（"我觉得先调研竞品更好"），原目标就被替换掉了。用户半小时后回来一看，AutoGPT 在做完全不相关的事。**根因是 goal 不是 first-class 字段，它藏在 prompt 里，跟其他 message 一样会被压缩、截断、覆盖**。harness 必须提供的对策是 **结构化 plan 加 observation pack**——目标做成持久字段每轮重新注入 context，让模型每一步都能"看见"原目标，无论历史被怎么压缩都不影响。
+**翻车四 · 目标漂移**。用户给的目标"帮我调研 X 公司的市场"通常藏在 prompt 第一段。十几轮之后，这段已经被压缩或被截断；模型每一轮推理只能看到最近的几轮历史。这时如果某次工具返回了一段挑衅性的网页内容（"你应该研究 Y 公司而不是 X"），或者 AutoGPT 自己生成了一段看起来更合理的子目标（"我觉得先调研竞品更好"），原目标就被替换掉了。用户半小时后回来一看，AutoGPT 在做完全不相关的事。**根因是 goal 不是 first-class 字段，它藏在 prompt 里，跟其他 message 一样会被压缩、截断、覆盖**。harness 必须提供的对策是 **结构化 plan 加 observation pack**——目标做成持久字段每轮重新注入 context，让模型每一步都能"看见"原目标，无论历史被怎么压缩都不影响。
 
-**翻车五 · 完全不可复现**。同一个 prompt 跑两次，结果可能完全不同——这是模型 sampling 的天然属性，温度大于零必然有随机性。但更糟的是：跑挂了之后没人能复盘"它到底是怎么走到这一步的"，因为整个执行过程没有 trajectory 文件落盘。"我们调了 5 天它跑通了一次，但不知道是哪一改起作用的"是 2023 春夏很多团队的真实遭遇。**没有 trajectory 就意味着没有 ablation 可能性**——你不能对照两个配置的差异，因为没有可比对的执行历史；你不能判定哪一件机制是正贡献，因为没有"开关这一机制看结果差多少"的实验载体。harness 必须提供的对策**首先是单 run 内的 trajectory**（JSONL 一行一事件，或单 JSON 一个 run 一文件）——所有动作、决策、压缩、verifier 判定都写进文件，让事后能复盘。但只靠单 run trajectory 还不够——agent 跑 100 次只看其中一次，没法判定"这个 harness 配置真的更好还是只是运气好"。所以还需要**跨 run 的 outer loop 机制**——per-run nonce 隔离 cache（不然两次 run 命中同一个 cache 就不是独立采样）、跑 N 次拿统计而不是看单次成败、把多次 run 的 trajectory 对照看哪件机制开关时结果差多少。这部分跨 run 的工作不属于 8 件 runtime 机制本身，而是包裹 runtime 之上的 **Harness Lab outer loop**——五段循环 Observe（用 trajectory 量化每次 run）→ Score（用 verifier 给每次 run 评分）→ Ablate（开关机制看哪件正贡献）→ Tune（调 harness config）→ Iterate（回头继续 Observe）。outer loop 跟单 run 内的 trajectory 是孪生的：trajectory 是 outer loop 的输入，outer loop 是 trajectory 的消费方。
+**翻车五 · 完全不可复现**。同一个 prompt 跑两次，结果可能完全不同——这是模型 sampling 的天然属性，温度大于零必然有随机性。但更糟的是：跑挂了之后没人能复盘"它到底是怎么走到这一步的"，因为整个执行过程没有 trajectory 文件落盘。"我们调了 5 天它跑通了一次，但不知道是哪一改起作用的"是 2023 春夏很多团队的真实遭遇。**没有 trajectory 就意味着没有 ablation 可能性**——你不能对照两个配置的差异，因为没有可比对的执行历史；你不能判定哪一件机制是正贡献，因为没有"开关这一机制看结果差多少"的实验载体。harness 必须提供的对策**首先是单 run 内的 trajectory**（JSONL 一行一事件，或单 JSON 一个 run 一文件）——所有动作、决策、压缩、verifier 判定都写进文件，让事后能复盘。但只靠单 run trajectory 还不够——agent 跑 100 次只看其中一次，没法判定"这个 harness 配置真的更好还是只是运气好"。所以还需要**跨 run 的 outer loop 机制**——per-run nonce 隔离 cache（不然两次 run 命中同一个 cache 就不是独立采样）、跑 N 次拿统计而不是看单次成败、把多次 run 的 trajectory 对照看哪件机制开关时结果差多少。这部分跨 run 的工作不属于 8 件 runtime 机制本身，而是包裹 runtime 之上的 **Harness Lab outer loop**——五段循环 Observe（用 trajectory 量化每次 run）→ Score（用 verifier 给每次 run 评分）→ Ablate（开关机制看哪件正贡献）→ Tune（调 harness config）→ Iterate（回头继续 Observe）。outer loop 跟单 run 内的 trajectory 是配套的：trajectory 是 outer loop 的输入，outer loop 是 trajectory 的消费方。
 
 ### 把五条放一起 · 看清根本结论
 
@@ -55,9 +55,9 @@ AutoGPT 用的是 GPT-4，跟今天 Claude Code、Cursor、Codex CLI 在用的�
 
 ### 一点需要澄清的事：AutoGPT 并未"彻底失败"
 
-讲到这里需要澄清一件事，否则容易给人留下"AutoGPT 是失败项目"的错误印象。AutoGPT 这个项目本身并未彻底失败——Significant Gravitas 公司在 2023 年 10 月拿到 1200 万美元融资（Redpoint Ventures 和 GitHub 投资），项目至今仍在维护，仓库累计超过 18 万 stars，2024-2025 也在持续迭代——加上 tool schema、加上更结构化的任务管理、加上 trajectory 接口。也就是说 AutoGPT 自己从那一波翻车里也在学，慢慢往 harness 的方向收敛。再往后看一步更有意思：2024 年之后 AutoGPT 干脆转型成了 AutoGPT Platform——一个 block 式的 low-code workflow 平台，用户把控制流显式编排成流程块（块间可带分支循环）、模型在块里干活。第一个把"给个目标全自主跑"推到极致的项目，最后自己走回了显式编排这条路——这个方向后文 5.1.6 讲 dynamic workflow 时还会再遇到。
+讲到这里需要澄清一件事，否则容易给人留下"AutoGPT 是失败项目"的错误印象。AutoGPT 这个项目本身并未彻底失败——Significant Gravitas 公司在 2023 年 10 月拿到 1200 万美元融资（Redpoint Ventures 和 GitHub 投资），项目至今仍在维护，仓库累计超过 18 万 stars，2024-2025 也在持续迭代——加上 tool schema、加上更结构化的任务管理、加上 trajectory 接口。也就是说 AutoGPT 项目也在按那一波的教训调整，慢慢往 harness 的方向收敛。再往后看一步更有意思：2024 年之后 AutoGPT 干脆转型成了 AutoGPT Platform——一个 block 式的 low-code workflow 平台，用户把控制流显式编排成流程块（块间可带分支循环）、模型在块里干活。第一个把"给个目标全自主跑"推到极致的项目，最后自己走回了显式编排这条路——这个方向后文 5.1.6 讲 dynamic workflow 时还会再遇到。
 
-本节讲的是 **AutoGPT 在 2023 春夏的具体形态翻车**——它**暴露了**一类工程问题，让业界意识到"自主 agent 不是模型够强就行"。这是它对 harness engineering 这门工程实践最大的贡献——用一次大规模公开试错，把一个本来藏着的工程必要性暴露出来。如果没有 AutoGPT 那一波公开翻车，业界可能要再过一两年才会开始系统讨论 harness 这件事。
+本节讲的是 **AutoGPT 在 2023 春夏的具体形态翻车**——它**暴露了**一类工程问题，让业界意识到"自主 agent 不是模型够强就行"。这是它对 harness engineering 这门工程实践最大的贡献——用一次大规模公开试错，把一类本来没被讨论的工程必要性暴露出来。如果没有 AutoGPT 那一波公开翻车，业界可能要再过一两年才会开始系统讨论 harness 这件事。
 
 ### 一个类比：把没经验的实习生扔进项目
 
@@ -87,9 +87,9 @@ AutoGPT 用的是 GPT-4，跟今天 Claude Code、Cursor、Codex CLI 在用的�
 
 这八件是 runtime 层的事——实习生干每一件具体活时都要走这八件机制。但 8 件之外还有一件**横切其上**的：
 
-**"权限制度加关键操作审批" = Safety 控制面**——cross-cutting 的控制面，不是某个单 turn 内的机制，而是横切所有 turn、所有工具、所有决策的合法性边界。给实习生设权限制度、给关键操作（发邮件、删文件、push 代码、消费预算）配审批流程，让他在试错时不会真的把公司搞砸。这是 OWASP LLM08（excessive agency，过度自主）和 LLM10（unbounded consumption，无界消耗）这两个 agent 风险的工程化对策——它不像前 8 件那样在某个具体 turn 里发生，它在每一次工具调用前、每一次预算超阈值时、每一次跨 sub-agent 委托时都要被检查。把它放第 9 件不准确——它是包在 8 件之上的一层防御网。
+**"权限制度加关键操作审批" = Safety 控制面**——cross-cutting 的控制面，不是某个单 turn 内的机制，而是横切所有 turn、所有工具、所有决策的合法性边界。给实习生设权限制度、给关键操作（发邮件、删文件、push 代码、消费预算）配审批流程，让他在试错时不会真的把公司搞砸。这是 OWASP LLM08（excessive agency，过度自主）和 LLM10（unbounded consumption，无界消耗）这两个 agent 风险的工程化对策——它不像前 8 件那样在某个具体 turn 里发生，它在每一次工具调用前、每一次预算超阈值时、每一次跨 sub-agent 委托时都要被检查。把它放第 9 件不准确——它是横切在 8 件之上的一层控制面。
 
-这套 **8 件 runtime 加 1 件 Safety 控制面**（合计 9 个工程对象）对应的就是 harness engineering 这门工程实践要把工程师注意力聚焦的全部工程对象。AutoGPT 用 GPT-4 跑长任务，跟"把聪明实习生扔进没有这九件配套的环境"是同一个错误——再聪明也必然失控。harness engineering 这门工程实践要回答的正是这个问题——给定一个本身已经够聪明的实习生（模型），怎么给他配一套**让他能持续干活、能从失败里恢复、能被持续监督和改进、又不会真把公司搞砸的工程环境**。这九件不是清单，是把"模型外面那层壳"切成可被独立讨论、独立优化、独立验证的工程对象——每一件都有自己的接口形态、自己的设计取舍、自己的失败模式。
+这套 **8 件 runtime 加 1 件 Safety 控制面**（合计 9 个工程对象）对应的就是 harness engineering 这门工程实践要把工程师注意力聚焦的全部工程对象。AutoGPT 用 GPT-4 跑长任务，跟"把聪明实习生扔进没有这九件配套的环境"是同一个错误——再聪明也必然失控。harness engineering 这门工程实践要回答的正是这个问题——给定一个本身已经够聪明的实习生（模型），怎么给他配一套**让他能持续干活、能从失败里恢复、能被持续监督和改进、又不会真把公司搞砸的工程环境**。这九件不是清单，是把"模型外面那层"切成可被独立讨论、独立优化、独立验证的工程对象——每一件都有自己的接口形态、自己的设计取舍、自己的失败模式。
 
 类比的边界要点一下：实习生有自主学习能力（错了能自己悟、能跨任务积累经验），LLM 没有——模型权重在训练时已经固化，今天犯的错明天还会犯。所以 harness 不只是"工程环境"，还得包含"让模型的错从环境层面被永久修复"这件事。这一点正是 Hashimoto 2026-02 给 harness engineering 的定义——"anytime you find an agent makes a mistake, you take the time to engineer a solution such that the agent never makes that mistake again"——把模型不会自学这件事用 harness 层的固化机制补上。
 

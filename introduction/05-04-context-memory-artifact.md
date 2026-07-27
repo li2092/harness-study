@@ -26,7 +26,7 @@ OS 工程里这三层有几十年成熟实践——什么数据放哪一层、�
 
 下面 §5.4.1 / §5.4.2 / §5.4.3 分别详写三块各自的工程细节。每块按"为什么这块必须独立存在 / 工程治理的关键策略 / 常见误区 / 起步建议"展开。读者按自己当前阶段挑相应优先级阅读即可——做 PoC 阶段先把 Context 工程做对（不做 agent 跑不远），生产阶段考虑加 Memory（不一定要做 · 见下面 Memory 章首判定），规模化阶段加 Artifact（不做形成不了业务壁垒）。
 
-但有三件事必须在章首先点透。
+但有三件事必须在章首先讲清楚。
 
 **第一 · Memory 不是所有 agent 都必须做**。大量垂直 agent（合规扫描、批处理、API 文档生成、单次分类、单次工具触发、行业研报生成）是合法的 stateless 架构 · stateless 路径相对 stateful 能省下相当一部分基础设施成本 + K8s 友好（K8s 本来就是为 stateless microservice 设计 · stateful 反而是它的常见误区）+ 失败模式少（没有 stale state / race condition / partial update / prompt drift 这些 stateful 独有的坑）。后面 §5.4.2 章首会给一个判定五问 · 让读者在投入 Memory 工程之前先确认"这一机制对我的 agent 是必要的"还是"被业界 memory-as-first-class 的口号让我误以为必要"。
 
@@ -44,7 +44,7 @@ OS 工程里这三层有几十年成熟实践——什么数据放哪一层、�
 
 **Memory 工程术语** —— **scratchpad**（草稿板 · agent 用来"自己写笔记给自己"的 Memory 区 · 比如 agent 主动写"用户偏好午餐时间是 12:30"、"客户 X 项目最关心成本不是工期"等 · 跨 turn 复用 · 是 agent 主动 write 的 Memory · 跟系统自动 capture 的 Memory 不一样）。**stale memory / memory rot**（记忆腐坏 · Memory 里存了过时数据但没被 invalidate · agent 还按旧数据决策 · 是长跑 agent 反复出现的隐性 bug · 典型场景：agent 在 Memory 里存了"用户邮箱是 X" · 用户三个月后换了邮箱 · agent 还按旧邮箱发邮件）。**memory eviction**（记忆淘汰 · 控制 Memory 总量不无限增长的机制 · 类比 OS 的 cache eviction · 常见策略有 LRU / LFU / 重要性打分）。
 
-**Artifact 工程术语** —— **artifact store**（产物仓库 · 存放跨 run artifact 的物理后端 · 可以是文件系统、对象存储 / S3、SQLite / Postgres、向量数据库 / Qdrant 或 pgvector · 选哪个取决于 artifact 类型和访问模式）。**knowledge graph**（知识图谱 · 一种 artifact 组织形态 · 把领域实体（合同、供应商、政策、客户）和它们之间的关系（"客户 A 跟供应商 B 签过合同 C"）存成图结构 · 适合需要做关系推理的领域 agent）。**RAG**（Retrieval-Augmented Generation · 一种把 artifact 拉回 Context 的检索机制 · 给一个 query · 从 artifact store 里检索相关条目 · 把检索结果注入下一次推理的 Context · 是 agent 跟长期 artifact 之间的桥）。**embedding 检索**（用向量空间相似度做 retrieval · 把每条 artifact 和 query 都向量化 · 按 cosine similarity 取 top-k · 是 RAG 最常见的实现）。
+**Artifact 工程术语** —— **artifact store**（产物仓库 · 存放跨 run artifact 的物理后端 · 可以是文件系统、对象存储 / S3、SQLite / Postgres、向量数据库 / Qdrant 或 pgvector · 选哪个取决于 artifact 类型和访问模式）。**knowledge graph**（知识图谱 · 一种 artifact 组织形态 · 把领域实体（合同、供应商、政策、客户）和它们之间的关系（"客户 A 跟供应商 B 签过合同 C"）存成图结构 · 适合需要做关系推理的领域 agent）。**RAG**（Retrieval-Augmented Generation · 一种把 artifact 拉回 Context 的检索机制 · 给一个 query · 从 artifact store 里检索相关条目 · 把检索结果注入下一次推理的 Context · 是 agent 访问长期 artifact 的检索通道）。**embedding 检索**（用向量空间相似度做 retrieval · 把每条 artifact 和 query 都向量化 · 按 cosine similarity 取 top-k · 是 RAG 最常见的实现）。
 
 #### 5.4.1 Context · 单 turn 容器的工程治理
 
@@ -84,7 +84,7 @@ auto-compact 的关键工程难点不是"压"，是**摘要要保留什么**。a
 
 摘要丢了任何一类，agent 后续推理就开始幻觉——拿不到关键决策就忘了为什么选 A 改去选别的；拿不到未闭合 tool_call 就编一个假 observation 假装已经看到结果；拿不到 artifact 引用就编一个 id 自圆其说；拿不到 verifier 失败信息就再撞一次同样的错。这些幻觉是工具调用相关 bug 里**最难调的**——表面看 agent 在按既有信息推理，实际它在编且自己也不知道在编。
 
-四类元素不是写进压缩 prompt 就完事——**压缩质量要有回归测试**。可操作的做法：留一组有代表性的历史 run 当金标集，每次改压缩 prompt 或换压缩模型，重跑压缩并自动比对四类元素的存活率——未闭合 tool_call 是否还在、关键决策是否还在、artifact 引用是否仍可解析、verifier 失败记录是否保留，存活率掉了就挡住这次变更。压缩是 harness 里"静默劣化"风险最高的机制之一——它出错不报错，只让 agent 慢慢变笨，没有回归测试你永远不知道是哪次改坏的。
+四类元素不是写进压缩 prompt 就完事——**压缩质量要有回归测试**。可操作的做法：留一组有代表性的历史 run 当金标集，每次改压缩 prompt 或换压缩模型，重跑压缩并自动比对四类元素的存活率——未闭合 tool_call 是否还在、关键决策是否还在、artifact 引用是否仍可解析、verifier 失败记录是否保留，存活率掉了就挡住这次变更。压缩是 harness 里"静默劣化"风险最高的机制之一——它出错不报错，只让 agent 表现慢慢变差，没有回归测试你永远不知道是哪次改坏的。
 
 工程化的摘要 prompt 要显式列出"必须保留的元素清单"——不能只说"请压成摘要"。一个能用的模板大致是这样："以下是 N 轮 trajectory 内容（拼接进来）。请压成 ≤500 tokens 的摘要。**必须保留**：所有未闭合 tool_call_id 及其当前状态、每个 turn 的关键决策及其理由、所有 artifact 引用 id、所有 verifier 失败的判定及原因。**可以丢**：重复内容、过期中间状态、与最终决策无关的探索分支、已闭合 tool_call 的完整 raw observation（可以摘要替代）。" 这种模板让便宜模型也能做出基本可用的摘要。
 
@@ -126,15 +126,15 @@ token 窗口装得下不等于模型能用好。Lost in the Middle[^lost-in-midd
 
 多模态让 Context 治理多一层复杂度。图片 token 远比文本贵——Anthropic Claude 一张高分辨率图大约 1500 tokens，一份扫描 PDF 每页约 2-3K tokens。截图 / PDF page / 文档扫描这类如果 inline 塞 Context，一两张就占大头。
 
-工程化做法是**截图先做分析加把分析结果回 Context · 原图存 Artifact**——例如截图调 vision 模型分析返回结构化描述，描述（几百 tokens）进 Context，原图（几千 tokens）存 Artifact 加索引。视频 / 音频更夸张：1 分钟视频按 1fps 取帧可能几万 tokens，必须先在 Adapter 层做降采样 / 关键帧提取 / 自动摘要，得到几百 tokens 描述后才能塞 Context。多模态场景里的 micro-compact 跟纯文本场景不一样——文本场景压缩是把长文本变短文本，多模态场景压缩是把图 / 视频 / 音频变文本（带索引）。后者依赖一个独立的"多模态摘要"工具链，是多模态 agent 工程的隐藏复杂度。
+工程化做法是**截图先做分析加把分析结果回 Context · 原图存 Artifact**——例如截图调 vision 模型分析返回结构化描述，描述（几百 tokens）进 Context，原图（几千 tokens）存 Artifact 加索引。视频 / 音频体量更大：1 分钟视频按 1fps 取帧可能几万 tokens，必须先在 Adapter 层做降采样 / 关键帧提取 / 自动摘要，得到几百 tokens 描述后才能塞 Context。多模态场景里的 micro-compact 跟纯文本场景不一样——文本场景压缩是把长文本变短文本，多模态场景压缩是把图 / 视频 / 音频变文本（带索引）。后者依赖一个独立的"多模态摘要"工具链，是多模态 agent 工程的隐藏复杂度。
 
 **常见误区 · 把 Context 当无限内存**
 
 Context 治理最常见的误区是**开发期当无限内存用 · 生产期撞墙**。
 
-机制层面：开发期 token 看起来不缺——PoC 任务跑 5 步还在 20K，开发者觉得 200K 窗口绰绰有余，把所有"以备万一"的信息全塞 Context · 不做主动管理。这种做法在 PoC 阶段没痛感，到生产规模化任务（合同审核 30 步、月度报告 40 步、客户咨询 50 步）跑下去，Context 就常态化撞 70-80% 阈值。撞阈值之后即使有 auto-compact 触发，agent 已经在 lost-in-the-middle 区跑了多轮——很多关键决策已经在中段被模型注意力漂移漏掉，后续推理基于不完整的"模型记得的部分"，结果不可靠。
+机制层面：开发期 token 看起来不缺——PoC 任务跑 5 步还在 20K，开发者觉得 200K 窗口绰绰有余，把所有"以备万一"的信息全塞 Context · 不做主动管理。这种做法在 PoC 阶段暴露不出来，到生产规模化任务（合同审核 30 步、月度报告 40 步、客户咨询 50 步）跑下去，Context 就常态化撞 70-80% 阈值。撞阈值之后即使有 auto-compact 触发，agent 已经在 lost-in-the-middle 区跑了多轮——很多关键决策已经在中段被模型注意力漂移漏掉，后续推理基于不完整的"模型记得的部分"，结果不可靠。
 
-一个工程经验：生产 agent 跑半年以上的项目里，Context 治理失误是任务通过率掉的主要原因之一（另外两个常见来源是 verifier 缺失和 tool description 没按 ACI 写）。具体表现是 long-horizon 任务（≥20 步）通过率明显低于 short 任务（≤10 步），并且通过率掉的原因调查到最后多半是"模型在 turn 15+ 后开始忽略 turn 3-5 的关键发现"——这就是 lost-in-the-middle 在作祟。
+一个工程经验：生产 agent 跑半年以上的项目里，Context 治理失误是任务通过率掉的主要原因之一（另外两个常见来源是 verifier 缺失和 tool description 没按 ACI 写）。具体表现是 long-horizon 任务（≥20 步）通过率明显低于 short 任务（≤10 步），并且通过率掉的原因调查到最后多半是"模型在 turn 15+ 后开始忽略 turn 3-5 的关键发现"——这就是 lost-in-the-middle 造成的。
 
 判定线：用一个 N=50 步的端到端 dry-run 看 token 增长曲线。**第 30 步还在 30K 以下属健康** · 第 30 步已经在 80K+ 就是没做 Context 工程 · 第 30 步在 150K+ 就是已经撞墙。这个 dry-run 应该作为 harness 上 production 前的必跑测试。边界要点出来——纯短对话 agent（≤5 步完成）可以不做 Context 工程；long-horizon 任务（≥20 步）必做；介于中间的 10-20 步任务看任务密度（每步是否大 tool result 多）。
 
@@ -162,7 +162,7 @@ Memory 不是 Context 的延展，是 agent 工程里独立的一层 working sto
 
 Memory 这一机制在 2026 业界被推为 "first-class architectural component"（Mem0 / Letta / Zep 等业界综述统一口径）—— 但这条口号会误导读者以为"任何 agent 都要做 Memory"。实际工程图景远更复杂：大量垂直 agent 是合法的 stateless 架构 · 不做 Memory 反而更经济。
 
-值得指出的是 Mem0 团队自己的立场也很克制。Mem0[^mem0-2025] 在 LongMemEval 长期记忆 benchmark 上测试分数较高 · 是 production-ready 长期记忆系统的代表 · 但它把长期记忆定位成**按需启用的 feature 而不是默认必备** —— 这是反"memory-first 口号"很有分量的内部声音。把 memory 当 first-class architectural component 跟把 memory 当 default 是两件不同的事 · "任何 agent 都要做 Memory"跟"90% agent 不需要长期记忆"是同一件事的两个方向 · 业界共识更接近后者而不是前者。
+值得指出的是 Mem0 团队自己的立场也很克制。Mem0[^mem0-2025] 在 LongMemEval 长期记忆 benchmark 上测试分数较高 · 是 production-ready 长期记忆系统的代表 · 但它把长期记忆定位成**按需启用的 feature 而不是默认必备** —— 这是来自 Mem0 团队内部、反"memory-first 口号"的立场。把 memory 当 first-class architectural component 跟把 memory 当 default 是两件不同的事 · "任何 agent 都要做 Memory"跟"90% agent 不需要长期记忆"是同一件事的两个方向 · 业界共识更接近后者而不是前者。
 
 **stateless agent 的典型场景**——这些场景里 Memory 整章可以跳过。**单次分类 / 评分**（垃圾邮件过滤、内容打标签、风险评级、合规扫描、文档分类 · 每条独立 · 输入输出一一对应）。**单次转换**（翻译 agent、格式转换、代码 lint、ETL 数据清洗 · 函数式：input → output）。**单次问答**（FAQ bot / 客服查知识库 / RAG 兜底 · 用 RAG 替代 Memory · 每条独立查 KB）。**单次工具触发**（设 timer / 播音乐 / 查天气 · 命令式工具调用无状态）。**批处理任务**（凌晨批量审核 / 数据清洗 / 月度报告生成 · 每个 record 独立处理）。**单次产物生成**（行业研报 / API 文档 / 代码 review 这种 PR 独立任务）。
 
@@ -194,7 +194,7 @@ stateless 路径的硬收益不是次要的——相对 stateful 能省下可观
 
 **写入策略**
 
-Memory 写入的工程难点是**写什么 / 什么时候写 / 写在哪个后端**——这三件事一起决定 Memory 是有用的工作记忆还是无序的垃圾堆。
+Memory 写入的工程难点是**写什么 / 什么时候写 / 写在哪个后端**——这三件事一起决定 Memory 是有用的工作记忆还是无序的 dump 区。
 
 **写什么进 Memory** 是个工程判断题。前面 Context 块讲过判断要点，这里展开到机制层面。**会被多个 turn 反复读取的中间结果进 Memory**——比如 agent 算了一个统计数字（成本：去年同期 +18%）后续 5 轮都要 reference，进 Memory 比留 Context 累积省 token 又省幻觉风险。**Context 装不下的大块原始内容进 Memory**——一份 50KB 合同的 raw 文本，micro-compact 决定不进 Context 时存 Memory 等 agent 真要看具体某条款再读。**agent 主动判断"我以后会再用"的判断进 Memory**——这是 scratchpad 模式 · agent 自己写笔记给自己，比如"这个客户偏好 ROI 三年回本不是五年"这种 working belief。**tool_call 状态进 Memory**——未闭合的 tool_call_id 加当前状态显式存，避免压缩动作丢工具调用导致幻觉。**verifier 失败记录进 Memory**——agent 之前撞过的错（"试过 path X 不存在"），避免重复尝试。
 
@@ -238,7 +238,7 @@ Memory 跟 Context 最大的差别是**生命周期更长**——run 期间持�
 
 **生命周期 · consolidation · Claude Code Auto Dream 工业样板**
 
-TTL 跟 invalidation 处理的是"过期 / 推翻"的失效场景 · 但 Memory 还有一个工程问题这两件机制覆盖不了——**记忆碎片化**。agent 跑久了 Memory 里堆积大量重复的 / 冗余的 / 相互矛盾的 entry · 单条 entry 都没"过期"也没"被推翻" · 但整体 Memory 已经成了无序信息堆 · retrieval 准确率掉。
+TTL 跟 invalidation 处理的是"过期 / 推翻"的失效场景 · 但 Memory 还有一个工程问题这两件机制覆盖不了——**记忆碎片化**。agent 跑久了 Memory 里堆积大量重复的 / 冗余的 / 相互矛盾的 entry · 单条 entry 都没"过期"也没"被推翻" · 但整体 Memory 已经成了无序的 dump 区 · retrieval 准确率掉。
 
 Anthropic 2026 年初给 Claude Code 加的 **Auto Dream**[^claude-code-auto-dream]（也叫 `/dream` 命令）是这件事的工程化样板。Auto Dream 的核心机制类比 REM 睡眠——agent 跑完一段时间之后定期触发一次"consolidation"动作：read 最近 N 次 session 的 transcripts → prune 已经过时的事实 → merge 重复的 entry → rebuild MEMORY.md 索引 → 把相对日期转绝对日期（"昨天决定用 Redis" → "2026-05-20 决定用 Redis"）。Auto Dream 在背景跑、不阻塞用户当前 session、只能 write memory files 不能改 source code 配置——这套 capability 边界让 consolidation 安全：consolidation 模型再不准也只会改 Memory · 不会污染 agent 的可执行环境。
 
@@ -272,7 +272,7 @@ memory rot 没有彻底解法，只能让它发生的概率从"每次任务都�
 
 Memory 有两个来源——agent 主动 write 的 scratchpad，跟 harness 在 hook 点自动 capture 的 system Memory。这两类来源工程治理完全不同，混在一起治理会让两边都失控。
 
-**scratchpad** 是 agent 自己的笔记本——agent 在 prompt 里被教会"重要发现写进 scratchpad 后续 turn 可以读到"。agent 写什么完全由 agent 自己判断，是 working belief / 假设 / 任务进度等 agent 主观判断。scratchpad 的工程治理特点是**容量小、写入频繁、内容自由、agent 完全可控**。读取也由 agent 主动 `scratchpad_get()`。
+**scratchpad** 是 agent 自己的草稿板——agent 在 prompt 里被教会"重要发现写进 scratchpad 后续 turn 可以读到"。agent 写什么完全由 agent 自己判断，是 working belief / 假设 / 任务进度等 agent 主观判断。scratchpad 的工程治理特点是**容量小、写入频繁、内容自由、agent 完全可控**。读取也由 agent 主动 `scratchpad_get()`。
 
 **system-captured Memory** 是 harness 在固定 hook 点自动写入的——tool_call 完成后 capture tool result 摘要、verifier 触发时 capture 失败详情、plan 阶段完成时 capture plan 骨架。agent 不直接看到这个写入动作 · 但读取 Memory 时拿得到。工程治理特点是**写入规则固定、内容结构化、harness 完全可控**、agent 不能修改。
 
@@ -338,7 +338,7 @@ Memory 这一机制最常见的误区是**把 Memory 当 dump 区**——agent �
 
 机制层面这件事怎么发生？通常是这两个原因。**第一是开发期的"防丢心理"**——agent 跑出来的中间结果工程师拿不准是不是关键，怕丢了后面调不出来，干脆全存。这种心态从单元测试 / 日志里来 · log 写多了不算错（log 是只追加的）· 但 Memory 不一样——Memory 进了 agent 决策回路 · 写多了 retrieval 准确率掉。**第二是写入接口太轻**——`memory.store(key, value)` 一行代码就能写 · 比起删 / 清 / 过期那些要专门写代码的事 · 写 Memory 几乎零成本 · 结果工程师懒得做 invalidation。
 
-业界数据这个常见误区的代价：实际跑过半年以上的生产 agent 项目里，Memory dump 失控是最常见的运维问题之一。具体表现是 **检索时间线性退化**（Memory 长到几万条后每个 query 要扫描全 Memory 慢得不可用）、**stale memory 频发**（旧数据没清 · agent 拿过时信息决策）、**检索准确率下降**（无关数据稀释相关数据 · retrieval top-k 里全是噪声 · 真正相关的 entry 反而排不到 top）、**写入成本失控**（每条 store 操作都要更新索引 · 一万条 Memory 后写入延迟 100ms+ 开始拖累 agent loop）。
+业界数据显示了这个常见误区的代价：实际跑过半年以上的生产 agent 项目里，Memory dump 失控是最常见的运维问题之一。具体表现是 **检索时间线性退化**（Memory 长到几万条后每个 query 要扫描全 Memory 慢得不可用）、**stale memory 频发**（旧数据没清 · agent 拿过时信息决策）、**检索准确率下降**（无关数据稀释相关数据 · retrieval top-k 里全是噪声 · 真正相关的 entry 反而排不到 top）、**写入成本失控**（每条 store 操作都要更新索引 · 一万条 Memory 后写入延迟 100ms+ 开始拖累 agent loop）。
 
 判定线 · 什么场景写入合理、什么场景过度？**这条信息会被未来 N 次 turn 读取吗？N≥3 写入，N≤1 不写入，N=2 看其他因素**。**这条信息有明确的失效条件吗？没有就不要写入持久 Memory，最多放 TTL ≤ 1 小时的临时 cache**。**这条信息能从其他源重算出来吗？能就不要存，需要时重算更安全（避免 stale）**。**这条信息是事实还是 working belief？working belief 优先存 raw 事实让 agent 每次重新 infer**。这四个问题答完，能把"该不该写入"判断收敛到 1-2 个明确选择。不答这四个问题就写入，半年后必定 Memory 失控。
 
@@ -358,7 +358,7 @@ Memory 是 §5.4 三层里**生命周期居中、工程纪律最重的一层**�
 
 Artifact 是 agent 跟未来打交道的层——这次任务做出来的产物存进 Artifact，以后类似任务能找到、能复用、能基于它继续推进。Memory 服务"这次 run 的 agent"、Artifact 服务"未来 run 的 agent"。这是 §5.4 三层里**时间尺度最长、工程治理最重**的一层。
 
-Artifact 跟 Memory 的根本差别在前面 §5.4 章首已经讲过 arXiv 论点——**两者是同一件记忆的两侧 · 不是两件不同的东西**。Memory 在 agent 边界内部、是 agent 主动管理的工作状态；Artifact 在 agent 边界外部、是环境中自然产出的留下物。同一个事实可以两边各存一份 · 但治理方式不同。实操判定靠三问。**第一 · 谁在主动写**？agent 显式调 `memory_store` 接口 → Memory；agent 调业务工具产出文件 / DB row / KG entry → Artifact。**第二 · 目的是什么**？"让自己后续 turn 能 read 回" → Memory；"完成任务的产出物 / 未来 run 可复用的物" → Artifact。**第三 · 谁在主动读**？主要是当前 agent / 同一 agent 跨 session → Memory；任意未来 agent / 不同 agent / 人 / 业务系统 → Artifact。三问答完边界就清晰——Memory 是 agent 的工作笔记本、Artifact 是企业的领域资产库。
+Artifact 跟 Memory 的根本差别在前面 §5.4 章首已经讲过 arXiv 论点——**两者是同一件记忆的两侧 · 不是两件不同的东西**。Memory 在 agent 边界内部、是 agent 主动管理的工作状态；Artifact 在 agent 边界外部、是环境中自然产出的留下物。同一个事实可以两边各存一份 · 但治理方式不同。实操判定靠三问。**第一 · 谁在主动写**？agent 显式调 `memory_store` 接口 → Memory；agent 调业务工具产出文件 / DB row / KG entry → Artifact。**第二 · 目的是什么**？"让自己后续 turn 能 read 回" → Memory；"完成任务的产出物 / 未来 run 可复用的物" → Artifact。**第三 · 谁在主动读**？主要是当前 agent / 同一 agent 跨 session → Memory；任意未来 agent / 不同 agent / 人 / 业务系统 → Artifact。三问答完边界就清晰——Memory 存 agent 的工作状态、Artifact 存企业的领域资产。
 
 Artifact 这一机制要解决什么？三个根本场景。**第一是任务产物的归档**——一份审完的合同、生成的报告、推断出的判断 · 这次任务结束了但产物要留下供后续使用。**第二是领域资产的积累**——agent 在某个领域跑得越久越多积累 · 历史方案库、客户档案、政策规则库、踩过的坑 · 这些是 To B agent 形成业务壁垒的核心载体。**第三是任务间复用**——下次类似任务来了能找到上次怎么做的、能避免重复工作、能基于历史经验做更好决策。
 
@@ -450,7 +450,7 @@ Artifact 这一机制特别是中高层（bitemporal KG / Enterprise Decision Pl
 
 **包装他人引擎**（第三条路 · 业界推荐）—— 借力上游的 80%（抽取 pipeline）· 留住自己最关心的 20%（关系治理 + 查询接口 + 应用层）。具体形态是上层自己掌控的 schema 治理（关系类型封闭枚举 / taxonomy / layer 分层 / bitemporal 查询封装）通过 HTTP / IPC 调底层的 Graphiti 这类引擎（实体抽取 / resolution / conflict 检测 / bitemporal 存储 / 增量更新）。关键好处是**第一周就能跑通端到端 · 包装层是天然迁移点 · 未来换底层时只换那一层应用代码不动**。
 
-三条路的陷阱各不相同。**完全自建** 最大陷阱是机会成本——本应花在差异化能力（关系链分析、博弈推理）的时间全花在造车轮上。**直接用开源** 最大陷阱是被锁定——上游设计哲学可能跟你的产品方向渐行渐远。**包装他人引擎** 最大陷阱是包装层失去意义——如果只是薄薄一层透传 · 等于直接用开源。
+三条路的陷阱各不相同。**完全自建** 最大陷阱是机会成本——本应花在差异化能力（关系链分析、博弈推理）的时间全花在重复造轮子上。**直接用开源** 最大陷阱是被锁定——上游设计哲学可能跟你的产品方向渐行渐远。**包装他人引擎** 最大陷阱是包装层失去意义——如果只是薄薄一层透传 · 等于直接用开源。
 
 业界推荐路径是三阶段。**第 1 阶段（第 1-2 周）**：直接用开源跑通最小闭环 · 不要急着写包装层——先看真实痛点是什么。**第 2 阶段（第 3-4 周）**：根据第 1 阶段真实痛点 · 加包装层（schema 治理 / 查询封装 / 中文预处理 / 等）。**第 3 阶段（自建）**：**只在开源真的成为瓶颈时**才走这一步 · 触发条件是需求跟上游设计哲学根本冲突 / 上游停摆 / 性能或本地化无法接受。此时已经有清晰需求清单（来自前两阶段真实使用）· 自建效率高得多。
 
@@ -504,7 +504,7 @@ Artifact 这一机制有两个常见误区——dump 失控 跟 cold-hot 不分�
 
 **写什么 prompt**——agent system prompt 应该告诉 agent 三件事：**Artifact 是什么**（"你有一个领域资产库 · 历史方案 / 客户档案 / 已审条款 / 政策规则都在里面"）、**怎么 retrieval**（"用 artifact_search 模糊查 · 用 artifact_get 按 id 取详细内容 · retrieval 拿到的内容跟当前对话拼接前先 reason 一下是否相关 · 不相关的别引用"）、**怎么写 Artifact**（"任务最终产物用 artifact_store 写 · 写之前想清楚以后是否真会用 · 不要写中间过程"）。如果走 bitemporal KG 路径 · prompt 要教 agent "你查的是历史状态还是当前状态 · 不确定就先问用户"。RAG 工程细节（chunking / rerank）agent 不需要知道——那是 harness 工程师的事 · agent 只用 high-level 接口。
 
-Artifact 是 §5.4 三层里**P2 等级但工程量最大**的一层——P2 是因为 PoC 不需要它 agent 也能跑 · 但工程量大是因为它涉及数据治理 / 物理选型 / RAG pipeline / 索引维护 / cold-hot 分层 / 备份恢复 / 三层工程实现 / Build vs Buy 决策 这么多子系统。Context 跟 Memory 是 agent 工程师的事 · Artifact 是 agent 工程师跟数据工程师跟 SRE 一起的事。这一机制做对 · agent 能积累领域资产形成业务壁垒 · 做错 · agent 跑 6 个月后变成数据黑洞 · 性能掉 加 成本飞 加 合规风险叠加。从 day 1 就把 Artifact 当一件数据工程严肃对待 · 不要等踩坑了再回头补。最后再呼应章首 arXiv 论点——Memory 跟 Artifact 是同一件记忆的两侧 · Artifact 是 agent 把状态外化到环境的工程化形态 · 比塞 agent 内部 memory 更经济 · 也更可治理。
+Artifact 是 §5.4 三层里**P2 等级但工程量最大**的一层——P2 是因为 PoC 不需要它 agent 也能跑 · 但工程量大是因为它涉及数据治理 / 物理选型 / RAG pipeline / 索引维护 / cold-hot 分层 / 备份恢复 / 三层工程实现 / Build vs Buy 决策 这么多子系统。Context 跟 Memory 是 agent 工程师的事 · Artifact 是 agent 工程师跟数据工程师跟 SRE 一起的事。这一机制做对 · agent 能积累领域资产形成业务壁垒 · 做错 · agent 跑 6 个月后变成失控的 dump 区 · 性能掉 加 成本涨 加 合规风险叠加。从 day 1 就把 Artifact 当一件数据工程严肃对待 · 不要等踩坑了再回头补。最后再呼应章首 arXiv 论点——Memory 跟 Artifact 是同一件记忆的两侧 · Artifact 是 agent 把状态外化到环境的工程化形态 · 比塞 agent 内部 memory 更经济 · 也更可治理。
 
 #### 业界归位卡片 · §5.4 三段涉及的实现层
 

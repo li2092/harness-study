@@ -1,6 +1,6 @@
 # 5.5 Prompt Assets · Instruction Layer · **P0**
 
-第五件机制是 agent 拿到的"指令性内容"——也就是模型从 prompt 里读到的一切非用户消息内容：角色定位、任务约束、工具说明书、输出规范、业务规则、错误处理提示、agent 当前所在项目的 context、能调用的 Skill 列表、即将触发的 hook 等等。前面讨论 Tool Registry 时点过一条规律——工具 description 是单点 ROI 最高的优化。这条规律往外扩一格就到了这一节的根本论点：整个 harness 给 agent 的所有指令性内容（system prompt、tool description、hook 注入、Skill 加载、错误返回的解释、工作区 README 等等）都需要按工程资产管理——拥有版本号、可被回滚、可被 A/B test、可被精确审计。Prompt Assets 这一机制命名的内在来由就在这里：把指令性内容从源代码里的字符串字面值升格为独立工程对象，这件升格本身就是 prompt 工程治理的起点。
+第五件机制是 agent 拿到的"指令性内容"——也就是模型从 prompt 里读到的一切非用户消息内容：角色定位、任务约束、工具说明书、输出规范、业务规则、错误处理提示、agent 当前所在项目的 context、能调用的 Skill 列表、即将触发的 hook 等等。前面讨论 Tool Registry 时点过一条规律——工具 description 是单点 ROI 最高的优化。这条规律再往外推一步就到了这一节的根本论点：整个 harness 给 agent 的所有指令性内容（system prompt、tool description、hook 注入、Skill 加载、错误返回的解释、工作区 README 等等）都需要按工程资产管理——拥有版本号、可被回滚、可被 A/B test、可被精确审计。Prompt Assets 这一机制命名的内在来由就在这里：把指令性内容从源代码里的字符串字面值升格为独立工程对象，这件升格本身就是 prompt 工程治理的起点。
 
 prompt 在 2026 年被单独抽出来作为一类工程资产管理，根因有两层相互叠加的工程压力。第一层来自杠杆效应——同一个模型同一套工具，仅仅改一句 system prompt 就可能让任务通过率出现以十个百分点计的波动。一个有这么大效果系数的工程对象，如果它的物理形态只是源代码里散落的字符串字面值，产品质量就要承受"哪个工程师最后碰过这段字符串"的随机性；在十人以上协作场景里这种随机性会被各种 merge 路径放大成难以溯源的回归。第二层来自审计需求——hard-code 形态的 prompt 改完没有留痕：什么时间改的、谁改的、为什么改、改完前后 agent 行为差异如何，这些问题在源代码字面值的承载形态里都没有答案。把 prompt 抽到独立的 asset 载体之后，这四个问题立即有了对应的工程机制承接——每次改动进版本管理、每次部署走 A/B test、每次回归能秒级回滚到上一版本。两层压力合起来推动 prompt 从源代码内嵌字符串脱离出去成为一个独立工程对象，这件升格的内核是工程治理对象变了——prompt 从"代码顺手写的辅助物"被识别为"需要独立生命周期管理的资产"。
 
@@ -30,7 +30,7 @@ prompt asset 这一机制跟其他 harness 件不是平行关系是渗透关系�
 
 *图 5.14 · Prompt Asset 五件物理形态的四维对照*
 
-真正交付到生产的 prompt asset 不是一段写死的字符串常量，而是按优先级拼装的片段集合。本教程作者自己写的 agent prompt 集把 system prompt 拆成 P0 到 P5 六个优先级、十二类片段——P0 是核心身份加安全规则，永不裁剪；P1 是工具使用规则加当前激活的 Skill；P2 是任务规则、输出规范、上下文管理；P3 是用户自定义指令；P4 是项目记忆；P5 是热索引、MCP 状态、系统信息，最先被裁掉。这种结构让 prompt 在上下文紧张时按价值放弃低层片段而不是从尾巴上无差别截断，核心身份和安全规则不会因为上下文挤压而丢失。
+真正交付到生产的 prompt asset 不是一段写死的字符串常量，而是按优先级拼装的片段集合。本教程作者自己写的 agent prompt 集把 system prompt 拆成 P0 到 P5 六个优先级、十二类片段——P0 是核心身份加安全规则，永不裁剪；P1 是工具使用规则加当前激活的 Skill；P2 是任务规则、输出规范、上下文管理；P3 是用户自定义指令；P4 是项目记忆；P5 是热索引、MCP 状态、系统信息，最先被裁掉。这种结构让 prompt 在上下文紧张时按价值放弃低层片段而不是从末尾无差别截断，核心身份和安全规则不会因为上下文挤压而丢失。
 
 ![](../diagrams/t3-layered-5.5-p0p5.png)
 
@@ -40,11 +40,11 @@ prompt asset 这一机制跟其他 harness 件不是平行关系是渗透关系�
 
 #### 5.5.2 设计原则 · 写给 agent 不写给人
 
-prompt asset 的第一原则是写给 agent 看的不是写给人看的。同一句"认真做事，全面思考"，给人看是动员口号，给 agent 看是纯浪费 token。每一轮调用 prompt 都进入 context 窗口跟工具描述、对话历史、工具结果争抢空间，业界普遍把 15% 以内当不管、50% 当警戒、70% 当该压缩、90% 当临崩盘——这意味着 prompt 里每一个无信息量的句子都在挤压核心规则的注意力。所以 prompt asset 必须可执行、可验证、可拆分到具体片段；只描述态度不给行为的"保持好奇心 / 不要焦虑"一类指令在 agent prompt 里就是负资产。
+prompt asset 的第一原则是写给 agent 看的不是写给人看的。同一句"认真做事，全面思考"，给人看是动员口号，给 agent 看是纯浪费 token。每一轮调用 prompt 都进入 context 窗口跟工具描述、对话历史、工具结果争抢空间，业界普遍把 15% 以内当不管、50% 当警戒、70% 当该压缩、90% 当临界——这意味着 prompt 里每一个无信息量的句子都在挤压核心规则的注意力。所以 prompt asset 必须可执行、可验证、可拆分到具体片段；只描述态度不给行为的"保持好奇心 / 不要焦虑"一类指令在 agent prompt 里就是负资产。
 
 第二条设计原则是不要信任模型的记忆力但信任模型的推理力。把"取消订单前必须检查四个条件"写在 system prompt 一开始，模型在五十轮工具调用之后大概率会忘——不是模型偷懒，是固定位置的长指令在长 context 里注意力自然衰减。正确做法是把这条规则做成 hook：检测到模型即将调用 cancel_reservation 工具的那一刻再注入一条临时提醒，列出四个条件。这相当于柜员按"转账"按钮之前系统弹一个合规确认框，而不是入职培训时讲一遍就完事。这条纪律推到极致就是一句话：system prompt 是起跑线不是终点线，越是关键的业务规则越要在调用前注入而不是在 prompt 头部多写两遍。这条原则跟 §5.3.5 讲的 PolicyRegistry 调用前注入是同一件事的两面——那一段从 Tool Registry 视角讲、这一段从 prompt asset 视角讲。
 
-这两条原则合起来界定了 prompt asset 工程跟一般 prompt template 教学之间的工程层次差。prompt template 教学的着眼点是在一段文字里如何用更准确的措辞引导模型——它假设 prompt 是一段静态文字，关注的是文字本身的清晰度、举例方式、术语选择。prompt asset 工程把同样的问题切换了一格——它假设 prompt 是一组分布在不同载体上的指令片段，关注的是哪一条规则该挂在哪一种载体上才不被 context 衰减、不被覆盖、不被模型忘掉。两件事不在同一层优化：前者优化语义传递效率，后者优化指令在系统中的稳定性跟可治理性。
+这两条原则合起来界定了 prompt asset 工程跟一般 prompt template 教学之间的工程层次差。prompt template 教学的着眼点是在一段文字里如何用更准确的措辞引导模型——它假设 prompt 是一段静态文字，关注的是文字本身的清晰度、举例方式、术语选择。prompt asset 工程把同样的问题换了一层来看——它假设 prompt 是一组分布在不同载体上的指令片段，关注的是哪一条规则该挂在哪一种载体上才不被 context 衰减、不被覆盖、不被模型忘掉。两件事不在同一层优化：前者优化语义传递效率，后者优化指令在系统中的稳定性跟可治理性。
 
 #### 5.5.3 版本化跟 A/B 测试
 
@@ -54,7 +54,7 @@ prompt 版本化的工程纪律比"git 多分支"严格得多。第一条规则�
 
 A/B 测试 prompt 还有一条容易被忽略的方法论纪律——必须有 trajectory 级别的对照评测不只是输出级别的对照。换 prompt 后 agent 可能输出看起来差不多，但调工具的顺序、参数选择、错误恢复路径都不一样——这些 trajectory 级别的差异在长 horizon 任务里会累积放大。所以 prompt A/B test 不只看任务通过率，还要看 trajectory 形态（工具调用次数 / 失败率 / 总 token / cache hit / 决策点分布）的多维对照。
 
-版本化还差一个常被漏掉的触发器：**模型侧变更**。prompt 行为漂移最大的来源往往不是你改了 prompt，是模型升级了——同一份 prompt 在新模型上的语气、格式遵循、工具触发率都可能漂，云端端点静默升级时连"换了模型"这个事实都未必有人通知你。所以 prompt asset 的 metadata 里要有 tested_models 字段——这份 prompt 在哪些模型版本上跑过回归；模型切换或端点升级时，自动触发对应 prompt family 的金标任务回归。版本化真正要钉住的是"prompt × 模型"这个组合，而不是 prompt 文本本身——prompt 没动不代表行为没动。
+版本化还差一个常被漏掉的触发器：**模型侧变更**。prompt 行为漂移最大的来源往往不是你改了 prompt，是模型升级了——同一份 prompt 在新模型上的语气、格式遵循、工具触发率都可能漂，云端端点静默升级时连"换了模型"这个事实都未必有人通知你。所以 prompt asset 的 metadata 里要有 tested_models 字段——这份 prompt 在哪些模型版本上跑过回归；模型切换或端点升级时，自动触发对应 prompt family 的金标任务回归。版本化真正要锁定的是"prompt × 模型"这个组合，而不是 prompt 文本本身——prompt 没动不代表行为没动。
 
 #### 5.5.4 多语种 / 多场景 prompt 抽象
 
@@ -68,11 +68,11 @@ agent 上 production 之后会撞到两个工程问题——多语种支持跟�
 
 prompt injection 是 §5.9 Safety 控制面的核心议题之一——攻击者通过 tool output、user message、RAG retrieval 等通道把恶意指令塞进 agent context，让 agent 执行原本不该执行的动作。完整的 prompt injection 防御要跨 Adapter / Tool Registry / Memory / Artifact 多层做，§5.9 会展开。这一段只讲 prompt asset 这一层能做的事——出口侧清洗跟历史侧纪律两条。
 
-反 prompt-injection 不只是过滤用户输入。同样重要的是出口处的 prompt 清洗——如果对话的另一端也是 LLM（评测里的 user simulator、流水线里的下游 agent、做总结的 reviewer），agent 输出里的 thinking 块跟 tool_call 标签必须剥离。τ-bench 实战记录显示曾经出现过 user simulator 回复变怪的现象，原因是 adapter 把 agent 的原始文本直接传过去没剥离推理前缀，simulator 把 chain-of-thought 当成回复内容读，对话立刻偏离正常轨迹。解法是在 agent 输出跟下一个 LLM 之间加一层清洗函数，剥离推理前缀加 `<tool_call>` 残留标签——这就是消息可见性边界，本质上是 prompt 在出口侧的版本化。
+反 prompt-injection 不只是过滤用户输入。同样重要的是出口处的 prompt 清洗——如果对话的另一端也是 LLM（评测里的 user simulator、流水线里的下游 agent、做总结的 reviewer），agent 输出里的 thinking 块跟 tool_call 标签必须剥离。τ-bench 实战记录显示曾经出现过 user simulator 回复变怪的现象，原因是 adapter 把 agent 的原始文本直接传过去没剥离推理前缀，simulator 把 chain-of-thought 当成回复内容读，对话立刻偏离正常轨迹。解法是在 agent 输出跟下一个 LLM 之间加一层清洗函数，剥离推理前缀加 `<tool_call>` 残留标签——这就是消息可见性边界，本质上是 prompt 在出口侧的边界控制。
 
 同一条出口侧的纪律推广到对话历史就是：tool_call 跟 tool_result 必须保持结构化配对，绝对不能在历史里出现"我读取了文件，内容是..."这种文字描述。一旦工具调用在压缩或清洗过程中被降级成文字，模型在后续轮次里会开始伪造工具执行结果——它从历史里学到的模式是"工具操作可以用文字描述"，于是下一轮跳过工具直接编"我刚刚执行了 X，结果是 Y"。所以压缩 prompt 必须有一条绝对禁止：tool_call 跟 tool_result 要么完整保留，要么整对删除，绝不可用文字替代。这是对话历史作为隐式 prompt 的版本化纪律。
 
-这两条纪律合起来定义了 prompt asset 的边界处理——出口侧剥离推理给下游、历史侧保持工具调用结构化。任何一条破了，agent 在多轮对话或多 agent 协作里都会出现"伪造执行""幻觉证据""结果污染"等隐性 bug，且很难追根。
+这两条纪律合起来定义了 prompt asset 的边界处理——出口侧剥离推理给下游、历史侧保持工具调用结构化。任何一条破了，agent 在多轮对话或多 agent 协作里都会出现"伪造执行""幻觉证据""结果污染"等隐性 bug，且很难溯源。
 
 #### 5.5.6 常见误区 · 业务规则全堆 system prompt
 
@@ -82,7 +82,7 @@ prompt asset 这一机制最常见的误区是把所有业务规则堆进 system
 
 这条规律落到可操作层面，比"绝对字符数"更准的判定维度有三个。最实用的一条是按比例占用——经验上把 system prompt 控制在总 context 窗口的一个较小比例（个位数百分点量级）以内比较安全。这条按比例的标准跟上下文窗口规模自动适配：上下文窗口越大、能容纳的常驻指令绝对量越高，不会因为模型上下文升级就要重新定字符阈值。第二条是按位置注意力——模型对 prompt 开头跟末尾的注意力远高于中段（lost-in-the-middle 现象），同一条规则放 system prompt 开头跟埋在 system prompt 中段，被遵守的概率有显著差距。第三条是按指令数累积——业界量化研究普遍记录到 prompt 越长、注意力被稀释得越厉害：超过几千 token 后准确率开始下滑、过长 prompt 倾向给出更笼统的回答（"Same Task, More Tokens" 等研究在 input 几千 token 量级就观察到 reasoning 能力下降），规则数累积到一定程度会出现"指令稀释"现象。三条维度任一条撞线都说明继续往 system prompt 加规则已经进入负 ROI 区间——正确的工程动作不是改写已有规则措辞或拼更长 prompt，而是把新增规则迁移到 hook 注入或工具 description 这种调用前精准注入的载体上。这三条维度都跟模型能力跟上下文窗口规模耦合，没有一个跨模型通用的固定字符数阈值——具体到自己的 harness，可以按"system prompt token 数 / 当前模型 context 窗口"算占比作为定期审查项。
 
-还有一件跟 prompt asset 工程纪律配套的常见误区——**Schema Coupling · 规则 + 测试 fixture + verifier 三件强耦合**。这件常见误区机制层面是 prompt 里的 output schema / 数据字段名 / 工具调用 schema 跟下游 fixture 跟 verifier classifier 三件硬连——其中任一件改动 · 另外两件跟着崩 · 而且崩得无声（pass rate 反转 / verifier pass 但实际错 / classifier 把 code 当 docs）。本教程配套实现项目 2026-05-10 跑出过一个具体案例—— v4-holdout-20.json scenario 跟 classifier 共动 · 60% pass rate 直接反转到 75-87% · 之前一周的 ablation 数据全部要重跑。机制级原因是 prompt schema 改动没有对应的回归测试套件——schema 是隐式契约 · 改动跨多个组件但 verifier 无法发现。业界系统化讨论这件事的 paper 是 AHE[^ahe-2026] schema 稳定性段——schema 稳定性是 agent harness 长期演化的硬约束 · 改 schema 必须配套改 fixture + classifier + verifier 三件 · 不能只改一处。这件常见误区跟"调几百本提示词"这类把 prompt 当万能调节器的误区同源——每改一档都希望靠 prompt 兜底 · 实际上是把 schema 隐式契约推到 prompt 层 · 让 prompt 越改越长 + 工程治理越来越难。判定线：每改一次 prompt schema · 先列出依赖这件 schema 的下游组件（fixture / verifier / classifier 等）· 每一件都跑回归测试 · 跨 release 看 pass rate 漂移——漂移显著说明 schema coupling 严重 · 需要 schema 显式契约化（前面 §5.4 Artifact Store 那种）。
+还有一件跟 prompt asset 工程纪律配套的常见误区——**Schema Coupling · 规则 + 测试 fixture + verifier 三件强耦合**。这件常见误区机制层面是 prompt 里的 output schema / 数据字段名 / 工具调用 schema 跟下游 fixture 跟 verifier classifier 三件硬连——其中任一件改动 · 另外两件跟着崩 · 而且崩得无声（pass rate 反转 / verifier pass 但实际错 / classifier 把 code 当 docs）。本教程配套实现项目 2026-05-10 跑出过一个具体案例—— v4-holdout-20.json scenario 跟 classifier 共动 · 60% pass rate 直接反转到 75-87% · 之前一周的 ablation 数据全部要重跑。机制级原因是 prompt schema 改动没有对应的回归测试套件——schema 是隐式契约 · 改动跨多个组件但 verifier 无法发现。业界系统化讨论这件事的 paper 是 AHE[^ahe-2026] schema 稳定性段——schema 稳定性是 agent harness 长期演化的硬约束 · 改 schema 必须配套改 fixture + classifier + verifier 三件 · 不能只改一处。这件常见误区跟"调几百版提示词"这类把 prompt 当万能调节器的误区同源——每改一档都希望靠 prompt 兜底 · 实际上是把 schema 隐式契约推到 prompt 层 · 让 prompt 越改越长 + 工程治理越来越难。判定线：每改一次 prompt schema · 先列出依赖这件 schema 的下游组件（fixture / verifier / classifier 等）· 每一件都跑回归测试 · 跨 release 看 pass rate 漂移——漂移显著说明 schema coupling 严重 · 需要 schema 显式契约化（前面 §5.4 Artifact Store 那种）。
 
 #### 5.5.7 业界实现对照
 
@@ -100,7 +100,7 @@ prompt asset 这一机制最常见的误区是把所有业务规则堆进 system
 
 **怎么测试**——A/B 测试 prompt 不只看任务通过率还看 trajectory 形态（工具调用次数 / 失败率 / 总 token / cache hit / 决策点分布）的多维对照。MRR（mean reciprocal rank）跟 task completion rate 是两层不同评测——MRR 看检索准确性、task completion 看端到端任务能不能完成，prompt 改动要在两层都验证。reference baseline 跟 ablation 是更深的方法论——同一任务跟同一组 baseline prompt 跑、看变体相对 baseline 的提升 / 退化 / 不变三种情况，跨 run 用同一 random seed 跟同一组 task 保证可比性。
 
-**写什么 prompt**——这一节本身就是 meta-prompt 设计指南，但具体到 agent 自己的 system prompt 该写什么，建议三件事。第一，**显式告诉 agent 自己当前用的什么 prompt asset 体系**——"你有 5 个 Skill 可激活、3 类 hook 会在工具调用前后触发、tool description 是当前工具调用的权威说明"。让 agent 知道 harness 的能力地图。第二，**显式告诉 agent 不要相信自己的记忆**——"长对话后忘掉开头规则是正常的，重要规则会通过 hook 在调用前再提醒"。让 agent 不为遗忘焦虑。第三，**显式告诉 agent 怎么跟历史共处**——"历史里的 tool_call 跟 tool_result 配对是真的，不要伪造工具执行结果，需要新结果就主动调工具"。让 agent 跟自己的对话历史保持诚实。这三条 prompt 跟前面 §5.5.1-§5.5.7 讲的工程纪律配套——工程纪律保证 prompt asset 体系本身可靠，agent prompt 让 agent 懂得用这套体系。
+**写什么 prompt**——这一节本身就是 meta-prompt 设计指南，但具体到 agent 自己的 system prompt 该写什么，建议三件事。第一，**显式告诉 agent 自己当前用的什么 prompt asset 体系**——"你有 5 个 Skill 可激活、3 类 hook 会在工具调用前后触发、tool description 是当前工具调用的权威说明"。让 agent 知道 harness 的能力地图。第二，**显式告诉 agent 不要相信自己的记忆**——"长对话后忘掉开头规则是正常的，重要规则会通过 hook 在调用前再提醒"。让 agent 不把遗忘当异常。第三，**显式告诉 agent 怎么跟历史共处**——"历史里的 tool_call 跟 tool_result 配对是真的，不要伪造工具执行结果，需要新结果就主动调工具"。让 agent 跟自己的对话历史保持诚实。这三条 prompt 跟前面 §5.5.1-§5.5.7 讲的工程纪律配套——工程纪律保证 prompt asset 体系本身可靠，agent prompt 让 agent 懂得用这套体系。
 
 这一机制经常被读者第一眼归类成"写 prompt 的细节技巧"，但当一个 agent 系统从 demo 阶段进入 To B production 阶段时，它真实的位置才显出来：把 prompt 从源代码里的字面值升格为可工程治理对象的那一道工程门槛。版本管理、A/B test、灰度发布、自动回滚这套工业级运维流程都需要 prompt 拥有独立的工程身份才能挂载上去——以字面值形式散落在源代码里的 prompt 没有这个身份，也没有任何运维流程能挂载的接口。Prompt Assets 在八件 runtime 机制里排到 P0 的根本原因就在这里——一个 agent 系统能不能进入工业级运维流程，由这一机制是否到位决定。
 

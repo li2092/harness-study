@@ -105,7 +105,7 @@
 | **Vivek Trivedy 5 项** | 5 | System Prompts / Tools / Bundled Infrastructure / Orchestration / Hooks & Middleware | 工程组件切法 · Bundled Infrastructure 是杂物袋 |
 | **MongoDB 6 件** | 6 | context / tool / planning / error recovery / validation / memory | 同档颗粒度 · 缺 Safety 独立面 |
 | **Firecrawl / DataCamp 9 件** | 9 | model / tool / context / planning / execution / memory / feedback / safety / orchestration | 颗粒度更细 · 件间关系不显 |
-| **本卷 8+1 件** | 8 + 1 | Agent Loop / Model / Tool / Context-Memory-Artifact / Prompt / Observation / Trajectory / Verifier + Safety | 件数控件认知容量 · runtime 件跟控制面显式分层 |
+| **本卷 8+1 件** | 8 + 1 | Agent Loop / Model / Tool / Context-Memory-Artifact / Prompt / Observation / Trajectory / Verifier + Safety | 件数控在认知容量内 · runtime 件跟控制面显式分层 |
 
 ### D.3 反向查询用法
 

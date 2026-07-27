@@ -2,9 +2,9 @@
 
 *Harness Study · The Engineering Practice for AI Agents · Intro*
 
-> **本卷定位**：Harness Study 项目的**导论级 / 入门版** explainer · 回答"什么是智能体的 harness 以及它由哪几件组成"。**平台无关的工程实践方法论**主轴 · 配套实现项目作为工程案例点缀。
+> **本卷定位**：Harness Study 项目的**导论级 / 入门版** explainer · 回答"什么是智能体的 harness 以及它由哪几件组成"。**平台无关的工程实践方法论**主轴 · 配套实现项目作为工程案例佐证。
 >
-> **在 Harness Study 全集中的位置**：本卷是开篇导论卷——把 8 件 runtime + Safety 控制面 + 工程模式 + Harness Lab + 可组合性矩阵 + 控制论四原则**全骨架走一遍** · 每件件给出 What / Why / How to start 三档完整 mental model。**后续会有逐章 / 逐模块展开版**——每件 runtime 件 / 每件工程模式 / Harness Lab 五层等都会有独立深度卷 · 覆盖更细的工程纪律 / 业界 case / 落地踩坑。
+> **在 Harness Study 全集中的位置**：本卷是开篇导论卷——把 8 件 runtime + Safety 控制面 + 工程模式 + Harness Lab + 可组合性矩阵 + 控制论四原则**全骨架走一遍** · 每件给出 What / Why / How to start 三档完整 mental model。**后续会有逐章 / 逐模块展开版**——每件 runtime 件 / 每件工程模式 / Harness Lab 五层等都会有独立深度卷 · 覆盖更细的工程纪律 / 业界 case / 落地踩坑。
 
 ## 目录
 
@@ -41,16 +41,16 @@
 
 ## 配图目录
 
-全卷共 50 张配图，统一 jimi-ink 视觉，源文件在同级 [`../diagrams/`](../diagrams/)。各图已嵌入对应章节正文，下表按章索引。
+全卷共 49 张配图，统一 jimi-ink 视觉，源文件在同级 [`../diagrams/`](../diagrams/)。各图已嵌入对应章节正文，下表按章索引。
 
 | 章 | 配图 |
 |---|---|
 | §一 | 鸿沟·对立桥 `t1-comparison-1-gap` · 从 vibe 到 agentic 光谱 `t2-comparison-1-spectrum` |
 | §二 | prompt-only 局限 `t1-comparison-2-prompt` |
 | §三 | AutoGPT 机制矩阵 `t1-matrix-3-autogpt` · 实习生类比 8+1 `t2-analogy-3-intern` |
-| §四 | harness 命名时间线 `t1-timeline-4-naming` · 每代算法对应约束层 `t2-matrix-4-generations` · 马具隐喻 `t2-analogy-4-bridle` |
+| §四 | harness 命名时间线 `t1-timeline-4-naming` · 每代算法对应约束层 `t2-matrix-4-generations` |
 | §五·总述 | 八大机制总览 `sample-05-mechanisms-overview` · 抽象层次 `t1-layered-5.0-abstraction` |
-| §5.1 | ReAct 演化矩阵 `t1-matrix-5.1-react8` · 设计四问决策树 `t1-tree-5.1-choose` · 十五条收敛五条 `t2-cardgrid-5.1-five` · 多 agent 成本 15x `t3-cardgrid-5.1-multiagent` |
+| §5.1 | ReAct 演化矩阵 `t1-matrix-5.1-react8` · 设计四问决策树 `t1-tree-5.1-choose` · 十六条收敛五条 `t2-cardgrid-5.1-five` · 多 agent 成本 15x `t3-cardgrid-5.1-multiagent` |
 | §5.2 | 模型路由 `t1-cardgrid-5.2-routing` |
 | §5.3 | tool call 流程 `t1-flow-5.3-toolcall` · 工具批处理四模式 `t3-cardgrid-5.3-toolbatch` |
 | §5.4 | 三层状态对比 `t1-comparison-5.4-state` · Memory 五问 `t2-tree-5.4-memory` · OS 内存层次 `t2-analogy-5.4-osmem` · 压缩三力度 `t3-comparison-5.4-compress` |
@@ -77,10 +77,10 @@
 
 ## 读完入门版应该能回答的六个问题
 
-1. **我的 agent 不稳定 · 是不是 prompt 写得不好？** —— 多半不是。prompt 只是 harness 一件零件 · prompt 调到极限收益就到顶了。
+1. **我的 agent 不稳定 · 是不是 prompt 写得不好？** —— 多半不是。prompt 只是 harness 的一件 · prompt 调到极限收益就到顶了。
 2. **ReAct 还在用吗？我该升级到 plan-execute 吗？** —— 看场景。ReAct 八条原始假设里四条已经失效 · 但失效不等于 ReAct 整体过时。
 3. **我跑 N 次取平均看通过率 · 统计可信吗？** —— 不一定。DeepSeek 之类的 prefix KV cache 会让 N 次之间不是独立的——表面 80% 通过率可能其实是同一份缓存复用 N 次。这叫 cache 共谋。
-4. **我的 verifier 总放过看似对实际错的输出 · 怎么办？** —— 三种典型病：答案泄漏、reward hacking、artifact-claim mismatch。各有不同对策。
+4. **我的 verifier 总放过看似对实际错的输出 · 怎么办？** —— 三种典型缺陷：答案泄漏、reward hacking、artifact-claim mismatch。各有不同对策。
 5. **我应该怎么系统优化 harness 而不是凭感觉调？** —— Observe → Score → Ablate → Tune → Iterate。这是一个独立于业务循环的外循环 · 本卷叫 Harness Lab。
 6. **这教程哪段是给我读的？** —— 见下文"谁该读哪段"。
 
@@ -96,8 +96,8 @@
 
 ## 跳读建议
 
-- **沿用章节**（§5.2 Model Adapter / §5.7 Trajectory）讲相对成熟的零件 · 方法论密度低 · 可跳读。
-- **重头戏章不要跳**：§5.1 Agent Loop / §5.4 Context-Memory-Artifact / §5.5 Prompt Assets / §5.6 Observation Surface / §5.8 Verifier / §七 Harness Lab / §八 可组合性矩阵 / §九 控制论。这八章是本卷的 thesis 承重墙。
+- **沿用章节**（§5.2 Model Adapter / §5.7 Trajectory）讲相对成熟的件 · 方法论密度低 · 可跳读。
+- **重点章不要跳**：§5.1 Agent Loop / §5.4 Context-Memory-Artifact / §5.5 Prompt Assets / §5.6 Observation Surface / §5.8 Verifier / §七 Harness Lab / §八 可组合性矩阵 / §九 控制论。这八章是本卷论点的主体支撑。
 - **§5.6 升级了三层 framing**——observation surface 不只是 runtime feedback 件 · 更是 cross-run self-evolution 的输入侧基础设施层。
 
 ## 完成判据 · Verify 六问

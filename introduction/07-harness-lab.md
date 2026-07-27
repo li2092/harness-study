@@ -2,9 +2,9 @@
 
 前面 §五 讲了 8 件 runtime + 1 件 Safety 控制面 · §六 讲了 6 件跨件复用的工程模式——读到这里读者大概能想象一个生产 agent harness 长什么样了。但实际跑生产 harness 半年下来 · 工程师会发现一件更难的事——**harness 自身怎么改进**。机制都装好了 / 工程模式都上了 · 但跑同样任务 · 这一周 success rate 65% / 下一周 58% / 再下一周 70%——为什么浮动 · 哪个机制贡献了 · 调哪个参数能让稳定上 70% · 不知道。这一章讲的就是怎么把"凭感觉调 harness"升级成"系统化优化 harness"。
 
-业界 2026 在这件事上还没有标准命名 · 早期文献叫 *meta-harness* / *autoresearch* / *Harness Lab* / *Outer Loop* —— 名字不重要 · 共同的语义是 **在 harness 之上加一层元工程实践 · 跑跨 run / 跨 task / 跨 config 的系统化 evaluation + ablation + tuning + iteration**。本教程选 **Harness Lab** 作命名——一方面跟 §5.1 Agent Loop 命名区分（§5.1 = Inner Loop · 单 run 内 think-act-observe；§七 = Outer Loop · 跨 run Observe-Score-Ablate-Tune-Iterate）· 另一方面跟"科学方法 · 受控实验"的类比对齐——把 harness config 当实验变量 · 把 agent run 当实验试验 · 用统计方法收敛到更好的配置。
+业界 2026 在这件事上还没有标准命名 · 早期文献叫 *meta-harness* / *autoresearch* / *Harness Lab* / *Outer Loop* —— 名字不重要 · 共同的语义是 **在 harness 之上加一层元工程实践 · 跑跨 run / 跨 task / 跨 config 的系统化 evaluation + ablation + tuning + iteration**。本教程选 **Harness Lab** 作命名——一方面跟 §5.1 Agent Loop 命名区分（§5.1 = Inner Loop · 单 run 内 think-act-observe；§七 = Outer Loop · 跨 run Observe-Score-Ablate-Tune-Iterate）· 另一方面跟"科学方法 · 受控实验"的类比对齐——把 harness config 当实验变量 · 把 agent run 当一次试验 · 用统计方法收敛到更好的配置。
 
-**这一章特别需要先标一件诚实** —— Harness Lab 五层在业界 2026 的工程落地程度差异很大。**Observe（观察）** 跟 **Score（评分）** 两层是业界共识 + 已经有成熟工程实现的 —— Anthropic / OpenAI / W&B / Langfuse / Galileo / Arize 等都在做。**Ablate（消融）** 是业界正在收敛的 —— AHE / Meta-Harness 等 2026 paper 把这件提了起来 · 但工程落地还在早期。**Tune（调优）** 跟 **Iterate（迭代）** 两层是设计骨架已经清楚 / 工程实施还是空白的——业界大部分项目这两层仍然是手工调 / 凭感觉 · 没有自动化闭环跑起来。本教程作者的 Harness Lab 工作台是按这五层完整设计的 · 但 L4 Tune / L5 Iterate 也仍然是设计骨架——工程 0 行 · 不是已经跑起来的产品。这件诚实让读者读这一章时知道**业界 SOTA 是什么**跟**自己项目能跑到哪一档**是两件事。
+**这一章特别需要先标一件诚实** —— Harness Lab 五层在业界 2026 的工程落地程度差异很大。**Observe（观察）** 跟 **Score（评分）** 两层是业界共识 + 已经有成熟工程实现的 —— Anthropic / OpenAI / W&B / Langfuse / Galileo / Arize 等都在做。**Ablate（消融）** 是业界正在收敛的 —— AHE / Meta-Harness 等 2026 paper 把这件事提了出来 · 但工程落地还在早期。**Tune（调优）** 跟 **Iterate（迭代）** 两层是设计骨架已经清楚 / 工程实施还是空白的——业界大部分项目这两层仍然是手工调 / 凭感觉 · 没有自动化闭环跑起来。本教程作者的 Harness Lab 工作台是按这五层完整设计的 · 但 L4 Tune / L5 Iterate 也仍然是设计骨架——工程 0 行 · 不是已经跑起来的产品。这件诚实让读者读这一章时知道**业界 SOTA 是什么**跟**自己项目能跑到哪一档**是两件事。
 
 读完这一章读者应该能回答几件事——什么是 Harness Lab 五层 · 工作台属性 4 条是什么 · 怎么从 Observe 开始一层一层往上搭 · 业界 W&B / Langfuse / AgentRM / Hyperband / verl-agent 这些产品分别覆盖五层的哪一档 · 工作台跟前面 §5.6 / §5.7 / §5.8 讲的 observation / trajectory / verifier 三件 harness 件是什么承载关系（harness 件是必要前提 · 工作台是 bonus 进阶 · 不是替代关系）。
 
@@ -68,11 +68,11 @@ Harness Lab 在工程层面是一套**工作台**——不是 agent runtime 件 
 
 作者给 DeepSeek V4 跑过这套把脉，A 族协议层最先暴露问题。V4 对含嵌套对象跟数组的复杂 strict schema 敏感，注册这类工具时在请求层直接失败，而不是退化降级——这条行为直接决定了 schema 归一化层要不要做、做多狠。C 族输出本地化那一维，V4 在中文上下文里会把任务里的英文 heading 译成中文，这条决定了 verifier 不能只认英文固定字符串、要不要开多别名匹配。B 族过度探索那一维，tool-first 的多文件任务里 V4 倾向先反复读再动手，这条决定了要不要上 read-complete guard。这些都是 temp=0 下看一眼就能归类的行为事实——它崩没崩、它译没译、它读了几次，是二元或可计数的观察，不需要跨配置的精确对照才能下结论。
 
-但把脉只给定性先验，真正的判决要靠消融定量验证。把脉说"开 text-tag-parser 能回收一部分被丢掉的工具调用"，这个"一部分"到底是多少，要靠消融拿干净数据回答。作者那次把脉之后想进消融验证这批预测，却撞上了前面讲的 Cache 共谋——当时 per-run nonce 还没上，N 次复跑共享了 provider 端的 prefix 缓存，跨配置的定量对比不再独立，那批定量数字只能作废。这次踩坑反而把把脉跟消融的分工照得很清楚：把脉这道定性先验看一眼就成立，缓存命中与否不改变"它崩了""它用文本标签"这个事实；消融那道定量判决必须配 N≥3 重复跟缓存隔离两道协议才可信。这正是前面工作台第四条属性"识别消化不了的"要兜的底——知道哪一批数据不能信，比硬给一个虚假精度重要。
+但把脉只给定性先验，真正的判决要靠消融定量验证。把脉说"开 text-tag-parser 能回收一部分被丢掉的工具调用"，这个"一部分"到底是多少，要靠消融拿干净数据回答。作者那次把脉之后想进消融验证这批预测，却撞上了前面讲的 Cache 共谋——当时 per-run nonce 还没上，N 次复跑共享了 provider 端的 prefix 缓存，跨配置的定量对比不再独立，那批定量数字只能作废。这次踩坑反而让把脉跟消融的分工变得清楚：把脉这道定性先验看一眼就成立，缓存命中与否不改变"它崩了""它用文本标签"这个事实；消融那道定量判决必须配 N≥3 重复跟缓存隔离两道协议才可信。这正是前面工作台第四条属性"识别消化不了的"要兜的底——知道哪一批数据不能信，比硬给一个虚假精度重要。
 
 所以把脉在工作台里的位置很清楚——它是五层之前的前置过滤器，用便宜的定性诊断把消融的搜索空间跟陷阱先标出来，让后面 Observe 起的五层不必盲目消融全部机制，把昂贵的定量验证留给真正需要判决的少数几个机制。
 
-把脉报告还要钉一个有效期锚点：**模型快照标识**。云端端点会静默升级——provider 不改名只改权重的事这几年反复发生，画像跟着过期。工程做法：把脉结果记录 model id + 把脉日期 + 一组行为指纹（挑几条最敏感的探针，把它们的输出特征存下来），daily run 里发现指纹漂移就自动重跑整套探针族。画像是有保质期的诊断，不是一次性的体检报告——端点在变，先验也要跟着刷新。
+把脉报告还要标注一个有效期锚点：**模型快照标识**。云端端点会静默升级——provider 不改名只改权重的事这几年反复发生，画像跟着过期。工程做法：把脉结果记录 model id + 把脉日期 + 一组行为指纹（挑几条最敏感的探针，把它们的输出特征存下来），daily run 里发现指纹漂移就自动重跑整套探针族。画像是有保质期的诊断，不是一次性的体检报告——端点在变，先验也要跟着刷新。
 
 #### 7.2 Observe · trajectory 收集跟 analysis 数据库
 
@@ -104,7 +104,7 @@ Observe 层在工作台五层里是**最容易做、也最容易做错**的一�
 
 **第三层 · process** —— 对 agent 推理过程的步骤级评分。这一层对应 §5.8 第三层 PRM · 工作台 L2 把每个 step 的 process reward 累加 + 归一化 · 给 ablation 提供 process-level 信号。业界 PRM 相关工作有 AgentPRM[^agent-prm-2025]（一个 PRM 实现）+ ToolPRMBench[^tool-prm-bench]（评测 benchmark）+ Socratic-PRMBench[^socratic-prm-bench-2026]（评测 benchmark · 非可直接调用的 PRM 实现）—— 其中 AgentPRM 这类实现可作工作台 L2 第三层的 component swap 候选 · 两个 bench 是用来评 PRM 自身好不好的标尺。
 
-工作台 L2 Reward 三层不只是简单 sum —— 有几个加权 invariant 要点透。**加权式 outcome 5x process 防 verbosity** —— 业界经验显示如果 outcome 跟 process 等权重 · agent 容易学到 "process 多写几步混 reward" 的 verbosity gaming（属于 §5.8 讲的 Reward Hacking 一种形态）。加权式让 outcome > process 5 倍权重 · 不让 verbose process 占 reward 主导。**Hard Gate 不通过直接 outcome=0 + process=0** —— 即使 process step 看起来合理 · Hard Gate fail 就整体 reward 归零 · 不让 agent 在 fail 任务上拿 process reward 混混。这件 invariant 让 process reward 是"合理 trajectory 的辅助打分" · 不是"独立兜底通道"。
+工作台 L2 Reward 三层不只是简单 sum —— 有几个加权 invariant 要讲清楚。**加权式 outcome 5x process 防 verbosity** —— 业界经验显示如果 outcome 跟 process 等权重 · agent 容易学到 "process 多写几步混 reward" 的 verbosity gaming（属于 §5.8 讲的 Reward Hacking 一种形态）。加权式让 outcome > process 5 倍权重 · 不让 verbose process 占 reward 主导。**Hard Gate 不通过直接 outcome=0 + process=0** —— 即使 process step 看起来合理 · Hard Gate fail 就整体 reward 归零 · 不让 agent 在 fail 任务上靠 process reward 混分。这件 invariant 让 process reward 是"合理 trajectory 的辅助打分" · 不是"独立兜底通道"。
 
 **L2 Reward 三层的 component swap 路径**——按工作台属性 4 第二条（自动评测）的 component swap 思路 · L2 三层每层都能换 component 不影响工作台整体接口。verifier hard 可以从 pytest 换成 build success + lint pass + 自定义 hash check；outcome judge 可以从 GPT-4 LLM-as-judge 换成 AgentRM；process 可以从基础 PRM 换成 AgentPRM 这类实现（换上的 PRM 好不好 · 用 ToolPRMBench / Socratic-PRMBench 两把标尺评）。这件 swap 灵活性让工作台 L2 在业界 reward model 演进时不锁死——AgentRM 升级了 / 新的 PRM paper 出来了 / 替换更 SOTA 实现 · 工作台 L2 接口不变 · 只换 component。
 
@@ -128,7 +128,7 @@ Ablate 的核心方法学是 **Harness Lab 三 Phase 消融** —— Phase A 分
 
 统计检验之前还有一道更早的关卡：**功效（power）前置**。改配置之前先问一句——我这组"任务数 × 重复数"能检出多大的 Δᵢ？按二项方差粗算就行：二十个任务乘三次重复这种量级 · 能可靠分辨的通过率差大致在两位数百分点；想看清 5 个百分点以内的差异 · 样本量要再翻几倍。这笔账不先算 · 小样本消融的典型结局是把噪声当信号——Δᵢ 的符号在两轮之间翻转 · 不是机制不稳定 · 是你根本没有分辨它的统计功效。N=3 的快速消融可以跑 · 但只能当方向感用 · 不要让它直接改默认 profile。
 
-**Phase B 单点消融的价值不只在"量化正贡献"，更在能抓出"负贡献的隐性机制"。** 一个真实例子——某 harness 的"工具参数自动补全"机制：模型调工具缺字段时自动填默认值，让调用不至于报错。代码逻辑完全正确、单元测试全过、看起来是个体贴的好设计。但端到端单点消融里关掉它，通过率不降反升——因为它**把模型本该暴露的参数错误悄悄遮盖了**：模型传错参数、工具靠补全照样跑出一个"看着对其实不对"的结果，模型收不到报错也就不自我修正，一路错下去。关掉补全后，错参数的调用直接失败、模型收到报错、重构参数、对了。这种"局部正确、全局有害"的机制，代码评审看不出、单元测试测不到——单测测的是代码逻辑对不对，不是在真实系统里有没有用——只有真实模型＋真实工具链＋真实任务的单点消融能照出来。这正是 Ablate 层比"凭感觉调机制"多出来的那一档。
+**Phase B 单点消融的价值不只在"量化正贡献"，更在能抓出"负贡献的隐性机制"。** 一个真实例子——某 harness 的"工具参数自动补全"机制：模型调工具缺字段时自动填默认值，让调用不至于报错。代码逻辑完全正确、单元测试全过、看起来是个周到的容错设计。但端到端单点消融里关掉它，通过率不降反升——因为它**把模型本该暴露的参数错误悄悄遮盖了**：模型传错参数、工具靠补全照样跑出一个"看着对其实不对"的结果，模型收不到报错也就不自我修正，一路错下去。关掉补全后，错参数的调用直接失败、模型收到报错、重构参数、对了。这种"局部正确、全局有害"的机制，代码评审看不出、单元测试测不到——单测测的是代码逻辑对不对，不是在真实系统里有没有用——只有真实模型＋真实工具链＋真实任务的单点消融才能把它暴露出来。这正是 Ablate 层比"凭感觉调机制"多出来的那一档。
 
 **Phase C 二阶消融** —— 看机制之间的交互项 Δᵢⱼ。机制 i + 机制 j 一起开的 reward · 跟 i 单开 + j 单开的 reward 总和比 · 看有没有显著协同（Δᵢⱼ > Δᵢ + Δⱼ · superadditive）或拮抗（Δᵢⱼ < Δᵢ + Δⱼ · subadditive）。Phase C 工程成本最高 —— 二阶消融的实验数量是 O(n²) · 16 件机制就要 120 对组合 · 每对 N 次 run · 几千 run 不夸张。这件高成本让 Phase C 必须配 **Bandit 前置筛** —— 用 multi-armed bandit 算法先快速排除明显负贡献的对 · 把全量 120 对降到 20-30 对真正有交互价值的 · 业界经验显示这件 Bandit 前置筛能显著降低 ablation 成本。
 
@@ -138,7 +138,7 @@ Ablate 的核心方法学是 **Harness Lab 三 Phase 消融** —— Phase A 分
 
 **AP01 · Cache 共谋常见误区** —— Cache 共谋是 2026 业界刚刚 formalize 的 agent eval 核心常见误区。源头是 provider 端 prefix KV cache 让 N 次复跑变成 non-i.i.d.。具体机制是这样—— DeepSeek V4 / Anthropic Claude / OpenAI GPT 等 provider 都在用 prefix KV cache（DeepSeek V4 TR §3.6.2 详写了 on-disk KV cache storage 机制 · Anthropic prompt caching 也是同源）· cache hit 时 provider 不重算 prefix 的 attention · 直接复用缓存。这件加速对 production 是好事 · 但对 ablation 评测是灾难——同一个 prompt 跑 N 次时 · 第 2 次到第 N 次都在复用第 1 次的 KV cache · 输出分布不是独立采样 · 是 cache 主导的复用。
 
-工程上看到的现象是—— 跑 N=5 次 run 取 pass rate 平均 · 看似 80% 通过率 · 实际是第 1 次跑通的那次缓存被复用 N 次 · 真实独立 pass rate 可能只有 50-60%。Mnimi paper[^mnimi-2025] 系统化论证了这件——naive cache reuse 让 N>1 复跑变成 non-i.i.d. · 标准统计推断失效（注：Mnimi 论证的是 client 端缓存复用破坏独立性这条通用论断 · provider 端 prefix KV cache 机制由前面 DeepSeek V4 TR 那条承担 · 两个来源各管一段）。philschmid 的 pass^k 分析[^philschmid-pass-k]点出这件事的代价 —— 真正独立时 · pass@1 = 0.33 的 agent 连续三次全通过率只有 **0.33³ ≈ 0.04** · 低得吓人；但 cache 共谋让 N 次复跑的观测通过率远高于这个真实独立值 · 把稳健性虚报上去。
+工程上看到的现象是—— 跑 N=5 次 run 取 pass rate 平均 · 看似 80% 通过率 · 实际是第 1 次跑通的那次缓存被复用 N 次 · 真实独立 pass rate 可能只有 50-60%。Mnimi paper[^mnimi-2025] 系统化论证了这件——naive cache reuse 让 N>1 复跑变成 non-i.i.d. · 标准统计推断失效（注：Mnimi 论证的是 client 端缓存复用破坏独立性这条通用论断 · provider 端 prefix KV cache 机制由前面 DeepSeek V4 TR 那条承担 · 两个来源各管一段）。philschmid 的 pass^k 分析[^philschmid-pass-k]点出这件事的代价 —— 真正独立时 · pass@1 = 0.33 的 agent 连续三次全通过率只有 **0.33³ ≈ 0.04**；但 cache 共谋让 N 次复跑的观测通过率远高于这个真实独立值 · 把稳健性虚报上去。
 
 Cache 共谋的工程对策是 **per-run nonce** —— 每次 run 在 prompt 里加一个随机 nonce 字符串（比如 task UUID + timestamp · 4-8 字节） · 让 prefix 每次都不同 · 强制 cache miss · 让 N 次复跑真正独立。这件 nonce 的位置很关键 —— 必须放在 prompt 前部（让整个 prefix 都 invalidate）· 不能放尾部（尾部不影响 prefix cache）。代价是 cache hit 没了 · 每次 run cost 高 1.05-1.10x（不是早期估计的 4x）· 但拿到的是真独立 ablation 数据。生产 agent 部署仍然可以保留 cache（不加 nonce）拿 latency 优势 · 只在 ablation eval 跑的时候开 per-run nonce 模式。
 
@@ -228,9 +228,9 @@ Harness Lab L5 设计跟 AHE / Meta-Harness / autoresearch 同源 · 把这三�
 
 **AP17 · Premature Optimization** —— 工作台跑 Ablate 跟 Tune 时 · 在数据还没收够（比如 N=3 太少）就急着下结论 "机制 X 是负贡献 · 拿掉它" —— 实际上 N=3 的统计不显著 · 结论是噪音。这件误区在生产 agent 项目早期特别常见 —— Ablate 出 Δᵢ = -8pp 看似负贡献 · 但 95% CI 是 [-22pp, +6pp] 实际跨过 0 · 不显著。工程对策是 **看 CI 不看点估计** + **N ≥ 5 才下结论** + 配对统计严格走 McNemar 不要简单 t-test。
 
-**AP18 · Stage Inflation** —— 工作台五层框架画得很整齐 / Phase A/B/C 跑得有声有色 / Iterate 闭环图画得很美 —— 但 **本质上工作台没解决任何工程问题** · 只是把 "凭感觉调 harness" 升级成 "用更多概念词汇 + 更多 dashboard 跑 + 更多 ablation report 但仍然凭感觉调"。Stage Inflation 的判定—— **工作台跑下来有没有让 agent harness pass rate 真实提升**——半年后没提升就是 inflation。
+**AP18 · Stage Inflation** —— 工作台五层框架画得很整齐 / Phase A/B/C 一轮一轮跑完 / Iterate 闭环图画得很完整 —— 但 **本质上工作台没解决任何工程问题** · 只是把 "凭感觉调 harness" 升级成 "用更多概念词汇 + 更多 dashboard 跑 + 更多 ablation report 但仍然凭感觉调"。Stage Inflation 的判定—— **工作台跑下来有没有让 agent harness pass rate 真实提升**——半年后没提升就是 inflation。
 
-**AP11 · Loop Blind Spot** —— 工作台 Iterate 层闭环跑起来后 · 容易陷入 "工作台优化自己优化得很高兴 · agent 实际任务 pass rate 没动" 的 loop blind spot。机制层面的根因是 Reward Hacking 在 outer loop 层级—— 工作台优化的 reward 函数本身可能不是真实任务质量 · 工作台越优化越偏离真实质量。这件常见误区跟前面 Observation Surface 那章讲 self-evolution 段提到的 loop_detector 同源—— Iterate 层必须有 sanity check 防自己陷进闭环 loop。
+**AP11 · Loop Blind Spot** —— 工作台 Iterate 层闭环跑起来后 · 容易陷入 ""工作台自己的指标越优化越好 · agent 实际任务 pass rate 没动" · agent 实际任务 pass rate 没动" 的 loop blind spot。机制层面的根因是 Reward Hacking 在 outer loop 层级—— 工作台优化的 reward 函数本身可能不是真实任务质量 · 工作台越优化越偏离真实质量。这件常见误区跟前面 Observation Surface 那章讲 self-evolution 段提到的 loop_detector 同源—— Iterate 层必须有 sanity check 防自己陷进闭环 loop。
 
 #### 7.9 起步建议 · 四维度
 

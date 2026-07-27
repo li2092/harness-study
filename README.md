@@ -12,8 +12,9 @@
 <p align="center">
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-CC_BY_4.0-6d28d9?style=flat-square"></a>
   <img alt="入门卷" src="https://img.shields.io/badge/入门卷-约25万字-8b5cf6?style=flat-square">
-  <img alt="配图" src="https://img.shields.io/badge/配图-50张-4c1d95?style=flat-square">
-  <img alt="语言" src="https://img.shields.io/badge/语言-中英双语-067a5b?style=flat-square">
+  <img alt="架构与工程卷" src="https://img.shields.io/badge/架构与工程卷-15章-7c3aed?style=flat-square">
+  <img alt="入门卷配图" src="https://img.shields.io/badge/入门卷配图-49张-4c1d95?style=flat-square">
+  <img alt="语言" src="https://img.shields.io/badge/入门卷-中英双语-067a5b?style=flat-square">
   <a href=".github/README.md"><img alt="English" src="https://img.shields.io/badge/English-README.md-b56a09?style=flat-square"></a>
 </p>
 
@@ -46,7 +47,7 @@
 好的，我闭环了。
 
 
-## 以下有请 Claude Code 为大家介绍《harness study》
+## 以下有请 Claude Code 为大家介绍《Harness Study》
 
 大多数关于智能体（agent）的资料停在"怎么搭一个能跑的 agent"——选框架、写提示词、加几件工具、跑通示例。这一层网上够多了。
 
@@ -54,7 +55,7 @@
 
 这些问题里大多数原因不在提示词。把希望寄托在反复迭代提示词上，到一定阶段之后边际收益迅速衰减。真正决定智能体稳定与否的，是围绕模型的那一层结构——在英文文献里叫 **harness**。harness 不是 LangChain 或某个 SDK——那是 framework。harness 是你在 framework 之上为某个具体任务搭起来的整套结构：模型怎么挂、工具怎么管、上下文怎么累积、产物怎么落地、验证靠什么、安全靠什么、出错怎么兜底。
 
-本项目（Harness Study）就是为了把围绕模型的这一层作为独立的工程对象，系统化地讲清楚。**项目分卷展开**：当前已写完**入门卷**，一次性走完全骨架；后续会有逐章 / 逐模块的展开卷，更聚焦、更详细，规划中。
+本项目（Harness Study）就是为了把围绕模型的这一层作为独立的工程对象，系统化地讲清楚。**项目分卷展开**：当前已写完**入门卷**（一次性走完全骨架）与**架构与工程卷**（第二卷：把这套部件组装成语义正确、可中断、可恢复、可验证的运行时）；第三卷（生产工程与治理）在大纲阶段。
 
 <p align="center">
   <img src="diagrams/t1-comparison-1-gap.png" alt="模型能做的是单步无副作用预测，任务要的是多步有副作用的状态机驱动——harness 就是中间这套工程系统" width="800">
@@ -77,8 +78,9 @@
 
 ## 三、当前进度
 
-- ✓ **入门卷**：稿件已写完，章节正文 + 50 配图已落入 [`introduction/`](introduction/)；终审进行中。
-- ⏳ **后续展开卷**：规划中。
+- ✓ **入门卷**：稿件已写完，章节正文 + 49 配图已落入 [`introduction/`](introduction/)；终审进行中。
+- ✓ **架构与工程卷（第二卷）**：全卷 15 章 + 工作制品汇编 + 附录完稿，正文与 34 配图、80 张排版替换图已落入 [`volume2/`](volume2/)。
+- ⏳ **第三卷 · 生产工程与治理**：大纲阶段。
 
 ---
 
@@ -90,7 +92,7 @@
   <img src="diagrams/sample-05-mechanisms-overview.png" alt="八种 runtime 机制 + 一种 Safety 控制面 总览" width="840">
 </p>
 
-> 全卷 50 张配图（统一 jimi-ink 视觉）已嵌入 [`introduction/`](introduction/) 各章正文，可逐章浏览。
+> 全卷 49 张配图（统一 jimi-ink 视觉）已嵌入 [`introduction/`](introduction/) 各章正文，可逐章浏览。
 
 入门卷整本约二十五万中文字，prose 主导。这一规模由"一次走完全骨架 + 给完整 mental model"的入门版定位决定；后续展开卷会更聚焦、更详细。
 
@@ -151,31 +153,67 @@
 ### 跳读建议
 
 - **附录是参考资料不是必读**——查到再读。
-- **沿用章节**（§5.2 Model Adapter / §5.7 Trajectory）讲的是相对成熟的零件，方法论密度低于重头戏章，可跳读。
-- **重头戏章不要跳**：§5.1 Agent Loop / §5.4 Context-Memory-Artifact / §5.5 Prompt Assets / §5.6 Observation Surface / §5.8 Verifier / §七 Harness Lab / §八 可组合性矩阵 / §九 控制论。这八章是入门卷的 thesis 承重墙。
+- **沿用章节**（§5.2 Model Adapter / §5.7 Trajectory）讲的是相对成熟的零件，方法论密度低于核心章，可跳读。
+- **核心章不要跳**：§5.1 Agent Loop / §5.4 Context-Memory-Artifact / §5.5 Prompt Assets / §5.6 Observation Surface / §5.8 Verifier / §七 Harness Lab / §八 可组合性矩阵 / §九 控制论。这八章承载入门卷的 thesis。
 
 ### 入门卷完成判据
 
-入门卷读完，上述六个问题读者能答出来。**整套项目的完成判据**比这更高：读者能独立设计 + 独立调优一个 agent harness——这一目标由后续展开卷承担。
+入门卷读完，上述六个问题读者能答出来。**整套项目的完成判据**比这更高：读者能独立设计 + 独立调优一个 agent harness——这一目标由架构与工程卷与后续展开卷承担。
 
 ---
 
-## 五、跟工作台项目的关系
+## 五、架构与工程卷概览
 
-教程一侧——本仓库——定义研究的对象与方法。工程实现一侧由独立项目 [Harness · Lab](https://github.com/li2092/Harness-Lab) 承担：把这套方法承担在可视化工作台规范上。两个项目共享同一套术语、节点、信号定义。
+架构与工程卷（第二卷）讲部件之后的下一步：把八种 runtime 机制组装成一个**语义正确、可中断、可恢复、可验证**的运行时。生产工程（数据库运维、安全治理、发布、SRE、成本）在第三卷。
+
+写法与入门卷不同：判据先行。§一 给出六契约与检验坐标系；§二 把"正确的 runtime"定义成可测的判据；§三 用一次"数据丢失"事故做判据的反向验证；§四 给出参考架构蓝图；§五 到 §十三 逐机制展开——Run 生命周期状态机、状态与持久化、Durable Execution 与重放、工具副作用、Streaming 与中断挂起、Context 连续性、权限与隔离、多 Agent 协调、Evidence Plane；§十四 从零构造一个最小但完整的 runtime；§十五 用全卷判据做一次完整的架构评审收束。
+
+<p align="center">
+  <img src="diagrams/t2-flow-1.4-causal-spine.png" alt="架构与工程卷 §一 · 全卷因果主线" width="840">
+</p>
+
+全卷 15 章 + 工作制品汇编 + 附录速查，34 张配图与 80 张排版替换图（表格与 ASCII 图的图片化，统一 jimi-ink 视觉）已嵌入 [`volume2/`](volume2/) 各章正文。工作制品汇编（[`90-artifacts.md`](volume2/90-artifacts.md)）是全卷登记表的单一真相源：State Registry、Routing Matrix、Tool Contract 等 A 到 Z 共 26 件登记件都在这一份汇编里。
+
+### 架构与工程卷章节
+
+| 章 | 主题 |
+|---|---|
+| §一 | 参考架构与检验坐标系 |
+| §二 | 什么叫"正确的 runtime" |
+| §三 | 一次"数据丢失"事故 · 判据的反向验证 |
+| §四 | 参考架构蓝图 |
+| §五 | Run 生命周期状态机 |
+| §六 | 状态、事件与持久化 |
+| §七 | Durable Execution 与重放 |
+| §八 | 工具执行与副作用 |
+| §九 | Streaming、中断与人机挂起 |
+| §十 | Context、Memory 与 Artifact 的连续性 |
+| §十一 | 权限、身份与运行时隔离 |
+| §十二 | 多 Agent 协调 |
+| §十三 | Evidence Plane |
+| §十四 | 从零构造一个最小但完整的 Runtime |
+| §十五 | Runtime 架构评审 |
+| 工作制品汇编 | 全卷登记表的单一真相源 |
+| 附录 | 第二卷速查与图解 |
+
+---
+
+## 六、跟工作台项目的关系
+
+教程一侧——本仓库——定义研究的对象与方法。工程实现一侧由独立项目 [Harness · Lab](https://github.com/li2092/Harness-Lab) 承担：把这套方法承载在可视化工作台规范上。两个项目共享同一套术语、节点、信号定义。
 
 使用顺序：
 
 - **第一次读本教程**：不需要工作台 · 直接读 [`introduction/`](introduction/)（从目录 README 进各章）起。
 - **已读完入门卷、要落地某个具体 harness**：把工作台规范当作 evidence graph 的视觉语言来用。
 
-## 六、协议
+## 七、协议
 
 本书依 [CC BY 4.0](LICENSE)（知识共享 · 署名 4.0 国际）授权 © 2026 Jinming Li
 
 你可以自由阅读、分享、引用与再创作，只需保留署名。
 
-## 七、联系
+## 八、联系
 
 - Issues 与 Discussions 欢迎
 - 邮箱：li2092@qq.com
