@@ -21,7 +21,7 @@
 
 顺序按三层落。地基层：（1）实体、ID 与 State Registry——一切状态的挂靠点，必须最先立。执行与账层：（2）单一 Execution Kernel 与 run 状态机、（3）model invocation record、（4）tool 的 intent/attempt/result/outcome 四段账、（5）event stream 与客户端重建。治理与验证层：（6）cancel 与 HITL、（7）checkpoint/resume 与 durable timer、（8）permission/sandbox 与 authority lifecycle、（9）context assembly 与 compaction、（10）可显式建模案例的 world model 闭环、（11）parent/child run、（12）Evidence Plane、（13）runtime 的 meter/limit/version 接口、（14）标准故障包验证。
 
-倒置任何一步都会落空：permission（第八步）没有 principal（第一步）就无处挂靠，resume（第七步）没有版本（第一步的 State Registry 里定义）就不知道该不该续跑。所以这份序列本身就是一张依赖拓扑——每一步的前提都排在它上面，谁先谁后没有商量余地。代价是顺序被锁死，想先做看得见的功能（漂亮的工具、能演示的 UI）得等地基先立；但地基不先立，那些功能就是空中楼阁，第一次真出故障就立不住。
+倒置任何一步都会落空：permission（第八步）没有 principal（第一步）就无处挂靠，resume（第七步）没有版本（第一步的 State Registry 里定义）就不知道该不该续跑。所以这份序列本身就是一张依赖拓扑——每一步的前提都排在它上面，谁先谁后没有商量余地。代价是顺序被锁死，想先做看得见的功能（漂亮的工具、能演示的 UI）得等地基先打好；但地基不打，那些功能就是空中楼阁，第一次真出故障就塌。
 
 ![](../diagrams/t1-layered-14.2-build-order.png)
 
