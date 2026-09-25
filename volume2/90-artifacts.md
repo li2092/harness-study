@@ -239,7 +239,7 @@
 
 一句话概括：状态可以回滚，授权不能跟着搭便车（7.8 节：状态连续推不出授权连续）。
 
-## V. Common-mode Failure Matrix
+## V. Common-cause Failure Matrix
 
 规则：纵深防御只在各层的执行点与失效模式相互独立时成立。本表考察的是共因失效（common-cause failure），即多层因同一个原因同时失效。逐层填写六列，共享同一个组件的层不算独立的层。评审用法：数一数被评系统的多层防御共享了几个 parser/classifier，被共享的那个就是形同虚设的底线。
 

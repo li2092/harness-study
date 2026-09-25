@@ -64,7 +64,7 @@ OpenAI Codex 的 execpolicy 把命令分三类：allow、prompt、forbidden，�
 - 有没有兜底（fallback）；
 - 留不留证据（evidence）。
 
-前面那个 hook fail-open 就是这张表里最危险的一行：失败时默认开，还不留证据。把这六列填出来，才知道四层里有几层是真的、有几层会一起失效。这张表交付为工作制品 V（Common-mode Failure Matrix，共因失效矩阵），也是本章给评审的一个重要工具：不接受"我们有多层防御"这种说法，只认逐层填出的六列。
+前面那个 hook fail-open 就是这张表里最危险的一行：失败时默认开，还不留证据。把这六列填出来，才知道四层里有几层是真的、有几层会一起失效。这张表交付为工作制品 V（Common-cause Failure Matrix，共因失效矩阵），也是本章给评审的一个重要工具：不接受"我们有多层防御"这种说法，只认逐层填出的六列。
 
 ## 11.6 恢复状态，不等于恢复授权
 
@@ -131,7 +131,7 @@ resume、fork、replay 三种操作重建的是状态与执行，绝不能顺手
 
 1. **Principal & Delegation Registry**（工作制品 T，11.1 节）：principal 五类，加委托记录（授予者、scope、期限、再委托、撤销）；
 2. **Authority Lifecycle Matrix**（工作制品 U，11.6 节）：授权的授予、范围、期限、失效条件、恢复重验，第五条概念主线在此收尾；
-3. **Common-mode Failure Matrix**（工作制品 V，11.5 节）：每层防御的六列（强制点、失效模式、共享组件、fail-open 或 fail-closed、兜底、证据）；
+3. **Common-cause Failure Matrix**（工作制品 V，11.5 节）：每层防御的六列（强制点、失效模式、共享组件、fail-open 或 fail-closed、兜底、证据）；
 4. **Runtime Trust Boundary**（工作制品 D 填充，11.4 节）、**Intervention Point Map**（工作制品 F 填充，11.7 节），以及五平面对应表；
 5. **权限故障用例（permission fixture）**（第十四章工单）：四场景破坏实验的可执行验证。
 
