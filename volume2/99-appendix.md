@@ -99,7 +99,7 @@
 | 双层控制流 | 节点内由 agent 自治的 loop（决定下一步调哪个工具、何时停），与跨节点由父编排的图（决定 spawn 谁、等谁、怎么合并结果）；两层的判断标准不同，不能混为一层 | 第十二章 12.2；工作制品 W |
 | 证据面（Evidence Plane） | 系统为事后核查留下的全部记录，作为架构中单独设计的一层：只装不可争议的事实，只追加，与执行面分开 | 第十三章 13.1 |
 | 先观察，后解释（Observe First, Interpret Later） | 热路径上只写不可争议的事实，解释放到离线，由 reducer 从事件重新计算；解释错了可以重跑，事实不被改动 | 第十三章 13.2 |
-| correlation（本书用法） | 一组八级层级 ID（tenant、conversation、run、turn、step、invocation、effect、artifact），全量冗余写进每条事件，允许为空的层显式置空；业界常说的 correlation ID 通常只是其中一个 | 第十三章 13.3；工作制品 C |
+| correlation（本书用法） | 一组八级层级 ID（tenant、conversation、run、turn（回合）、step、invocation、effect、artifact），全量冗余写进每条事件，允许为空的层显式置空；业界常说的 correlation ID 通常只是其中一个 | 第十三章 13.3；工作制品 C |
 | reducer（两义） | ① 事件溯源中的投影函数（fold），把事件序列折叠成状态或解释，第十三章 13.2 用此义；② LangGraph 的合并 reducer，合并并发写入同一状态的函数，第十二章 12.5 用此义 | 第十二章 12.5、第十三章 13.2 |
 | 缺席检测（absence detection） | 为关键机制登记"期望出现的事件"，把声明态与运行态对账，事件缺席即告警 | 第十三章 13.6；工作制品 C、Y |
 | 检测器自检（sabotage validation） | 定期给检测器喂已知的坏样本，验证它真的会触发，结果记入检测器测试记录 | 第十三章 13.6；工作制品 Y |

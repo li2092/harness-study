@@ -31,10 +31,10 @@ Turn 1 · 初始化 · Prompt Assets + Agent Loop 启动
 Turn 2 · 探查 · git log
    Agent thought: "git log 看哪些 commit 动过 logging"
    tool_call_request("shell_exec", "git log --oneline -20 src/logging/")
-   Safety 4 层穿过：
-     L1 workspace-write → pass
-     L2 shell_exec git read-only commands 默认 allow
+   Safety 4 层穿过（按求值顺序，hook 先于规则）：
      L3 PreToolUse hook → allow
+     L2 shell_exec git read-only commands 默认 allow
+     L1 workspace-write → pass
      L4 sandbox cwd in workspace → pass
    Execute → 20 行 git log 输出
    Observation: stub("git log 20 行 · 最近 20 个 commit · 提到 'add threading support'")
@@ -74,8 +74,8 @@ Turn 9 · 第一次尝试修复
    Agent thought: "加 threading.Lock 保护 buffer 写入"
    tool_call_request("edit_file", "src/logging/handler.py", patch=加 threading.Lock)
    Safety 4 层穿过：
-     L2 edit_file in src/ → workspace-write mode 默认 allow
      L3 Hook 检查 patch 是否涉及 sensitive file → handler.py 不在 sensitive list · allow
+     L2 edit_file in src/ → workspace-write mode 默认 allow
      L4 sandbox file system bound check · pass
    Execute → patch 应用
    Trajectory: 3 行
@@ -143,20 +143,19 @@ Turn 15 · 跑 lint + diff 检查
 ║   "git switch -c fix/logging-race && git commit           ║
 ║    && git push -u origin fix/logging-race")                ║
 ║                                                            ║
-║ Safety 4 层逐层穿过：                                     ║
-║   L1 permission mode = workspace-write                    ║
-║      → git commit 本地 OK · git push 涉及 network egress  ║
-║      → escalate 到 L2                                     ║
-║   L2 allow-deny-ask rule:                                 ║
-║      "git push -u origin fix/logging-race"                ║
-║      matched ask rule（git push 一律需人工确认）          ║
-║      → 触发 user approval                                 ║
+║ Safety 4 层按求值顺序穿过（hook 先于规则）：              ║
 ║   L3 PreToolUse hook fire:                                ║
 ║      user-defined script 读 commit message + diff size    ║
-║      检查 commit message 不含 'WIP' · 通过                 ║
+║      检查 commit message 不含 'WIP' · 通过                ║
 ║      检查 diff size < 500 行 · 通过                       ║
-║      返回 { decision: "ask" } （hook 也要求 user ask）     ║
-║   L4 sandbox network egress allowlist:                    ║
+║      返回 { decision: "ask" }（hook 要求 user ask）       ║
+║   L2 allow-deny-ask rule:                                 ║
+║      "git push -u origin fix/logging-race"                ║
+║      无 deny 命中 · matched ask rule                      ║
+║      （git push 一律需人工确认）→ 触发 user approval      ║
+║   L1 permission mode = workspace-write                    ║
+║      ask 规则已先命中，模式不再参与判定                   ║
+║   L4 sandbox network egress allowlist（push 执行时）:     ║
 ║      target = github.com:443 · 在 allowlist 内 · pass     ║
 ║                                                            ║
 ║ HALT · 写入 awaiting_user 事件 · 暂停 agent 主循环         ║
@@ -217,7 +216,7 @@ End of run.
 
 **Verifier 三层按轮次类型选择性启动。** Hard Gate 在每个调用工具的轮次都跑（文件是否存在、命令退出码等）；Outcome Judge 只在任务结束的那一轮启动一次（Turn 17）；PRM 全程累加每步得分（每次模型调用都打分）。三层按场景配置，不是每轮都全跑。需要说明的是，PRM（过程奖励模型）主要用于训练和推理期搜索，线上逐步打分的做法较少见，这里只为展示三层的分工（见 §5.8）。
 
-**Safety 控制面的 4 层每轮都经过，但通常不显形。** Turn 2、3、4、5、7、9、13、15 等常规工具调用（workspace-write 模式下）都经过 4 层且全部放行，读者看不到 Safety 的存在。Turn 16 的 git push 同时触发了网络出口检查、ask 规则和 hook 要求人工确认三项，Safety 4 层的完整介入才显式可见。Turn 17 建 PR 是另一个动作，按 §5.3 说的"批准 X 不等于批准 Y"，再确认一次。这种"平时不显形、关键操作显式"的模式是 Safety 控制面工程化的核心：不应该让用户在每次工具调用时都被打断，但高影响的关键操作必须让人看见。
+**Safety 控制面的 4 层每轮都经过，但通常不显形。** Turn 2、3、4、5、7、9、13、15 等常规工具调用（workspace-write 模式下）都经过 4 层且全部放行，读者看不到 Safety 的存在。Turn 16 的 git push 同时触发了 hook 要求人工确认、ask 规则和网络出口检查三项，Safety 4 层的完整介入才显式可见。Turn 17 建 PR 是另一个动作，按 §5.3 说的"批准 X 不等于批准 Y"，再确认一次。这种"平时不显形、关键操作显式"的模式是 Safety 控制面工程化的核心：不应该让用户在每次工具调用时都被打断，但高影响的关键操作必须让人看见。
 
 ![](../diagrams/t1-sequence-5.11-turn16.png)
 

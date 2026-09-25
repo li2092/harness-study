@@ -31,10 +31,10 @@ Turn 1 · Initialization · Prompt Assets + Agent Loop start
 Turn 2 · Exploration · git log
    Agent thought: "git log to see which commits touched logging"
    tool_call_request("shell_exec", "git log --oneline -20 src/logging/")
-   Safety's 4 layers crossed:
-     L1 workspace-write → pass
-     L2 shell_exec read-only git commands allowed by default
+   Safety's 4 layers crossed (in evaluation order, hook before rules):
      L3 PreToolUse hook → allow
+     L2 shell_exec read-only git commands allowed by default
+     L1 workspace-write → pass
      L4 sandbox cwd inside workspace → pass
    Execute → 20 lines of git log output
    Observation: stub("git log, 20 lines · last 20 commits · mentions 'add threading support'")
@@ -74,8 +74,8 @@ Turn 9 · First fix attempt
    Agent thought: "add a threading.Lock to protect the buffer writes"
    tool_call_request("edit_file", "src/logging/handler.py", patch=add threading.Lock)
    Safety's 4 layers crossed:
-     L2 edit_file in src/ → allowed by default under workspace-write
      L3 hook checks whether the patch touches a sensitive file → handler.py not on the sensitive list · allow
+     L2 edit_file in src/ → allowed by default under workspace-write
      L4 sandbox file-system bound check · pass
    Execute → patch applied
    Trajectory: 3 lines
@@ -151,22 +151,21 @@ Turn 15 · Run the lint + check the diff
 ║   "git switch -c fix/logging-race && git commit             ║
 ║    && git push -u origin fix/logging-race")                 ║
 ║                                                             ║
-║ Safety's 4 layers, crossed one by one:                      ║
-║   L1 permission mode = workspace-write                      ║
-║      → git commit is local, OK · git push means network     ║
-║        egress → escalate to L2                              ║
-║   L2 allow-deny-ask rule:                                   ║
-║      "git push -u origin fix/logging-race"                  ║
-║      matched an ask rule (every git push needs human        ║
-║      confirmation)                                          ║
-║      → user approval triggered                              ║
+║ Safety's 4 layers, in evaluation order (hook before rules): ║
 ║   L3 PreToolUse hook fires:                                 ║
 ║      user-defined script reads commit message + diff size   ║
 ║      commit message carries no 'WIP' · pass                 ║
 ║      diff size < 500 lines · pass                           ║
 ║      returns { decision: "ask" } (the hook requires a       ║
-║      user ask as well)                                      ║
-║   L4 sandbox network egress allowlist:                      ║
+║      user ask)                                              ║
+║   L2 allow-deny-ask rule:                                   ║
+║      "git push -u origin fix/logging-race"                  ║
+║      no deny match · matched an ask rule (every git push    ║
+║      needs human confirmation) → user approval triggered    ║
+║   L1 permission mode = workspace-write                      ║
+║      the ask rule already matched, so the mode does not     ║
+║      decide                                                 ║
+║   L4 sandbox network egress allowlist (when the push runs): ║
 ║      target = github.com:443 · on the allowlist · pass      ║
 ║                                                             ║
 ║ HALT · awaiting_user event written · agent main loop paused ║
@@ -228,7 +227,7 @@ The example explicitly draws out several key points to observe in how the eight 
 
 **The three verifier layers start selectively, by turn type.** The Hard Gate runs on every tool-call turn (file exists, command exit code, and so on); the Outcome Judge starts exactly once, on the task-completion turn (Turn 17); the PRM accumulates step scores throughout, scoring every model call. The layers are configured to fit the situation, and not all three run on every turn. One caveat: a PRM (process reward model) is used mainly in training and in inference-time search, and scoring each step online is uncommon. It appears here only to show how the three layers divide the work (see §5.8).
 
-**The Safety control plane's four layers are crossed on every turn, but they usually stay out of view.** The routine tool calls, such as Turns 2, 3, 4, 5, 7, 9, 13, and 15 under workspace-write mode, all cross the four layers and are all allowed, so the reader never sees Safety at work. Turn 16's git push triggers three checks at once: the network egress check, the ask rule, and a hook that requires human confirmation. Only there does the full intervention of the four layers become visible. Opening the PR in Turn 17 is a separate action, so under the §5.3 principle that approving X is not approving Y, it is confirmed again. This pattern, out of view most of the time and explicit for critical operations, is the core of engineering the Safety control plane: users should not be interrupted on every tool call, but high-impact critical operations must be seen by a person.
+**The Safety control plane's four layers are crossed on every turn, but they usually stay out of view.** The routine tool calls, such as Turns 2, 3, 4, 5, 7, 9, 13, and 15 under workspace-write mode, all cross the four layers and are all allowed, so the reader never sees Safety at work. Turn 16's git push triggers three checks at once: a hook that requires human confirmation, the ask rule, and the network egress check. Only there does the full intervention of the four layers become visible. Opening the PR in Turn 17 is a separate action, so under the §5.3 principle that approving X is not approving Y, it is confirmed again. This pattern, out of view most of the time and explicit for critical operations, is the core of engineering the Safety control plane: users should not be interrupted on every tool call, but high-impact critical operations must be seen by a person.
 
 ![](../diagrams/t1-sequence-5.11-turn16-en.png)
 

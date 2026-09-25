@@ -167,7 +167,7 @@ In one line: **do not trust the model's memory, but trust its reasoning.** The i
 
 #### 5.3.6 Design tradeoff 3 · how failures return to the model · raw error or sanitized error
 
-The Tool Registry's third job is failure handling: when a tool fails, how does the error get back to the agent? Here too there are two engineering options: return it as-is (raw error), or sanitize it first (sanitized error).
+The execution step also has to handle failure: when a tool fails, how does the error get back to the agent? Here too there are two engineering options: return it as-is (raw error), or sanitize it first (sanitized error).
 
 **Raw error** returns the complete failure (exception type, stack trace, internal paths, full message) to the agent as-is. This gives the agent the fullest possible error context, so it can infer from the trace what went wrong, fix its own arguments, and retry. Development-scenario harnesses like Claude Code lean raw, because the development scenario depends on the agent repairing itself from detailed errors.
 
