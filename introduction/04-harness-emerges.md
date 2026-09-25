@@ -103,7 +103,7 @@ harness engineering 的命名，关键事件集中在 2026 年 2 月初到 4 月
 
 #### Hashimoto 2026-02-05 · 命名的工程师身份背书
 
-**Mitchell Hashimoto** 在 *My AI Adoption Journey* 一文中提出并推广了"harness engineering"这个叫法。他是 HashiCorp 联合创始人、Terraform 作者，十几年处理的是"大型分布式系统怎样被可靠地构建和运维"。这样一位工程师说"我把跟 agent 协作的工程实践叫做 harness engineering"，这个命名自带工程分量：它不是营销造词，也不是论文标题，而是写过生产系统的人从实践里提炼出来的词。
+**Mitchell Hashimoto** 在 *My AI Adoption Journey* 一文中提出并推广了"harness engineering"这个叫法。他是 HashiCorp 联合创始人、Terraform 作者。Terraform 不是机器学习或学术工具，而是大规模分布式系统的基础设施定义语言，Hashimoto 十几年处理的是"大型分布式系统怎样被可靠地构建和运维"。这样一位工程师说"我把跟 agent 协作的工程实践叫做 harness engineering"，这个命名自带工程分量：它不是营销造词，也不是论文标题，而是写过生产系统的人从实践里提炼出来的词。
 
 他的措辞很谨慎：说这是自己"逐渐称为 harness engineering"的工作方式，并表示不确定行业是否已有通用术语。也就是说，他**没有宣称这是一门学科**。把它当作一门工程学科，是后来 Trivedy、Böckeler 和本书的归纳；Hashimoto 给的是命名的起点。
 
@@ -223,7 +223,7 @@ Trivedy 给出了今天被引用最广的公式和定义：
 **洞察二：术语的命名总是滞后于实践几年到十几年，这个滞后是必要的。**
 
 - **知识工程**：DENDRAL 项目 1965 年启动，到 1977 年 Feigenbaum 在 IJCAI 发表讨论知识工程的论文，相隔约 12 年。
-- **MLOps**：机器学习大规模进入生产在 2010 年代中期，专门的教科书（Hapke & Nelson《Building Machine Learning Pipelines》，2020-07）和课程（吴恩达的 MLOps 专项课程，2021-05）出现在几年之后。
+- **MLOps**：机器学习大规模进入生产在 2010 年代中期；2015 年 Sculley 等人的论文点出问题域，2017–2018 年 Google、Uber、LinkedIn 等公司陆续发表内部机器学习平台的文章，专门的教科书（Hapke & Nelson《Building Machine Learning Pipelines》，2020-07）和课程（吴恩达的 MLOps 专项课程，2021-05）出现在几年之后。
 - **harness engineering**：从 Aider（2023）、SWE-agent（2024）、Cursor 的 Composer 与 agent 模式（2024-07 起），到 Claude Code（2025-02）、Codex CLI（2025-04），再到 2026-02 命名，早的实践滞后约三年，晚的只有一年左右。
 
 滞后看起来是"行业反应慢"，其实是一种自我保护：名字要等足够多的实践案例积累之后才稳定，起得太早会被后续实践推翻。假如 2021 年有人把"prompt engineering"当作整个大模型工程的统一名字，到 2023 年 function calling 出来它就装不下工具调用，到 2024 年 trajectory、verifier、消融这些做法成熟，它就彻底过窄了。Hashimoto 2026 年才提 harness engineering，此时 2024–2025 年的实践已经验证了"模型外面那层"的组件清单，名字才稳得住。
@@ -248,6 +248,8 @@ DENDRAL 1965 年起就在做今天叫知识工程的事，MYCIN 在 1972–1976 
 - **命名滞后**：MLOps 从 2015 年那篇论文到 2020–2021 年出现专门的书和课程，前后约五六年；harness 从最早的产品实践到 2026 年命名，约一到三年。
 
 最有意思的相似点是**奠基性论点的结构相同**：都在说"算法本体只是整件事的一小部分，剩下的部分本身就是一门独立的工程实践"。一门约束层学科要成立，先要承认它要管的东西在已有学科里位置太边缘：MLOps 说"机器学习代码只占一小部分"，harness engineering 说"模型只是 agent 的一部分"。
+
+照 MLOps 的节奏，harness engineering 在 2026 年 2–4 月的密集事件之后，2026–2028 年可能经历类似的快速成熟，这也是本书在 2026 年中写成的依据。
 
 #### 但同辈关系也有边界 · MLOps 跟 Harness 的根本不同
 
