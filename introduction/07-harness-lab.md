@@ -7,7 +7,7 @@
 **这一章要先交代清楚一点**：Harness Lab 五层在业界的工程成熟度差别很大。
 
 - **Observe（观察）** 和 **Score（评分）** 两层已有成熟的工程实现，Anthropic、OpenAI、W&B、Langfuse、Galileo、Arize 等都在做。
-- **Ablate（消融）** 正在推进：AHE、Meta-Harness 等 2026 年的论文提出了这个方向，但工程实现还在早期。
+- **Ablate（消融）** 还在早期：统计方法是现成的，但作者没有看到把消融做成工作台功能的产品；AHE、Meta-Harness 等 2026 年的论文走的是自动演化路线，覆盖的是 Tune 和 Iterate 的一部分（§7.7）。
 - **Tune（调优）** 和 **Iterate（迭代）** 两层设计思路已经清楚，工程实现基本空白：业界大部分项目这两层仍靠手工和感觉，没有跑起来的自动化闭环。
 
 本书作者的 Harness Lab 工作台按五层完整设计，但 L4 Tune、L5 Iterate 也只是设计骨架，一行代码还没写，不是已经跑起来的产品。读这一章时要分清**业界最前沿做到了什么**和**自己的项目能做到哪一层**，这是两回事。
@@ -363,7 +363,7 @@ Harness Lab L5 的设计与 AHE、Meta-Harness、autoresearch 思路相同，把
 
 ![](../diagrams/t2-matrix-7-workbench.png)
 
-*图 7.3 · 业界五类工作台对照：没人把五层做全*
+*图 7.3 · 业界五类工作台对照：作者没有看到把五层做全的*
 
 **ML 实验追踪类（W&B、Langfuse、Galileo、Arize）**：这一类使用最广，覆盖五层中的 **Observe 和 Score 前两层**，trajectory 记录、看板、跨 run 对比、reward 跟踪、指标监控都做得很好，但**不做 Ablate、Tune、Iterate**：它们帮你记录跑了哪些实验、看哪个 reward 高，但不帮你判定哪个机制有贡献，不帮你调参，也不帮你跑到收敛。Langfuse、W&B 是 LLM 可观测性加实验追踪，Galileo、Arize 偏 agent 可观测性与生产监控，共同的定位是"记录你的 run"，而不是"优化你的 harness"。
 

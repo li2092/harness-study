@@ -32,7 +32,7 @@
 三条设计决定（6.0 节）：
 
 1. attempt 不设独立实体。模型侧的 invocation 行就是 attempt（失败的调用也记一行），工具侧由 effects.attempt_no 承载；出现跨层共享的重试预算（retry budget）时，再升格为独立实体。
-2. turn、compaction 摘要、policy decision 三者不设独立表：turn 由字段承载；compaction 摘要是 messages 表中的特殊类型行（第十章沿用这一做法）；policy decision 由第十一章决定并入 events，见本表 policy decision 行。
+2. 回合、compaction 摘要、policy decision 三者不设独立表：回合由 turn_no 字段承载；compaction 摘要是 messages 表中的特殊类型行（第十章沿用这一做法）；policy decision 由第十一章决定并入 events，见本表 policy decision 行。
 3. lease（执行权）是进程内的授权对象，不入本表（6.0 节、第八章）。
 
 ## B. Effect Ledger

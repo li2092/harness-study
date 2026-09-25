@@ -127,7 +127,7 @@ When the model should call a tool but outputs only text, there are three possibl
 - **No event is the most dangerous signal**: it means the code path was never reached.
 - Loop detection blocks repeated tool calls. Queue any intervention messages and push them all at once after this turn's tool results have been processed; don't break the message protocol midway.
 
-`↪ Main text: Observation Surface (§5.6) / Trajectory (§5.7, P0)`
+`↪ Main text: Observation Surface (§5.6, P0) / Trajectory (§5.7, P0)`
 
 ### 1.6 The Safety control plane, to start: cutting across all mechanisms, not a ninth mechanism
 

@@ -37,7 +37,7 @@
 
 素材来自三个自研 runtime（Python / Rust / TypeScript）与四个应用项目的开发记录。
 
-成书 PDF 在仓库根 `《harness-study》-实战笔记卷 - 李金铭 0902.pdf`。本卷共 41 张配图，成品 PNG 与前两卷共用 `../diagrams/`（`fn-*` 前缀）；图源与构建方式见配套工程仓。
+成书 PDF 在仓库根 `《harness-study》-实战笔记卷 - 李金铭 0926.pdf`。本卷共 41 张配图，成品 PNG 与前两卷共用 `../diagrams/`（`fn-*` 前缀）；图源与构建方式见配套工程仓。
 
 ## 与前两卷的关系
 

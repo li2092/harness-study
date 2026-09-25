@@ -583,7 +583,7 @@ Teach scratchpad use separately ("write important hypotheses, task progress, and
 
 Memory is the layer of §5.4 that sits **in the middle by lifetime and carries the most engineering constraints**. Context's engineering focus is the window, compression, and caching; Artifact's is schema, RAG, and data governance; Memory's is **write boundaries, invalidation mechanisms, consolidation, and the six enterprise productionization requirements**. Get these wrong and Memory is sure to become a dumping ground, and a long-running agent is sure to make decisions based on outdated information. Before doing any of this, though, go back to the five-question necessity test at the start of this section: **does your agent really need this whole Memory apparatus**, or is the stateless path enough? Answer that wrong, and all the engineering effort that follows is wasted.
 
-#### 5.4.3 Artifact · permanent products across runs
+#### 5.4.3 Artifact · long-lived products across runs
 
 Artifact is the layer where the agent deals with the future. The products of this task go into Artifact so that later, similar tasks can find them, reuse them, and build on them. Memory serves "this run (or the same agent)"; Artifact serves "future runs, plus other agents, people, and business systems." Of the three layers in §5.4, this is the one with **the longest time scale and the heaviest governance**.
 
@@ -682,7 +682,7 @@ Once Artifact reaches large B2B scale (1TB+ of data, 10,000+ users, multiple ten
 
 **Fifth, the memory scaling effect.** Databricks also discussed publicly in 2026 that in B2B settings, growth in accumulated Memory and Artifacts directly drives improvements in agent performance. This is a "tribal knowledge" advantage: one agent serves many users, and each user's experience accumulates into an asset shared by all of them. Structured Memory plus Artifact improves an agent's consistency across users more reliably than unstructured storage does. At scale, Artifact is not only passive storage but also a key driver of the agent's performance growth curve.
 
-**Sixth, backup, restore, and drills.** Artifacts are permanent data, and backups cannot be skipped. A common setup is **real-time replication to secondary storage on write, daily full snapshots, and weekly off-site backups**. Restore drills must run regularly (quarterly or monthly), because "we have backups" and "we can restore from backups" are two different things. Many teams have backups but have never practiced a restore, and only when they actually need one do they discover that the backup is missing key files or its format is incompatible.
+**Sixth, backup, restore, and drills.** Artifacts are long-lived data, and backups cannot be skipped. A common setup is **real-time replication to secondary storage on write, daily full snapshots, and weekly off-site backups**. Restore drills must run regularly (quarterly or monthly), because "we have backups" and "we can restore from backups" are two different things. Many teams have backups but have never practiced a restore, and only when they actually need one do they discover that the backup is missing key files or its format is incompatible.
 
 **Seventh, audit logs.** Who accessed which Artifact, and when, must all leave an audit trail. This is key both for compliance and for tracing security incidents. The audit log is itself an Artifact (a temporal one), but it must be stored separately, not in the same store as business Artifacts. Otherwise, when an agent mistakenly deletes business Artifacts, the audit log gets deleted along with them.
 
@@ -742,7 +742,7 @@ Artifact has two anti-patterns: uncontrolled dumping, and no cold-hot tiering.
 
 **Uncontrolled dumping** is a magnified version of the Memory anti-pattern in §5.4.2. Every intermediate result the agent produces goes into Artifact, "in case we need to look it up later." Half a year later Artifact has grown to hundreds of GB, backup costs double, retrieval accuracy falls (irrelevant data dilutes the relevant), and index maintenance work soars.
 
-Its causes are the same as for Memory: the development-stage fear of losing things, plus a write interface that is too light. But it is worse for Artifact. Memory's working state is cleared when the run ends, and long-term memory has TTL and consolidation too, so Memory converges on its own. Artifact is kept permanently with no mechanism for converging automatically: every write is one more entry forever, and every wrong write stays wrong forever.
+Its causes are the same as for Memory: the development-stage fear of losing things, plus a write interface that is too light. But it is worse for Artifact. Memory's working state is cleared when the run ends, and long-term memory has TTL and consolidation too, so Memory converges on its own. Artifact is kept long-term until explicitly deleted, with no mechanism for converging automatically: every write adds one more entry, and a wrong write stays wrong until someone deletes it.
 
 **No cold-hot tiering** is an anti-pattern specific to Artifact: all Artifacts sit on the same high-performance storage tier (pgvector, Elasticsearch, the main Postgres), with no distinction between hot and cold data. The "B2B at 1TB+ scale" passage above already worked out the numbers. In projects running for more than a year, most data is cold, and pressing all of it onto one high-performance storage setup doubles cost, makes retrieval less efficient rather than more, and drives backup and index costs up linearly with the cold data.
 
@@ -759,7 +759,7 @@ The rule cuts both ways: uncontrolled dumping and excessive strictness are two e
 
 **What to watch.**
 
-- Artifacts are permanent data, and mistakes are hard to undo, so think data governance (PII, isolation, GDPR, backup) through on day one instead of waiting to "do compliance later."
+- Artifacts are long-lived data, and mistakes are hard to undo, so think data governance (PII, isolation, GDPR, backup) through on day one instead of waiting to "do compliance later."
 - Choose among the three engineering levels (Lightweight, Bitemporal Knowledge Graph, Enterprise Decision Platform) by business complexity; one size does not fit all.
 - The real-world payoff of the retrieval that pulls Artifact content back into Context (RAG) is often overestimated. Don't treat it as a cure-all, and if you really need it, find dedicated material first.
 - The workload of index maintenance is often underestimated, at roughly 0.2 to 0.5 of a full-time engineer per year (a rule of thumb); include it in early cost estimates.

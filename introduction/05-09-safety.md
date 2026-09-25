@@ -107,7 +107,7 @@ HITL 的核心工程载体是 **ToolPolicy 上的 `requires_confirmation` 字段
 - **批量审批**：如果 agent 要连着调 10 个同类工具，每个都问用户会很烦，常见做法是批量审批（用户一次确认一组同类调用）。
 - **预演（dry-run）**：某些高影响操作（删文件、发邮件）需要用户先看到"同意之后会发生什么"再确认，常见做法是 agent 先给用户看预演结果，再问是否真的执行。
 
-HITL 有一个重要的演进方向叫 **Auto-review（自动审查）**：把"哪些操作要问用户"从人工配置的静态规则，变成由模型动态判断。**Codex 的 Auto-review 是一个代表性的实现**（[Agent approvals & security · Codex Docs](https://developers.openai.com/codex/agent-approvals-security)）：用专门的安全模型区分无害操作和可能有害的操作，Codex 文档称约 99% 的沙箱外操作可以自动批准，大幅减少用户被审批提示打扰的次数。Auto-review 的实现是"模型判断，加一条退回给人的通道"：模型判为无害就放行，判为不确定就升级给人询问，判为有害就拒绝。它的价值在于，把 HITL 给用户带来的打扰从"每个沙箱外操作都打断用户"降到"大约每 100 个沙箱外操作只有 1 个真需要用户看一眼"，大幅减轻用户的认知负担，同时不放弃对关键操作的人工把关。
+HITL 有一个重要的演进方向叫 **Auto-review（自动审查）**：把"哪些操作要问用户"从人工配置的静态规则，变成由模型动态判断。**Codex 的 Auto-review 是一个代表性的实现**（[Agent approvals & security · Codex Docs](https://developers.openai.com/codex/agent-approvals-security)）：用专门的安全模型区分无害操作和可能有害的操作，Codex 文档称约 99% 的沙箱外操作可以自动批准，大幅减少用户被审批提示打扰的次数。Auto-review 的实现是"模型判断，加一条退回给人的通道"：模型判为无害就放行，判为不确定或有害就转交人工审批。它的价值在于，把 HITL 给用户带来的打扰从"每个沙箱外操作都打断用户"降到"大约每 100 个沙箱外操作只有 1 个真需要用户看一眼"，大幅减轻用户的认知负担，同时不放弃对关键操作的人工把关。
 
 OpenHands 走的是另一条 HITL 路线：**工作流级审批**（[Agent Control Plane · OpenHands 2026-03-30](https://www.openhands.dev/blog/agent-control-plane)）。它不在单个工具调用上做审批，而是在整个工作流上做：用户配置"这个工作流可以访问哪些密钥、走哪些网络、调哪些外部系统"，工作流内部 agent 自由运行，不每次打断用户。工作流级审批适合企业规模的批量 agent 运行，配合花费追踪和审计日志兜底，用户不用全程盯着。它跟 Codex Auto-review 的"逐个调用由模型判断"是两条相对的路线。生产环境选哪条主要看场景：交互式开发场景，Codex Auto-review 更友好；企业批量部署场景，OpenHands 的工作流级审批更适用。
 

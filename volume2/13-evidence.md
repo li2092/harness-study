@@ -38,7 +38,7 @@
 
 事实写下了，下一个问题是：一条孤立的事件，怎么知道它属于哪次执行的哪一步？
 
-靠 correlation：一条八级的关联链，完整、冗余地写进每一条事件：tenant、conversation、run、turn、step、invocation、effect、artifact，允许为空的层显式置空（conversation 即第六章统一语言里实体链的顶层，Claude Code 里叫 session）。业界常说的关联标识（correlation ID）通常是贯穿一次请求的单个 ID；本书扩大了 correlation 的含义，用它统称这一组层级 ID，常见的 correlation ID 只是其中一个，传播方式类似 W3C Trace Context。第十二章留下的要求"child 的 trace 以父 run_id 关联，跨 agent 的因果链能拼回来"，在这里落实为：每条 child 事件都带着父的 run_id。反过来看它的脆弱之处：这条链断一级，因果就断在那一跳。第十二章的 infinite handoff loop 之所以查不清谁负责任务，根源就在 correlation 没有贯穿；少了那一环，记录里就只剩一堆认不出归属的孤立事件。设计上只有一句话：每条事件带全链（工作制品 C（Event Schema，事件信封与类型表）升级到 v2 后的信封字段规定了这些）。代价是每条事件冗余八个 ID，用存储的膨胀换"任意一条事件都能当场定位到它属于哪个 run 的哪一步"。
+靠 correlation：一条八级的关联链，完整、冗余地写进每一条事件：tenant、conversation、run、turn（回合）、step、invocation、effect、artifact，允许为空的层显式置空（conversation 即第六章统一语言里实体链的顶层，Claude Code 里叫 session）。业界常说的关联标识（correlation ID）通常是贯穿一次请求的单个 ID；本书扩大了 correlation 的含义，用它统称这一组层级 ID，常见的 correlation ID 只是其中一个，传播方式类似 W3C Trace Context。第十二章留下的要求"child 的 trace 以父 run_id 关联，跨 agent 的因果链能拼回来"，在这里落实为：每条 child 事件都带着父的 run_id。反过来看它的脆弱之处：这条链断一级，因果就断在那一跳。第十二章的 infinite handoff loop 之所以查不清谁负责任务，根源就在 correlation 没有贯穿；少了那一环，记录里就只剩一堆认不出归属的孤立事件。设计上只有一句话：每条事件带全链（工作制品 C（Event Schema，事件信封与类型表）升级到 v2 后的信封字段规定了这些）。代价是每条事件冗余八个 ID，用存储的膨胀换"任意一条事件都能当场定位到它属于哪个 run 的哪一步"。
 
 ![](../diagrams/t1-flow-13.2-event-anatomy.png)
 

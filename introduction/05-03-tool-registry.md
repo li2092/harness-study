@@ -167,7 +167,7 @@ ToolPolicy 的第二个取舍是：策略应该写在哪一层？早期 agent �
 
 #### 5.3.6 关键取舍 3 · 失败如何回模型 · raw error 还是 sanitized error
 
-Tool Registry 做的第三件事是失败处理：工具执行出错时，错误信息怎么返回给 agent？这里也有两种工程取舍：原样返回（raw error），还是脱敏后返回（sanitized error）。
+执行这一步还要处理失败：工具执行出错时，错误信息怎么返回给 agent？这里也有两种工程取舍：原样返回（raw error），还是脱敏后返回（sanitized error）。
 
 **raw error** 的做法是把工具执行的完整错误（异常类型、栈信息、内部路径、详细消息）原样返回给 agent。优点是 agent 拿到最完整的错误上下文，能从栈信息里推断哪里错了，自己改参数重试。Claude Code 等面向开发场景的 harness 倾向原样返回，因为开发场景就是要 agent 能从详细错误里自己修正。
 

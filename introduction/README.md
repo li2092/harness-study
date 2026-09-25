@@ -25,7 +25,7 @@
 | §5.3 | [05-03-tool-registry.md](./05-03-tool-registry.md) | Tool Registry & ACI · **P0** |
 | §5.4 | [05-04-context-memory-artifact.md](./05-04-context-memory-artifact.md) | Context / Memory / Artifact |
 | §5.5 | [05-05-prompt-assets.md](./05-05-prompt-assets.md) | Prompt Assets · Instruction Layer · **P0** |
-| §5.6 | [05-06-observation-surface.md](./05-06-observation-surface.md) | Observation Surface（观测面）· 两个作用加一个案例 |
+| §5.6 | [05-06-observation-surface.md](./05-06-observation-surface.md) | Observation Surface（观测面） |
 | §5.7 | [05-07-trajectory.md](./05-07-trajectory.md) | Trajectory · Event Stream · **P0** |
 | §5.8 | [05-08-verifier.md](./05-08-verifier.md) | Verifier 三层 · **P0** |
 | §5.9 | [05-09-safety.md](./05-09-safety.md) | Safety 控制面 · cross-cutting |

@@ -15,6 +15,8 @@
 
 ![](../diagrams/tb-06-1.png)
 
+第三级的"回合"与术语对照表同义：从一条用户消息开始，到模型给出最终回复为止，一个回合包含多个 step。第四级 step 大致对应入门卷的"一轮"（turn），即一次模型调用加上它触发的工具执行。数据库字段沿用 turn_no。
+
 第五级的两条裁决合起来是一项结构决定，来路要交代清楚。
 
 **结论**：不设独立的 Attempt 实体。模型侧每次真实调用记一行 invocation，失败的调用也单独成行，序号与状态就是尝试的记录；工具侧由 Effect Ledger 的 attempt_no 承载，"尝试可多次、结果只记一次"在工作制品 B 里本来就是不变量。"失败输出不混入下一次尝试"这条执行约束，由 step 范围内的 context 组装来保证。
@@ -31,7 +33,7 @@
 
 **推翻条件**：一旦需要对执行权的授予与收回做完整的历史审计，授权就不再只是授权记录的内部事务，届时在 Registry 另起一行登记。这条分层第八章会结合桌面案例项目的一次工程改造详细说明，fencing 高水位存在状态层的哪一处，也在那里交代。
 
-六级实体对应十一张表：conversations、runs、messages、steps、invocations、effects、checkpoints、artifacts、approvals、timers、events，全表与逐行归属收录在工作制品 A（State Registry，状态注册表）。数目背后还有三条"不设表"的裁决：turn 不设表，由字段承载；compaction（上下文压缩）摘要暂作 messages 的特殊行，是否独立成表由第十章裁决；policy decision 并入 events，是否独立由第十一章裁决。表可以少，归属不能含糊：Registry 每行都要填满四列，即谁是唯一写者、谁在读、删除意味着什么、进程在写它的中途被杀之后它处于什么状态。
+六级实体对应十一张表：conversations、runs、messages、steps、invocations、effects、checkpoints、artifacts、approvals、timers、events，全表与逐行归属收录在工作制品 A（State Registry，状态注册表）。数目背后还有三条"不设表"的裁决：回合不设表，由 turn_no 字段承载；compaction（上下文压缩）摘要暂作 messages 的特殊行，是否独立成表由第十章裁决；policy decision 并入 events，是否独立由第十一章裁决。表可以少，归属不能含糊：Registry 每行都要填满四列，即谁是唯一写者、谁在读、删除意味着什么、进程在写它的中途被杀之后它处于什么状态。
 
 最后是四条全局规则，适用于全部持久对象：
 
