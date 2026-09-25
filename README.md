@@ -88,6 +88,8 @@
 
 ## 四、入门卷概览
 
+> 2026 年 9 月修订：改动摘要见[入门卷修订记录](introduction/00-revision-notes.md)，三卷共用的术语约定与事实核查见[术语对照表](术语对照表.md)。英文版尚未同步。
+
 入门卷是本项目的开篇导论卷。它把 agent harness 拆成**八种 runtime 机制 + 一种横切控制面 + 工程模式 + 工作台 + 可组合性矩阵 + 控制论四原则**，把整套骨架走一遍。每一种给出 What / Why / How to start 三档完整 mental model。
 
 <p align="center">
