@@ -67,7 +67,7 @@
 
 在本书看来，三者缺一不可：没有循环，只能跑单步；没有 thought，只能看到最终结果，看不到决策过程；没有 verifier，就只能靠模型自己宣布完成，再用步数上限兜底。
 
-"Agent Loop 不等于 while 循环"这个观点，在生产级实现里有具体证据。社区对 Claude Code 实现的公开分析显示，它的内循环不是一个简单的 while 块，而是由异步生成器（async generator）拼成的事件流水线，单轮承载十步以上的小机制：四级压缩的串行检查、token 阻断预算、system prompt 装配、流式采样、工具边流边执行、错误恢复、stop hook 评估、按 token 预算续写、附件注入。<!-- 待作者补充：Claude Code 内循环结构分析的公开出处 --> 代码里用一个 State 结构体跨迭代携带十个字段，主循环里显式标出了七个继续点和十一个终止出口，每一处都注明了转移原因。可见"循环何时继续、何时终止"在这套生产代码里是需要单独设计的部分，而不是"while True 加一个 break"。这跟前面讲的三元组正好对上：三元组是模型层的思考结构，内循环是这个结构在工程层可审查的实现。
+"Agent Loop 不等于 while 循环"这个观点，在生产级实现里有具体证据。对 Claude Code 源码快照的第三方分析[^dive-cc-2026]显示，它的外层仍是一个 while 循环，写成异步生成器（async generator），但单轮承载十步以上的小机制：四级压缩的串行检查、token 阻断预算、system prompt 装配、流式采样、工具边流边执行、错误恢复、stop hook 评估、按 token 预算续写、附件注入。代码里用一个 State 结构体跨迭代携带十个字段，主循环里显式标出了七个继续点，终止时给出十种终止原因之一，每一处都注明了转移原因。可见"循环何时继续、何时终止"在这套生产代码里是需要单独设计的部分，而不是"while True 加一个 break"。这跟前面讲的三元组正好对上：三元组是模型层的思考结构，内循环是这个结构在工程层可审查的实现。
 
 生产级循环还有一条教学示例常省略的路径：**中断与插话（steering）是循环状态机的正式输入**。agent 跑长任务时，用户中途改方向是常态而不是异常，所以状态机除了继续和终止，还要有一条"吸收外部输入、再继续"的转移路径。工程上，中断点只能放在轮与轮的边界上：每个工具调用都要有配对的工具结果（5.1.2 末尾会讲这条协议规则），如果在半轮处硬切，留下没有结果的工具调用，下一次请求会被 API 直接拒绝；即使手工补齐，也容易让模型误判哪些工具真的执行过。判断标准很直接：预计超过几分钟的任务，必须支持无损中断，即中断后 context、artifact、trajectory 三者状态一致，恢复时 agent 不需要猜刚才发生了什么。Claude Code 的消息队列、Codex 全程可取消的 CancellationToken，都是这条路径的生产实现。
 
@@ -350,6 +350,7 @@ Agent Loop 不是孤立的组件，而是整个 harness 的执行内核。
 [^swe-bench-verified]: SWE-bench Verified · OpenAI · 2024-08 · openai.com/index/introducing-swe-bench-verified/
 [^swe-trace-2026]: SWE-TRACE（Rubric Process Reward Model）· arxiv 2604.14820 · 预印本
 [^plan-and-act-2025]: Plan-and-Act: Improving Planning of Agents for Long-Horizon Tasks · Erdogan, Lee, Kim et al. · arxiv 2503.09572 · ICML 2025
+[^dive-cc-2026]: Dive into Claude Code: The Design Space of Today's and Future AI Agent Systems · Liu, Zhao, Shang, Shen（MBZUAI）· arxiv 2604.14228 v2 · 预印本 · 分析对象为 Claude Code v2.1.88 快照，属第三方源码分析，当前行为以官方文档为准；十个字段、七个继续点、十种终止原因另见社区读本 claude-code-from-source.com 第 5 章
 [^anthropic-skills-spec]: Agent Skills · Anthropic · 2025-10-16 初版 / 2025-12-18 open standard · agentskills.io
 [^anthropic-multi-agent-research]: How we built our multi-agent research system · Anthropic · 2025-06-13 · anthropic.com/engineering/multi-agent-research-system
 [^dynamic-workflows]: 把多 agent 编排写成确定性脚本、交给运行时在后台执行的工程形态，2026 年的一个实例是 Claude Code 的 dynamic workflows：ultracode 模式下 Claude 会主动为复杂任务生成这类编排脚本 · research preview（需 Claude Code v2.1.154+）· code.claude.com/docs/en/workflows

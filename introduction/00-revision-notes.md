@@ -54,6 +54,8 @@
 | §5.9 | 物理 sandbox；用正则检测提示词注入；OWASP 官方 LLM01 测试套件 | OS 级沙箱；注入检测主要靠分类器，只能降低风险；OWASP 没有官方测试套件，改用 AgentDojo、InjecAgent 等 |
 | §5.11 | 先 push main 再提 PR；死锁因 Handler 自带锁 | 先推功能分支再向 main 提 PR；死锁因同一把不可重入锁被重复获取（Handler 自带的锁本是 RLock） |
 | §7 | HPO 的 acquisition function（如 Hyperband） | 采集函数属于贝叶斯优化 / TPE，Hyperband 用 successive halving |
+| §5.1 | Claude Code 内循环"不是一个简单的 while 块"；七个继续点、十一个终止出口；出处未注 | 按第三方分析（arXiv 2604.14228）改为外层仍是 while 循环、单轮承载十步以上机制；终止改为十种终止原因；补脚注 |
+| §5.8.7、图 5.21 | overlap_pos / overlap_neg 对照组列为偏好泄漏的对策 | 该对照组检测的是预期答案被字面暴露，移到第二类"答案明示"并写明构造与判定规则；偏好泄漏的对策改为 judge 与 agent 跨模型家族 |
 | §7.4 Phase B、落地 Spec 第 7 条 | "工具参数自动补全"在端到端单点消融里关掉后通过率不降反升 | 这次消融没有运行记录。改用一条真实的工程记录：参数解析失败就换成空对象、照常调用工具，遮蔽了错误信号；注明它由专项审计发现，没有做过开关对比 |
 | §八 | MCP 传输有 stdio、SSE、WebSocket 三种；handoff 不共享状态、隔离最强 | 标准传输只有 stdio 与 Streamable HTTP（2026-07-28 版已去掉会话 ID）；handoff 默认把完整对话历史交给接收方 |
 | §九 | 两句英文标为 Wiener 1948 原话；可观测性出自 Wiener；钱学森"70 年前"提出开放复杂巨系统 | 《控制论》原书无此两句，已删；可观测性、可控性出自 Kalman 1960；开放复杂巨系统论文发表于 1990 年 |
