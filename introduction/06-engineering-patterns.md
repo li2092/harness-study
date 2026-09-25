@@ -14,7 +14,7 @@
 
 ![](../diagrams/t1-cardgrid-6-patterns.png)
 
-*图 6.1 · 跨件复用的六个工程模式*
+*图 6.1 · 跨机制复用的六个工程模式*
 
 工程模式跟 runtime 机制的边界要分清。**runtime 机制是 agent 每一轮实际用到的组件**，Tool Registry、Verifier、Trajectory 这些都是机制。**工程模式是机制之间的组合方式**，例如：
 
@@ -162,7 +162,7 @@ JSONL 只追加文件之所以常见，有三项工程优势：
 
 ![](../diagrams/t2-comparison-6-isolation.png)
 
-*图 6.2 · sub-agent 执行隔离的三档模式*
+*图 6.2 · sub-agent 执行隔离的三级模式*
 
 **InProcess**：sub-agent 与主 agent 跑在同一个进程里，共享内存和文件系统，只在逻辑上划分 agent 边界。这种模式最轻量，sub-agent 启动几乎没有开销，可以直接共享数据结构，适合**短任务、高频协作、没有副作用风险的子任务**（比如 sub-agent 只是分析主 agent 的上下文、给出审阅意见，不写产物）。代价是隔离弱：sub-agent 出错可能污染主 agent 的状态，多个 agent 并发时要小心线程安全。
 

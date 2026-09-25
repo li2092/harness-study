@@ -84,7 +84,7 @@ Prompt asset 单独抽成一个 P0 机制，是因为指令性内容的资产化
 
 ![](../diagrams/t3-layered-5.5-p0p5.png)
 
-*图 5.15 · system prompt 的六个裁剪层级与裁剪顺序（图中标为 P0–P5，即正文的 L0–L5）*
+*图 5.15 · system prompt 的六个裁剪层级与裁剪顺序*
 
 把 prompt asset 等同于"system prompt 文件"是一种窄化。同一套 prompt 工程规则实际上同时管三种形态：常驻的 system prompt 片段、按相关性激活的 Skill、按事件触发的 hook 注入。Anthropic 2025-10 公开的 Skills 规范规定，SKILL.md 必须有 frontmatter 头（name 和 description 两个必填字段），正文写概述（Overview）和用法（Usage）。hook 的物理形态则是配置文件里的事件块：Claude Code 的 hook 体系覆盖十几种生命周期事件（PreToolUse、PostToolUse、UserPromptSubmit、Stop、SubagentStop、SessionStart、SessionEnd、PreCompact 等，随版本持续增加），每个事件挂一组匹配条件（matcher）和动作（action）。这三种形态本质上都是把指令外置成文件，差别主要在注入的时机，以及阻断型 hook 多出的那一层代码强制。
 
