@@ -37,12 +37,12 @@
 | §九 | [09-cybernetics.md](./09-cybernetics.md) | 控制论四原则 · 整本教程的元规则收束 |
 | §十 | [10-learning-path.md](./10-learning-path.md) | 学习路径 · 三类读者怎么用这本教程 |
 | 配套 · Prompt | [11-harness-prompt.md](./11-harness-prompt.md) | Harness Prompt · 给 agent 的可执行实施 Spec（Phase 0–3 + 每步 gate）|
-| 配套 · Prompt lite | [12-harness-prompt-lite.md](./12-harness-prompt-lite.md) | Harness Prompt · 通用 TDD lite 版（三段指令直接喂编码 AI）|
+| 配套 · Prompt lite | [12-harness-prompt-lite.md](./12-harness-prompt-lite.md) | 通用落地提示词（评测先行）精简版，三段指令直接交给编码 AI|
 | 附录 | [99-appendix.md](./99-appendix.md) | 8 个机制速查表 + 一手引源汇总 |
 
 > 目录中标 **P0** 的是优先级最高的机制：不做它，harness 跑不起来或跑起来也不可靠（P0/P1/P2 三级的含义见[第五章总述](./05-00-mechanisms-overview.md)）。
 >
-> §5.1 的深讲卷在后续展开卷（规划中）。**可执行的配套文件已收进本目录**：实施 Spec → [`11-harness-prompt.md`](./11-harness-prompt.md)；TDD lite 版 → [`12-harness-prompt-lite.md`](./12-harness-prompt-lite.md)；速查附录 → [`99-appendix.md`](./99-appendix.md)。
+> §5.1 的深讲卷在后续展开卷（规划中）。**可执行的配套文件已收进本目录**：实施 Spec → [`11-harness-prompt.md`](./11-harness-prompt.md)；落地提示词精简版（评测先行）→ [`12-harness-prompt-lite.md`](./12-harness-prompt-lite.md)；速查附录 → [`99-appendix.md`](./99-appendix.md)。
 
 ## 配图目录
 

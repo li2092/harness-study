@@ -149,7 +149,7 @@
 | §九 | 控制论四原则 |
 | §十 | 学习路径 |
 | 配套 · Prompt | Harness Prompt · 给 agent 的可执行落地 Spec（[`11-harness-prompt.md`](introduction/11-harness-prompt.md)）|
-| 配套 · Prompt lite | 通用 TDD lite 版 · 三段指令直接喂编码 AI（[`12-harness-prompt-lite.md`](introduction/12-harness-prompt-lite.md)）|
+| 配套 · Prompt lite | 通用落地提示词（评测先行）精简版，三段指令直接交给编码 AI（[`12-harness-prompt-lite.md`](introduction/12-harness-prompt-lite.md)）|
 | 附录 | 一手 source / EG10 / OWASP / 命名映射 / SPIFFE-biscuit / AP01-AP19 / arxiv 全表 |
 
 ### 跳读建议
