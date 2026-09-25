@@ -10,17 +10,17 @@
 
 ```
 ═══════════════════════════════════════════════════════════
-[单个 run · 约 17 turn]
+[单个 run · 16 轮 agent 调用 + 1 次两轮之间的压缩 · 共 17 个编号]
 ═══════════════════════════════════════════════════════════
 
 Turn 1 · 初始化 · Prompt Assets + Agent Loop 启动
    Prompt Assets 装配：
-     P0 system: Safety 纪律 + 工具使用纪律 + instruction hierarchy
-     P1 task: "修 src/logging/handler.py 的并发 bug · 提 PR"
-     P2 memory: 空（fresh run · 没有 prior context）
-     P3 tools: shell_exec / read_file / write_file / edit_file / create_pr
-     P4 examples: 2 个 prior debug case（pattern 借鉴）
-   system_prompt_hash = sha256(P0+P1+P2+P3+P4) = "abc123..."
+     system: Safety 规则 + 工具使用规则 + instruction hierarchy
+     task: "修 src/logging/handler.py 的并发 bug · 提 PR"
+     memory: 空（fresh run · 没有 prior context）
+     tools: shell_exec / read_file / write_file / edit_file / create_pr
+     examples: 2 个 prior debug case（pattern 借鉴）
+   prompt_hash = sha256(system+task+memory+tools+examples) = "abc123..."   # 本轮完整 prompt 的指纹
    Agent Loop = ReAct mode（task 是 multi-step debug · ReAct 默认适用）
    Model Adapter call → 返回 plan text:
      "先看 git log 了解最近改动 · 再读 logging 模块"
@@ -34,8 +34,8 @@ Turn 2 · 探查 · git log
      L2 shell_exec git read-only commands 默认 allow
      L3 PreToolUse hook → allow
      L4 sandbox cwd in workspace → pass
-   Execute → 100 行 git log 输出
-   Observation: stub("git log 100 行 · 最近 20 commits · 提到 'add threading support'")
+   Execute → 20 行 git log 输出
+   Observation: stub("git log 20 行 · 最近 20 个 commit · 提到 'add threading support'")
                 body 入 ArtifactStore (art_001)
    Trajectory: 3 行（request / policy / response）
 
@@ -85,9 +85,11 @@ Turn 10 · 跑测试 · 期望 pass
    Trajectory: 3 行
 
 ╔═════════════════════════════════════════════════════════╗
-║ Turn 11 · CONTEXT AUTO-COMPACT 触发                       ║
+║ [11] Turn 10 与 Turn 12 之间 · CONTEXT AUTO-COMPACT 触发 ║
+║ （两轮之间由 harness 执行的事件 · 不是一轮 agent 调用） ║
 ║                                                            ║
-║ context 总 tokens 达预算 70% 阈值（auto-compact 触发条件）║
+║ 上下文占用达到上下文预算的 70%（auto-compact 触发条件 ·  ║
+║ 经验值 · 本例不设具体预算数）                             ║
 ║ Compactor 启动（Context-Memory-Artifact 协作）:           ║
 ║   - 选 Turn 1-7 作为压缩范围（早期 + 已完成阶段）         ║
 ║   - 调便宜模型（gpt-5.4-nano）把 7 轮压成 250 字摘要     ║
@@ -99,14 +101,17 @@ Turn 10 · 跑测试 · 期望 pass
 ║   { before_tokens: 18000, after_tokens: 8500,             ║
 ║     summary_model: gpt-5.4-nano, range: turns_1_to_7 }   ║
 ║                                                            ║
-║ ★ Context-Memory-Artifact 在此 turn 第一次显式出现 ★     ║
+║ ★ compaction 在本 run 中第一次出现 ★                      ║
 ╚═════════════════════════════════════════════════════════╝
 
 Turn 12 · 看摘要重新分析 · 修正方向
    Agent Loop · 模型读 compaction 后 context + Turn 8-10 失败信息
    thought:
-     "之前用 Lock 死锁 · 因为 handler.emit() 内部又调了 self.acquire()。
-      改用 RLock（reentrant lock）即可。"
+     "之前加 Lock 后死锁：emit() 内部调用的辅助方法
+      又去获取同一把新加的 Lock，而 threading.Lock 不可重入。
+      改用 RLock（reentrant lock，可重入锁）即可。"
+     （标准库 logging.Handler 自带的 self.lock 默认就是 RLock，
+      出问题的是这次新加的那把锁）
    Trajectory: 1 行
 
 Turn 13 · 第二次尝试修复
@@ -130,16 +135,19 @@ Turn 15 · 跑 lint + diff 检查
    Trajectory: 3 行
 
 ╔═════════════════════════════════════════════════════════╗
-║ Turn 16 · COMMIT + PUSH · Safety 控制面 4 层完整介入       ║
+║ Turn 16 · COMMIT + PUSH 到功能分支 · Safety 4 层完整介入   ║
 ║                                                            ║
-║ tool_call_request("shell_exec", "git commit && git push") ║
+║ tool_call_request("shell_exec",                           ║
+║   "git switch -c fix/logging-race && git commit           ║
+║    && git push -u origin fix/logging-race")                ║
 ║                                                            ║
 ║ Safety 4 层逐层穿过：                                     ║
 ║   L1 permission mode = workspace-write                    ║
 ║      → git commit 本地 OK · git push 涉及 network egress  ║
 ║      → escalate 到 L2                                     ║
 ║   L2 allow-deny-ask rule:                                 ║
-║      "git push origin main" matched ask rule              ║
+║      "git push -u origin fix/logging-race"                ║
+║      matched ask rule（git push 一律需人工确认）          ║
 ║      → 触发 user approval                                 ║
 ║   L3 PreToolUse hook fire:                                ║
 ║      user-defined script 读 commit message + diff size    ║
@@ -167,9 +175,13 @@ Turn 15 · 跑 lint + diff 检查
 ╚═════════════════════════════════════════════════════════╝
 
 Turn 17 · 创建 PR
-   tool_call_request("create_pr", title, body=含修复说明 + 测试结果)
-   Safety 4 层穿过 · create_pr 工具配 requires_confirmation = false（已经在 Turn 16 approve push 后视为整体任务批准）· allow
-   Execute → PR URL 返回 "https://github.com/org/repo/pull/123"
+   tool_call_request("create_pr", head="fix/logging-race", base="main",
+                     title, body=含修复说明 + 测试结果)
+   Safety 4 层穿过 · create_pr 工具配 requires_confirmation = true
+     Turn 16 批准的是 push · 不等于批准建 PR（§5.3：批准 X 不等于批准 Y）
+     → HALT · 写入 awaiting_user 事件 · 用户 approve
+   Trajectory: policy_decision (awaiting_user) + user_approval event
+   Execute → 向 main 提交 PR · PR URL 返回 "https://github.com/org/repo/pull/123"
    Verifier Outcome Judge（这个 turn 是 task 结束 turn · 启动 outcome judge）:
      judge LLM 读 PR body + commit diff + test result
      judge LLM rubric: "PR 是否包含 bug fix + 测试 + 描述" · pass
