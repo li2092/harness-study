@@ -241,7 +241,7 @@ Safety 控制面最核心的反模式有四类：**假落地机制**（AP06，�
 
 **AP12 子 agent 深度爆炸**：主 agent 启动子 agent，子 agent 又启动孙 agent，没有深度上限，也没有 token 预算上限，最后一次 run 跑出几十万 token 的成本。它本质上是前面 Multi-Agent Over-Decomposition 那一节讲的编排开销在 Safety 维度上的体现：多智能体系统的 token 消耗约为普通对话的 15 倍，派生深度再失控，成本就成倍放大，成为 LLM10 Unbounded Consumption。该不该上多智能体的判断标准（按任务轮数和子任务的可并行度判断）在那一节已经给出，这里只讲 Safety 侧的硬约束：**子 agent 深度上限（经验值：2 到 3 层）、每次 run 的总 token 预算上限、超预算时提前中止，三者必须齐全**。前面的判断标准回答"值不值得上多智能体"，这三条保证"上了也不会失控"。
 
-**AP13 Hook 与白名单绕过**：hook 配了拒绝规则，agent 仍然找到办法绕过去。机制上，根因通常是**规则覆盖不全**：比如拒绝了 `cargo check`，却允许了它的别名 `cargo c`；拒绝了 `git push origin main`，却允许了 `git push --force origin main`；拒绝了 `rm -rf`，却允许了 `find . -delete`。本教程配套实现项目遇到过的具体情况，就是 5.9.2 提到的别名：hook 对 `cargo check` 配了拒绝规则，agent 换用 cargo 内置的别名 `cargo c`，规则只按字面匹配，没有识别出这是同一个命令，于是自动放行，hook 形同虚设。按工程经验，hook 被绕过是成熟 agent 项目里 hook 相关 bug 的常见一类。判断时看三点：
+**AP13 Hook 与白名单绕过**：hook 配了拒绝规则，agent 仍然找到办法绕过去。机制上，根因通常是**规则覆盖不全**：比如拒绝了 `cargo check`，却允许了它的别名 `cargo c`；拒绝了 `git push origin main`，却允许了 `git push --force origin main`；拒绝了 `rm -rf`，却允许了 `find . -delete`。以 5.9.2 提到的别名为例：hook 对 `cargo check` 配了拒绝规则，agent 换用 cargo 内置的别名 `cargo c`，规则只按字面匹配，没有识别出这是同一个命令，于是自动放行，hook 形同虚设。按工程经验，hook 被绕过是成熟 agent 项目里 hook 相关 bug 的常见一类。判断时看三点：
 
 - hook 规则是按字面字符串精确匹配，还是先把命令规范化成意图再匹配？前者几乎必然有绕过的余地。
 - hook 的维护流程是不是"每加一个新工具，同时检查 hook 规则要不要扩展"？通常都不是，工具越加越多，hook 规则就落后了。
