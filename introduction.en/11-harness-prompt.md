@@ -1,45 +1,45 @@
 # Harness Prompt · The executable landing spec for an agent
 
-This file is the **executable companion** to the main text, *Harness Study*. The main text covers "what the parts are and why they are designed this way"; this file covers "what order to build them in, and how to verify each step is right."
+This file is the **executable companion** to the main text, *Harness Study*. The main text covers "which mechanisms there are and why they are designed this way"; this file covers "what order to build them in, and how to verify that each step was done right."
 
-**How to use it**: hand this file, together with your concrete scenario ("build me an agent for scenario X"), to a coding agent. The agent works through Phase 0 → 1 → 2 → 3 in order, and **the completion gate at the end of each Phase must pass before the next Phase begins**. A gate is "how you verify the step was done right," not "what was done" — with no verifiable evidence, treat the step as unfinished.
+**How to use it**: hand this file, together with your concrete scenario ("build me an agent for scenario X"), to a coding agent. The agent works through Phase 0 → 1 → 2 → 3 in order, and **the completion gate at the end of each Phase must pass before the next Phase begins**. A gate answers "how do you verify it was done right," not "what was done." Without verifiable evidence, treat the step as unfinished.
 
 **Global conventions**:
 
-- Every concrete number in this file (token-usage thresholds, single-tool output caps, tool counts) is a **starting default**, to be tuned against your scenario, not a universal constant.
-- Each Phase marks its corresponding main-text chapter (`↪`); drill down there when you need the underlying reasoning.
-- Build on a **strong model**. A weak model cannot carry multi-turn tool calling and will fail the Phase 1 gate over and over.
-- Wherever possible, give each Phase's completion gate a **runnable check** — a script, an assertion, a comparison that executes — not just a written description. The one executing this spec is an agent, and written criteria are exactly what an agent finds easiest to "declare satisfied" (the incubator of artifact-claim mismatch); a gate that runs leaves no room to fudge. Example: the Phase 1 gate should at minimum include a hard check like "one full ReAct loop completed on a fake provider + a tool_call/tool_result pairing assertion."
-- This spec runs the **middle-coverage tier**: a generic runtime + scenario narrowing + cost structure (the three parts distilled from practice) + the Model Probe + the four-principle self-check + the mechanism admission gate. The two advanced topics — the Harness Lab five layers and the composability three axes — get only their judgment lines here, not a full treatment; go back to the main text when you need them.
+- Every concrete number in this file (token-usage thresholds, single-tool output caps, tool counts, pass-rate thresholds, and so on) is a **starting default**, to be tuned by measuring in your own scenario, not a universal constant. Numbers that come from the literature say so.
+- Each Phase marks the main-text sections it corresponds to (`↪`); go back there when you need the underlying reasoning. The P0, P1, and P2 in the `↪` lines are the priorities §V of the main text assigns to the mechanisms: P0 is required for a minimum viable version, P1 is what to add before going to production, and P2 can wait until you scale.
+- Build on a **strong model**. A weak model can't run multi-turn tool calling reliably and will fail the Phase 1 gate over and over.
+- Wherever possible, back each Phase's completion gate with a **runnable check**: a script, an assertion, a comparison that actually runs, not just a written description. The one executing this spec is an agent, and a written criterion is exactly what an agent can most easily wave through with a one-line "satisfied" (the breeding ground for Artifact Claim Mismatch, AP04 in Appendix F). A gate that runs leaves no room to fudge. Example: the Phase 1 gate should at minimum include a hard check like "complete one full ReAct loop against a fake model service (a fake provider), and assert that every tool call has a matching tool result."
+- The coverage of this spec is a middle ground: three parts distilled from practice (a generic runtime, scenario narrowing, and cost structure), plus behavioral probing, the four-principle self-check, and the mechanism admission check. Two advanced topics, the Harness Lab's five layers and the three composability axes, get only their decision criteria here, not a full treatment; go back to the main text when you need them.
 
 ---
 
-## Phase 0 · Model Probe · take the model's pulse before you build
+## Phase 0 · Behavioral probing · get to know the model's quirks before you build
 
-**Goal**: before building the runtime, run a diagnostic against the exact LLM endpoint you will use, and produce a profile — which mechanisms this model needs, which it does not, and which are traps for it. The value is not "understanding the model"; it is **cutting down the space of mechanisms you will later have to try**, and **flagging negative-contribution traps in advance**.
+**Goal**: before building the runtime, run a set of diagnostics against the model endpoint you will use. This is behavioral probing, which the book also calls "taking the model's pulse." It produces a profile: which mechanisms this model needs, which it doesn't, and which are traps for it. The value lies less in "understanding the model" for its own sake than in **narrowing the range of mechanisms you will have to try later** and **flagging in advance the traps that would backfire**.
 
-**Method core · the three-part probe**: every probe is a triple —
+**Method core: the three-part probe.** Every probe consists of three parts:
 
 1. **Stimulus**: a minimal task designed to expose one behavior (not hard, just enough to force the behavior out).
-2. **Behavior classification**: judge *how* it did it, not *whether* it was right. Prefer programmatic judgment (did it crash, did it translate, how many times did it read — all binary or countable), and use a model-as-judge only on fuzzy dimensions.
+2. **Behavior classification**: judge *how* it did it, not *whether* it was right. Prefer programmatic judgment (did it crash, did it translate, how many times did it read: each of these is binary or countable), and let a model act as judge only on fuzzy dimensions.
 3. **Mechanism implication**: given the behavior class, output **one configuration decision plus one prediction that later ablation can falsify**. A probe ends in a configuration decision and a testable prediction, never in a score.
 
 **Four probe families** (graded hard to soft by the consequence of an error, run A through D):
 
-- **Family A · protocol layer**: an error crashes the harness, not degrades it. Highest priority, binary hard judgment. Typical — feed a complex strict-schema tool with nested objects and arrays, and watch whether the model fails at the request layer or registers and calls it cleanly. Outright failure → a schema-normalization layer is mandatory.
-- **Family B · tool-use layer**: degrades, does not crash. Typical — give a tool-first multi-file task and count how many times it reads before acting. Reading over and over without acting → add a read-complete / evidence-sufficiency guard.
-- **Family C · instruction-following layer**: typical — put an English heading in the task and see whether the model translates it into Chinese in a Chinese context. If it translates → the verifier cannot match a fixed English string; turn on multi-alias matching.
-- **Family D · self-healing and calibration layer**: the deepest and most differentiating. Typical — give an operation that will error, and see whether the model retries blindly or reads the error message and changes approach.
+- **Family A, protocol layer**: an error crashes the harness outright instead of merely degrading results. Highest priority, with a binary hard judgment. Typical probe: give the model a tool with a complex strict schema containing nested objects and arrays, and see whether it fails outright at the request layer or registers and calls the tool normally. If it fails outright, you must build a schema-normalization layer.
+- **Family B, tool-use layer**: results degrade, but nothing crashes. Typical probe: give it a multi-file task that requires using tools first, and count how many times it reads before it acts. If it keeps reading and keeps putting off acting, add a check along the lines of "read completeness" or "evidence sufficiency."
+- **Family C, instruction-following layer**: for a typical probe, use an English heading in the task and see whether the model, working in a Chinese context, translates the heading into Chinese. If it does, the verifier can't accept only the fixed English string; turn on multi-alias matching.
+- **Family D, self-correction layer**: the deepest family, and the one that best tells models apart. Typical probe: give it an operation that will fail with an error, and see whether the model retries blindly or reads the error message and tries a different approach.
 
 **✅ Completion gate**:
 
-- [ ] Each of families A/B/C/D ran a few probes, and every probe landed in one behavior class (keep the raw observation for the programmatic ones: crashed / translated / read N times).
+- [ ] Families A, B, C, and D each ran a few probes, and every probe was assigned to one behavior class (for programmatic judgments, keep the raw observation: crashed, translated, read N times).
 - [ ] Every probe produced both a configuration decision and a falsifiable prediction, not just a score.
 - [ ] You have a profile table: which mechanisms this model **must** turn on, which it **does not need**, which are **traps**. This table directly narrows the mechanism set for Phases 1–3.
 
-**Note**: the Model Probe gives only **qualitative priors**, not quantitative conclusions. "Turning on X recovers some of the dropped tool calls" — how much "some" is waits for Phase 3 ablation to answer with clean data. What you can read off at a glance is a binary fact — did it crash, did it translate — and that does not depend on a precise cross-config comparison.
+**Note**: behavioral probing gives only **qualitative priors**, not quantitative conclusions. Take a finding like "turning on X recovers some of the missed tool calls." How much "some" really is has to wait until the Phase 3 ablation produces clean data. What probing can settle at a glance are facts such as "did it crash" and "did it translate," which don't depend on a precise comparison between configurations.
 
-`↪ Main text: Model Probe · the first of the Harness Lab's three steps`
+`↪ Main text: behavioral probing ("taking the model's pulse"), the first of the Harness Lab's three steps`
 
 ---
 
@@ -47,250 +47,250 @@ This file is the **executable companion** to the main text, *Harness Study*. The
 
 **Goal**: build a generic runtime that can run a ReAct loop against any tool set. This step touches no concrete business; it just gets the frame running.
 
-### 1.1 Module split · five modules
+### 1.1 Module split: five modules
 
 Three core modules plus two supporting:
 
-- **engine**: runs the loop. The main loop is one ReAct — send the message → receive the reply → execute any tool call → write the result back → decide whether to stop. Add a state machine for multi-turn: awaiting user input / awaiting user confirmation / done / errored. Check the cancellation signal at the top of every turn; stop must take effect immediately.
-- **llm**: the multi-provider abstraction. Abstract one unified interface and handle each vendor's differences in an adapter layer. `thinking` / reasoning parameters are written differently by each vendor, so configure them through an `extra` field. **Domestic APIs must explicitly bypass the proxy**, with a dedicated `no_proxy` — setting only the uppercase variable will not stop the lowercase one.
-- **tools**: handles registration and execution. Reload the tool list every step — **do not cache it** — because a tool registered in a POST hook has to be visible on the next turn.
+- **engine**: runs the loop. The main loop is a single ReAct loop: send the message → receive the reply → execute any tool call → write the result back → decide whether to stop. Add a state machine to manage multiple turns, with the states awaiting user input, awaiting user confirmation, done, and errored. Check the cancellation signal at the start of every turn, and make a stop take effect immediately.
+- **llm**: the multi-provider abstraction. Abstract a single unified interface and handle each vendor's differences in an adapter layer. Parameters such as `thinking` and reasoning are written differently by each vendor, so configure them per vendor through an `extra` field. **Requests to domestic model services should bypass the proxy explicitly, by domain, in code.** Don't rely on environment variables alone: some libraries read the uppercase `NO_PROXY` and others the lowercase `no_proxy`, so if you do use environment variables, set both.
+- **tools**: handles tool registration and execution. Reload the tool list at every step and **do not cache it**: a tool newly registered in a POST hook must be visible on the next turn.
 - **storage**: stores sessions and checkpoints.
 - **types**: the central place for message and tool signatures.
 
 `↪ Main text: Agent Loop (§5.1, P0) / Model Adapter & Routing (§5.2, the P0 boundary)`
 
-### 1.2 Three protocols / runtime red lines
+### 1.2 Three protocols and runtime red lines
 
-- **The assistant-message protocol**: a `tool_result` must follow **immediately** after `tool_calls`, with nothing inserted between them, or the next request returns a 400 outright.
-- **strict-schema normalization** (if the Family A probes in Phase 0 show the model is sensitive to strict schemas): normalize the schema before registering a tool, and handle nested objects / arrays until the model accepts them.
-- **The cancellation signal**: check it at the top of every turn; release the lock the instant you take the engine out, run async and listen for cancellation, and guarantee the engine is returned on all three paths — success, cancellation, error. Do not wait synchronously on a long task while holding the lock.
+- **The message protocol**: once an assistant message issues tool calls (the `tool_calls` field in the OpenAI protocol, `tool_use` blocks in the Anthropic protocol), the next message must carry the matching tool results (in OpenAI, messages with role `tool`; in Anthropic, `tool_result` blocks inside a user message). Insert no other message in between, or the API will reject the next request with a 400.
+- **Strict-schema normalization** (if Phase 0's Family A probes show the model is sensitive to strict schemas): normalize each schema before registering the tool, and convert schemas that contain nested objects or arrays into a form the model accepts.
+- **The cancellation signal**: check it at the start of every turn. While holding the lock, do nothing but take the engine out, and release the lock as soon as you have it. Then run asynchronously while listening for the cancellation signal, and make sure the engine is returned on all three paths: success, cancellation, and error. Never wait synchronously on a long task inside the lock.
 
 `↪ Main text: Model Adapter & Routing (§5.2)`
 
 ### 1.3 The tool layer
 
-The tool layer is not only "register and execute" — **tool-call quality** (does the model actually call, call correctly, get a clean result written back, and self-repair on failure) is decided by the groups below together.
+The tool layer does more than "register and execute." **Tool-call quality** (whether the model actually makes the call, makes it correctly, gets a clean result written back, and corrects itself after a failure) is decided jointly by the groups of practices below.
 
 **Interface and guards**
 
-- Define the Tool abstraction by the main text's five fields (`name` / `description` / `input_schema` / `execute` / `policy`, where policy is the ToolPolicy: allowed_paths / timeout / requires_confirmation, and so on). On every tool_call the Registry does three things: schema validation → policy decision (allow / ask / deny) → execute + audit into the trajectory.
-- Give every single tool output a **hard cap** (starting defaults: file read 20k / search 10k / shell 15k); over the cap, go through "result roll-up" below.
-- Route shell and git commands through `execFile` + array arguments; **reject string concatenation**, to prevent injection.
+- Define the Tool abstraction with the main text's five fields (`name`, `description`, `input_schema`, `execute`, and `policy`, where policy is the ToolPolicy, covering allowed_paths, timeout, requires_confirmation, and so on). For every tool call, the Registry does three things: schema validation → policy decision (allow, human approval, or deny) → execution, with an audit record written into the trajectory.
+- Give every single tool output a **hard cap** (starting defaults: 20k for file reads, 10k for search, 15k for shell). Output over the cap goes through "result roll-up" below.
+- Always invoke shell and git commands with an argument array, never through shell parsing: `execFile` in Node, `subprocess.run([...])` without `shell=True` in Python, `exec.Command` in Go. **Reject string concatenation**, to prevent command injection.
 
-**Scheduling · the four Tool Batch modes** (whether a batch should run concurrently, serially, or stop)
+**Scheduling: the four tool-batch modes** (whether a batch of tools should run concurrently, run serially, or stop)
 
-- **parallel_read**: read-only, no side effects, no path conflicts → concurrent by default (read_file / grep / glob / list_dir / web_search / web_fetch).
-- **sequential_write**: writing files / changing the workspace / changing state → serial by default (write_file / edit_file / shell_exec / git_* and anything marked DANGEROUS).
-- **barrier**: permission confirmation / a dangerous operation / a batch switch / a decision that must be reconsidered against the previous batch's observation → stop explicitly and decide where to switch.
-- **background_sidecar**: hand off to a lightweight side agent, independent of the main line.
-- **Main-line discipline**: a single agent executes a batch of tools → rolls the results up and writes them back → spins up a sidecar only when needed. Do not reach for a sub-agent up front (the three costs — the safety boundary, context isolation, result aggregation — are more than most tasks can bear).
+- **parallel_read**: read-only, no side effects, no path conflicts; concurrent by default (read_file, grep, glob, list_dir, web_search, web_fetch).
+- **sequential_write**: writing files, changing the workspace, or changing state; serial by default (write_file, edit_file, shell_exec, git_*, and any tool marked DANGEROUS).
+- **barrier**: when the next step needs permission confirmation, involves a dangerous operation, switches batches, or calls for a new decision based on the previous batch's observations, stop explicitly and make the decision at that switch point.
+- **background_sidecar**: hand the work to a lightweight side agent that runs without interfering with the main line.
+- **Main-line principle**: a single agent executes tools in batches → rolls up the results and writes them back → brings in a side agent only when needed. Don't start out with a sub-agent: the costs in three areas (the safety boundary, context isolation, and result aggregation) are more than most tasks can bear.
 
-**Result roll-up · tool results never enter the main conversation as raw text**
+**Result roll-up: tool results never enter the main conversation as raw text**
 
-- After a batch executes, it produces two kinds of artifact: the raw text lands in the **ArtifactStore** (returning a ref) plus an **observation stub** (a trimmed summary, starting default around 200 characters, which enters context). The main thread consumes only the stub; for the raw text, the model itself sends `read_observation(obs_id)` / `read_artifact` to fetch on demand. The rule: **extract in full, inject on demand, never truncate, never skip pages**.
-- The stub must carry the metadata `truncated:true / size / preview_truncated_at` — to sidestep two opposite failure modes: **overload** (everything stuffed into context, triggering lost-in-the-middle, paying tokens without getting attention) and **distortion** (a crude truncate drops information and the agent does not know it was cut). **The body must be in addressable persistent storage**; truncating without storing the body is still distortion.
-- The three lines of prompt that go with it: ① when the feedback is large, look only at the stub, and use `read_observation` to fetch the full content; ② when the stub carries a `truncated` marker, check `size` to decide whether to fetch the full text; ③ a `PreprocessError` is a modal-processing failure, not a tool-call failure, and can be retried or routed around.
+- When a batch of tools finishes, it produces two things: the raw text goes into the **ArtifactStore** (which returns a reference), plus an **observation stub** (a trimmed summary, starting default around 200 characters, which enters the context). The main thread reads only the stub. When it needs the raw text, the model itself calls `read_observation(obs_id)` or `read_artifact` to fetch it on demand. The rule of thumb: **extract in full, inject on demand, never truncate, never skip pages**.
+- The stub must carry the metadata `truncated:true`, `size`, and `preview_truncated_at`, to avoid two opposite failure modes. One is **overload**: everything goes into the context, triggering the lost-in-the-middle effect, so you pay for tokens the model never attends to. The other is **distortion**: a crude truncation drops information, and the agent doesn't even know it is looking at a truncated version. **The raw text must be stored persistently and be retrievable by reference**; truncating without keeping the raw text is still distortion.
+- The three lines of prompt that go with it: ① when the feedback is large, look only at the stub, and use `read_observation` to fetch the full content; ② when the stub carries a `truncated` marker, check `size` to decide whether to fetch the full text; ③ errors like `PreprocessError` are preprocessing failures on multimodal content, not tool-call failures, so you can retry or try a different approach.
 
-**Error returns · they decide whether the agent can self-repair**
+**Error returns: they decide whether the agent can correct itself**
 
-- **actionable**: say "what went wrong and how to fix it," not a raw stack trace. Example: `file_path 'data/output.txt' does not exist — did you mean 'data/input.txt'? list data/ first` — far better than throwing a raw `FileNotFoundError`. It is one key piece of the ACI design that pushes the tool-call success rate from 60–70% to 95%+ (the number is the whole Tool Registry + ACI working together, not this one piece alone).
-- **raw vs sanitized, split by the tool's origin**: tools whose `execute` is fully under your control, implemented in internal code → raw error (with details, easy to self-repair); tools that reach an external data source, whose `execute` result contains external content → sanitized error (strip the stack trace / internal paths / sensitive fields). You can also split by environment: raw in development, sanitized in production. **The error return is one of the most common injection points for prompt injection.**
+- **Actionable**: say what went wrong and how to fix it, but don't throw away the useful information in the original stack trace. Example: `file_path 'data/output.txt' does not exist; did you mean 'data/input.txt'? list data/ first` is far better than throwing a raw `FileNotFoundError`. In the author's experience, this is a key piece of ACI (agent-computer interface) design for raising tool-call accuracy. The accuracy gain, though, comes from the whole Tool Registry and ACI design working together, not from this one rule alone.
+- **Raw or sanitized errors, depending on the tool's origin**: a tool implemented in internal code, whose execution is fully under your control, returns the raw error (with details, so the agent can correct itself). A tool that reaches an external data source, whose results contain external content, returns a sanitized error (with the stack trace, internal paths, and sensitive fields removed). You can also split by environment: raw errors in development, sanitized errors in production. **Error returns are one of the most common injection points for prompt injection.**
 
-**Recommended default: web_search + web_fetch**
+**Recommended: equip web_search and web_fetch by default**
 
-- The model's weights are frozen and its knowledge has a cutoff; facts after the cutoff (a new version number, a just-changed API, the current docs) can only be guessed at, and a bad guess is a hallucination — these two tools wire "the world after training" back in for live lookup and checking, often raising quality more than another round of prompt tuning would.
-- Two disciplines that go with them: ① a large return (dozens of results at once, or one article of tens of thousands of characters) → must go through "result roll-up" above; do not let the raw text flood the main conversation; ② the fetched content is external input → run it through a source-credibility check or hand it to a verifier; do not take a found source as ground truth.
+- The model's weights are frozen, and its knowledge has a cutoff date. The model can only guess at facts from after the cutoff (a new version number, a just-changed API, the current docs), and a wrong guess turns into a hallucination. These two tools connect the model to "the world after training" so it can look things up and check them live, which often improves quality more than another round of prompt tuning would.
+- Two requirements go with them: ① when a return is large (dozens of results at once, or one article of tens of thousands of characters), it must go through "result roll-up" above; don't let the raw text flood the main conversation; ② fetched content is external input, so judge the credibility of its source first or hand it to a verifier; don't treat incorrect information that a search turns up as a factual basis.
 
-**Diagnosis · a tool that should have been called but wasn't**
+**Diagnosis: a tool that should have been called but wasn't**
 
-When the model should call a tool but emits only a stretch of text, there are three causes, sitting at three layers, with completely different fixes. Rule them out in order — response parsing → request parameters → prompt assembly. That is faster than repeatedly editing the prompt or swapping the model:
+When the model should call a tool but outputs only text, there are three possible causes, one at each of three layers, and the fixes are completely different. Rule them out in the order response parsing → request parameters → prompt assembly; that is much faster than repeatedly editing the prompt or swapping the model:
 
-1. **The response-parsing layer (false negative)**: the model may have written the call as a text tag in the body (e.g. `<tool_call>…</tool_call>`) instead of into the structured `tool_calls` field, and an Adapter that only reads the structured field drops it as ordinary text. Fix: have the parsing layer also catch text-tag calls with a regex, beyond the structured field.
-2. **The request-parameter layer**: the default `tool_choice:auto` makes a call optional. On a turn that must use a tool (must query the database, must write to disk), set `tool_choice` to `required` / `any` or name a specific tool — **per turn and per scenario, not globally on** (a permanent `required` forces the model to call when it shouldn't, manufacturing noise).
-3. **The prompt-assembly layer**: an overlong Chinese prompt makes some models "too lazy" to call a tool and answer in text instead. Keep the instruction that triggers a tool call short and near the front, and split the long explanation out.
+1. **The response-parsing layer (false negative)**: the model may have written the call as a text tag in the body (e.g. `<tool_call>…</tool_call>`) instead of in the structured tool-call field (`tool_calls` in OpenAI, `tool_use` blocks in Anthropic). An Adapter that reads only the structured field then drops it as ordinary text. Fix: beyond the structured field, have the parsing layer extract text tags with a regex as a fallback.
+2. **The request-parameter layer**: the default `tool_choice: auto` means the model may or may not call a tool. When an exchange must use a tool (it must query the database, it must write to disk), set `tool_choice` to require a tool call (`required` in OpenAI, `any` in Anthropic), or name a specific tool. **Turn this on per exchange and per scenario, never globally** (forcing calls all the time pushes the model to call tools when it shouldn't, which creates noise).
+3. **The prompt-assembly layer**: an overlong Chinese prompt makes some models skip the tool call and answer in text instead. Keep the instruction to call a tool short and near the front, and split long explanations out.
 
 `↪ Main text: Tool Registry & ACI (§5.3, P0) / ObservationPack · Observation Surface (§5.6) / the Model Adapter three causes (§5.2 last subsection) / Artifact (§5.4, P2)`
 
-### 1.4 Context compression · three strengths
+### 1.4 Context compression: three strengths
 
-- **micro**: the lightest notch on the compression spectrum — the local roll-up of one large tool result (the stub enters context / the raw lands externally / `read_observation` fetches on demand); the mechanism is the "result roll-up" in 1.3, marked here only for its place among the three strengths.
-- **auto**: when the token estimate exceeds the window (starting default 60–70%, commonly 70%) it triggers a small-model summary of the whole history. The summary **must keep four classes** — any open `tool_call_id` and its state / each turn's key decision and reasoning / artifact-reference ids / verifier failure information. Drop any one and the agent will hallucinate afterward (fabricate an observation, fabricate an id, hit the same error again).
-- **rolling window**: the crudest fallback — when it runs too long, roll off the oldest turns.
+- **micro**: the lightest of the three, a local roll-up of one large tool result (the stub goes into the context, the raw text is stored externally, and `read_observation` fetches it on demand). The mechanism itself is described under "result roll-up" in 1.3; this entry only marks where it sits among the three compression strengths.
+- **auto**: when the token estimate reaches 60–70% of the window (starting default, commonly 70%), use a small model to summarize the whole history. The summary **must keep four kinds of information**: any open `tool_call_id` and its state; each turn's key decisions and their reasons; artifact reference ids; and verifier failure information. Drop any one of them and the agent will make things up later on (inventing a fake observation or a fake id, or running into the same error again).
+- **rolling window**: the crudest fallback; when the history runs too long, drop the earliest turns outright.
 - **After compression you must re-inject the task goal and the system identity**, or after dozens of turns the agent drifts off topic and thinks it is doing something else.
 
 `↪ Main text: Context (§5.4, P0) / Prompt Assets identity re-injection (§5.5, P0)`
 
-### 1.5 Observability · instrument it from the first line
+### 1.5 Observability: instrument from the first line of code
 
-- Instrument at **decision points**, not execution points — where the mechanism judges "should this be done."
-- Record all four states: triggered and executed / condition unmet and not executed / triggered but blocked / executed and errored.
-- **No event is the most dangerous signal** — it means the code path was never reached.
-- Loop detection catches repeated tool calls; queue any intervention message and push it after the `tool_result` is processed, all at once, instead of breaking the message protocol mid-stream.
+- Put the instrumentation at **decision points**, not execution points: the places where a mechanism judges "should this be done."
+- Record all four states: triggered and executed; condition unmet, so not executed; triggered but blocked; executed with an error.
+- **No event is the most dangerous signal**: it means the code path was never reached.
+- Loop detection blocks repeated tool calls. Queue any intervention messages and push them all at once after this turn's tool results have been processed; don't break the message protocol midway.
 
 `↪ Main text: Observation Surface (§5.6) / Trajectory (§5.7, P0)`
 
-### 1.6 The Safety control plane, to start · cross-cutting, not a ninth part
+### 1.6 The Safety control plane, to start: cutting across all mechanisms, not a ninth mechanism
 
-Safety is not another runtime part; it is a control plane cutting across all the parts — every tool call, state change, and artifact write passes through it, like an OS syscall gate, with no exceptions. The full thing is a **four-layer permission decision model**:
+Safety is not one more runtime mechanism. It is a control plane that cuts across all of them: every tool call, state change, and artifact write must pass through it, like the system-call gate of an operating system, with no exceptions. Its full form is a **four-layer permission decision model**:
 
-- **permission mode**: the agent's overall run mode (read-only / workspace-write / and a few other tiers).
-- **allow-deny-ask rules**: fine-grained rules by tool and by parameter pattern, running **default deny + explicit allow** (allow `git status` / deny `git push` / ask on `git commit`).
-- **Hooks**: user scripts run before and after a call, for decisions the rules cannot express. Run on **normalized intent, not the raw string** — otherwise a deny on `cargo check` gets bypassed by an alias like `cargo c`.
-- **sandbox**: the physical isolation layer (Seatbelt / bubblewrap / container), bounding the file read-write range and network egress. When the first three logical layers are bypassed, it is the last line of defense.
+- **permission mode**: the agent's overall run mode (read-only, workspace-write, and a few other levels).
+- **allow, deny, and ask rules**: fine-grained rules configured per tool and per parameter pattern, following **default deny plus explicit allow** (allow `git status`, deny `git push`, ask on `git commit`).
+- **hooks**: user scripts that run before and after a call, for complex decisions the rules cannot express. **Match on whole command words and normalized intent, not on a prefix of the raw command string.** Otherwise, allowing `cargo check` also lets `cargo checkpoint` through (cargo runs it as the external program `cargo-checkpoint` on the PATH).
+- **sandbox**: an OS-level sandbox (Seatbelt, bubblewrap, containers) that bounds which files can be read and written and where network traffic can go. When the logical checks of the first three layers are bypassed, it is the last line of defense.
 
-To start, land at least these two:
+To start, get at least these two in place:
 
-- **Critical safety goes through code, not the LLM** (a hard gate): the interception for dangerous operations (deleting files, pushing code, making network requests, spending money) is written at the code layer, not left to the model's discretion via a prompt. The LLM assists only at the soft gate (judging benign vs harmful) and is never the last line of defense.
-- **A HITL approval gate**: high-impact operations (deleting data / transferring money / deploying / sending email) are marked `requires_confirmation`, and the agent sends them for human confirmation before executing rather than deciding on its own. The approval mode propagates down the parent-child agent chain (a sub-agent inherits the parent by default, never looser).
+- **Critical safety decisions live in code, not with the model** (the Hard Gate): the decision to intercept a dangerous operation (deleting files, pushing code, making network requests, spending money) is written at the code layer, not left to the model's discretion through a prompt. The model assists only with soft judgments (whether content is harmful) and never serves as the last line of defense.
+- **A human-in-the-loop approval gate (HITL approval gate)**: mark high-impact operations (deleting data, transferring money, deploying, sending email) with `requires_confirmation`. Before calling one, the agent hands it to a human for confirmation and only then executes it; the agent does not decide on its own whether to go ahead. The approval mode propagates down the parent-child agent chain (a sub-agent inherits its parent's setting by default and can never be looser).
 
 `↪ Main text: the Safety control plane · the four-layer permission decision model + HITL (§5.9, cross-cutting)`
 
-### 1.7 The verifier, to start · the hard gate only
+### 1.7 The verifier, to start: the Hard Gate only
 
-Start with the cheapest of the three verifier layers — the **hard gate**: a programmatic PASS/FAIL (pytest passes / build succeeds / file hash matches). The outcome judge and the PRM come in Phase 2.
+Start with the cheapest of the three verifier layers, the **Hard Gate**: a program rules PASS or FAIL (pytest passes, the build succeeds, a file hash matches). The Outcome Judge (model review) and the PRM (process reward model) wait until Phase 2.
 
 `↪ Main text: the three-layer verifier (§5.8, P0)`
 
 ### 1.8 Frontend integration (if any)
 
-The backend is the **single source of truth**; do not keep a frontend state snapshot. On a session switch, pull `last_messages` and `is_running` from the backend.
+The backend is the **single source of truth**; don't keep a separate copy of the state in the frontend. When switching sessions, pull `last_messages` and `is_running` from the backend.
 
 **✅ Phase 1 completion gate**:
 
 - [ ] The runtime can start a ReAct loop against **any tool set** and run at least one task to completion.
 - [ ] The trajectory has a complete event stream, instrumented at decision points and covering the four states.
-- [ ] A dangerous command (delete / push / spend money) is stopped at the **code layer** — write a task that triggers one and verify the interception actually fires, not a prompt that says "don't delete."
-- [ ] A high-impact operation (deleting data / transferring money / deploying) triggers HITL, and the agent really stops to wait for human confirmation before the call.
-- [ ] The hard gate can rule PASS/FAIL on a task.
-- [ ] Tool results go through the roll-up — run a tool that returns a large amount of content (say 5000 lines) and confirm that only the stub enters the main conversation, the body can be fetched back with `read_observation`, and the stub carries `size` / `truncated`.
-- [ ] Running dozens of turns in a row stays on topic (post-compression identity + goal re-injection works).
+- [ ] Dangerous commands (delete, push, spend money) are stopped at the **code layer**: write a task that triggers the interception and verify that it really fires, rather than relying on a line in the prompt that says "don't delete."
+- [ ] High-impact operations (deleting data, transferring money, deploying) trigger human approval, and the agent really stops before the call to wait for human confirmation.
+- [ ] The Hard Gate can rule PASS or FAIL on a task.
+- [ ] Tool results go through roll-up: run a tool that returns a large amount of content (say 5000 lines) and confirm that only the stub entered the main conversation, the raw text can be fetched back with `read_observation`, and the stub carries `size` and `truncated`.
+- [ ] Running dozens of turns in a row stays on topic (re-injecting identity and goal after compression works).
 
 ---
 
 ## Phase 2 · From generic to scenario, narrowing down · not industry-bound
 
-**Goal**: once the generic runtime runs, narrow it to a concrete business scenario (customer service / tendering / quality inspection / operations / translation / data analysis, and so on). The method is the same for every industry; do the eight steps.
+**Goal**: once the generic runtime runs, narrow it to a concrete business scenario (customer service, tendering, quality inspection, operations, translation, data analysis, and so on). The method is the same for every industry and has eight steps.
 
-1. **Build the eval set**: start with 3–5 typical tasks, each with an automatable pass/fail decision, an expected tool-call sequence, and a final database state. The eval set evolves with the code; do not "build first, test later."
-2. **Narrow the tools**: the generic runtime may carry dozens of tools, while a business scenario usually uses a small handful (starting default 8–15). **Explicitly disable** the rest in a whitelist — leaving them in context scatters attention and raises the odds of a wrong pick; it is not enough to just not call them.
-3. **Strengthen tool descriptions**: each business tool's description lists the required field names, types, and enum values directly. Whether a field is `user_id` or `userId`, an array or an object, what the enum values are — do not let the model guess. **This is the single highest-ROI optimization**, an order of magnitude more effective than editing the system prompt.
-4. **A policy rule engine**: do not pile business rules into the system prompt (the model forgets them after dozens of turns). Make them "**inject a structured reminder before calling tool X**" — an eligibility check before a cancellation, a second confirmation before a deletion. A reminder at the point of use beats stating the rule once up front.
+1. **Build the eval set**: start with 3–5 typical tasks, each with a pass-or-fail criterion that can be judged automatically, an expected tool-call sequence, and a final database state. The eval set evolves with the code; don't "build first, test later." Split the eval set into a development set and a held-out set. Day-to-day tuning of prompts and rules looks only at the development set. The held-out set takes no part in tuning: run it before and after every change, only to check whether the gains on the development set still hold, so you avoid Overfitting to a Fixed Test Set (AP20, see Appendix F). Failed inputs you meet after launch should flow back into the eval set as new case records.
+2. **Narrow the tools**: the generic runtime may carry dozens of tools, while a business scenario usually uses only a small subset (starting default 8–15). Use an allowlist that admits only those tools, or put the rest on a denylist to **disable them explicitly**. Don't just leave them there uncalled: tools left in the context scatter the model's attention and raise the odds of picking the wrong one.
+3. **Strengthen tool descriptions**: in each business tool's description, list the required field names, types, and enum values directly. Whether a field is `user_id` or `userId`, whether it is an array or an object, how many values the enum has: don't make the model guess any of it. **In the author's experience, this is the single optimization with the highest return on investment**, usually far more effective than editing the system prompt again and again.
+4. **A policy rule engine**: don't pile all the business rules into the system prompt (the model forgets them after dozens of turns). Turn them into "**inject a structured reminder before calling tool X**": pop up an eligibility check before a cancellation, and a second confirmation before a deletion. A reminder at the point of use is far more effective than a global statement.
 5. **Layer the prompt**: the system layer writes the role and capability boundary, the scenario layer writes the business rules and forbidden behaviors, the execution layer writes the output format. Keeping the three separate makes them easy to tune and A/B individually.
-6. **Turn on reasoning mode** (if the model supports it and Phase 0 showed a payoff): turn it on for scenarios dense in multi-step judgment / numeric computation / rule checking; leave it off for simple Q&A (expensive, slow, no payoff).
-7. **Run ablation experiments**: for each mechanism added, turn it off and rerun the eval set, and see how far the score drops. Keep the positive contributors, cut the negative ones, weigh the near-zero ones against maintenance cost. This step is the crux — some plausible-looking mechanisms raise the score when turned off, and a unit test cannot see it. A concrete counter-example from the tool-call-quality domain: **parameter auto-completion** (the harness fills in a missing tool parameter for the model) looks like a convenience but may measure as a negative contributor — locally correct, globally harmful, caught by single-point ablation, invisible to a unit test. Ablate down to a single mechanism on/off; do not switch a whole group.
-8. **Attribute failures by dimension**: do not look only at the pass rate; also look at — **a tool that should have been called but wasn't** (if so → re-run the three checks in §1.3) / whether the tool-call parameters were right / whether the final database state was right / whether the reply said the numbers and clauses it should have / whether the required flow ran to the end. A single-dimension eval hides the real problem (the database was right but the number went unsaid, which to the customer is a job not done).
+6. **Turn on reasoning mode** (if the model supports it and Phase 0 showed a payoff): turn it on for scenarios dense in multi-step judgment, numeric computation, or rule checking; leave it off for simple Q&A (expensive, slow, no payoff).
+7. **Run ablation experiments**: for each mechanism you add, turn it off and rerun the eval set to see how far the score drops. Keep the positive contributors, cut the negative ones, and decide on the near-zero ones by their maintenance cost. This step is the crux: some mechanisms that "look correct" give better results when turned off, and a unit test cannot see it. A concrete counter-example from tool-call quality is **lenient parameter handling**: when a tool's parameters fail to parse or don't match the schema, the harness patches over the problem and calls the tool anyway. It looks like it saves the model trouble, but it actually masks the error signal the model should have received. It is locally correct and globally harmful. Unit tests can't see it; it takes an ablation of that single mechanism, or a dedicated audit, to catch it. Ablate down to a single mechanism switched on and off; don't switch a whole group at once.
+8. **Attribute failures by dimension**: don't look only at the pass rate. Also check **whether the tools that should have been called were called** (if not, go back to "a tool that should have been called but wasn't" in 1.3 and run the three checks), whether the tool-call parameters were right, whether the final database state was right, whether the reply stated the numbers and clauses it should have, and whether the required flow ran to the end. A single-dimension eval hides real problems (the database was right but the number went unsaid, which to the customer means the job wasn't done).
 
 ### 2.1 When narrowing graduates to an independent sub-harness
 
-If cramming a scenario's domain knowledge into the main agent's context would blow it up, or it needs to evolve and iterate independently, make it an **independent sub-harness**. The criterion is whether the **five-dimension ontology** is complete —
+A sub-harness is a child harness, called up dynamically per task, that carries its own domain rules. If cramming a scenario's domain knowledge into the main agent's context would blow the context up, or the scenario needs to evolve and iterate independently, make it an **independent sub-harness**. The criterion is **whether the domain model is complete across five dimensions** (the main text borrows the word "ontology" and calls this the "five-dimension ontology"; here it means a domain-model schema):
 
-1. **Domain entities**: what "things" the domain has (for a PPT sub-harness, slide / layout / content_block).
-2. **Entity attributes**: each entity's fields + types + constraints.
-3. **Relationships**: the logical constraints between entities (layout determines content_block type, and so on).
-4. **State machine**: an entity's legal states + transition paths (draft → review → approved → exported).
+1. **Domain entities**: what "things" the domain has (for a PPT sub-harness, slide, layout, and content_block).
+2. **Entity attributes**: the fields each entity has, and each field's type and constraints.
+3. **Relationships**: the logical constraints between entities (for example, layout determines the type of content_block).
+4. **State machine**: an entity's legal states and transition paths (draft → review → approved → exported).
 5. **Operations**: the tool set the sub-harness exposes.
 
-**Judgment line**: all five dimensions present = design complete; missing one is 80%; missing two is 40%; missing three = still at the "catch-all prompt" stage, not a sub-harness. Writing one 5,000-word system prompt and letting the model improvise ≠ a sub-harness.
+**Criterion**: the design is complete only when all five dimensions are present. The more dimensions are missing, the further it is from a real sub-harness; with three or more missing, it is still at the "catch-all prompt" stage and does not count as a sub-harness. Writing one 5,000-character system prompt and letting the model improvise is not a sub-harness.
 
 `↪ Main text: the sub-harness cell's five-dimension ontology (§8.5)`
 
-### 2.2 Extend the verifier from the hard gate to three layers
+### 2.2 Extend the verifier from the Hard Gate to three layers
 
-Phase 1 ran only the hard gate. Here, add the other two as needed:
+Phase 1 ran only the Hard Gate. Here, add the other two layers as needed:
 
-- **Layer two · outcome judge**: use **another LLM** to score the final output semantically. The judge LLM is **cross-vendor / cross-family** from the agent LLM, to prevent preference leakage (same-family self-grading is biased toward itself). Needed only for open-ended tasks.
-- **Layer three · PRM (process scoring)**: step-level scoring of the reasoning process. Add it once long tasks run stably, to give ablation a step-level signal.
-- **Combining them**: a failed hard gate fails the whole thing — do not let the model scrape by on a process score on a failed task.
+- **Layer two, the Outcome Judge**: use **another model** to score the final output semantically. The judge model and the agent's model should come **from different vendors or different model families**, to reduce preference leakage (a judge model favors content generated by models from its own family or models it is related to by inheritance). Only open-ended tasks need this layer.
+- **Layer three, PRM (process scoring)**: score the reasoning process step by step. Add it once long tasks run stably, to give ablation experiments a step-by-step signal.
+- **Combination rule**: if the Hard Gate fails, the whole result fails outright; the model doesn't get to scrape through a failed task on its process score.
 
 `↪ Main text: the three-layer verifier + the three-layer combination strategy (§5.8)`
 
 **✅ Phase 2 completion gate**:
 
-- [ ] Every task in the eval set can be **judged automatically** pass/fail.
-- [ ] After narrowing, the eval-set score is higher than the generic version, and **ablation proves** it was the narrowing that did it (not an illusion).
-- [ ] Failures are attributed by multiple dimensions (parameters / database state / things that should have been said / flow), not by pass rate alone.
-- [ ] If a sub-harness was added: the five-dimension ontology is complete. If it was only narrowing: disabled tools are in the whitelist, and key rules are injected before the call.
-- [ ] If an outcome judge was added: the judge is cross-family from the agent.
+- [ ] Every task in the eval set can be **judged automatically** as pass or fail, and the development and held-out sets are already separated.
+- [ ] After narrowing, the eval-set score is higher than the generic version's, and **an ablation experiment proves** that the narrowing is what did it, not an illusion; the score on the held-out set is not noticeably lower than on the development set.
+- [ ] Failures are attributed along multiple dimensions (parameters, database state, what should have been said, flow), not by pass rate alone.
+- [ ] If you built a sub-harness: all five dimensions are present. If you only narrowed: the tool allowlist contains only the tools the scenario uses, and key rules are injected before the call.
+- [ ] If you added an Outcome Judge: the judge model and the agent's model come from different families.
 
 ---
 
 ## Phase 3 · Cost structure + mechanism admission · spend where it counts
 
-**Goal**: do not spread resources evenly. Hit the bottleneck where it is. Get the order wrong and the same money buys a worse result.
+**Goal**: don't spread resources evenly; put them where the bottleneck is. Get the order wrong, and the same money won't buy the same result.
 
-### 3.1 The order to spend
+### 3.1 The order of investment
 
-1. **Spend on the eval set first**: with no eval set you are tuning blind, and every later change becomes "did it actually help?" — unanswerable. Even a crude pass-rate-only set beats nothing.
-2. **Then on tool descriptions**: the highest single-point ROI. A wrong field-name guess wastes a turn, and over dozens of turns may waste half of them.
-3. **Then on the policy rule engine**: make business rules "inject before the call" and the model will not forget them. Doing this before reaching for a new model is far cheaper.
-4. **Reasoning mode by task**: turn it on for the multi-step-judgment / rule-checking / numeric-computation-dense ones, off for simple Q&A.
-5. **Model upgrade last**: expensive, irreversible (a swap means rerunning the eval set), and limited gain for most scenarios. What usually caps the pass rate is not model capability but a poorly tuned outer mechanism. **Swapping the model first is the most common mistake** — you spend the money and the score does not move.
+1. **Invest in the eval set first**: without evals you are tuning blind, and for every later change you can't say whether it actually helped. Even a crude eval that looks only at the pass rate beats having none.
+2. **Then invest in tool descriptions**: in the author's experience, this is the single spot with the highest return on investment. Each wrong guess at a field name wastes a turn, and over dozens of turns the wasted turns can add up considerably.
+3. **Next, invest in the policy rule engine**: turn business rules into "inject before the call," and the model won't forget them. Finishing this step and then checking performance is far cheaper than swapping the model straight away.
+4. **Reasoning mode depends on the task**: turn it on for scenarios dense in multi-step judgment, rule checking, or numeric computation; leave it off for simple Q&A.
+5. **Model upgrade last**: expensive, irreversible (a new model means rerunning the evals), and of limited gain for most scenarios. What usually holds the pass rate back is not model capability but outer mechanisms that aren't tuned well. **Swapping the model as the first step is the most common mistake**: the money is spent and the score doesn't rise.
 
-**Infrastructure (compression / observability / loop detection / locking and cancellation) is admission, not investment**: nothing works without it, but "good enough to run" is enough, and over-engineering it only slows iteration.
+**Infrastructure (compression, observability, loop detection, locking and cancellation) is the price of admission, not an investment**: without it nothing else is possible, but "good enough to run" is enough, and over-engineering it only slows iteration down.
 
 ### 3.2 Allocate by scenario type
 
-| Scenario type | Spend here first |
+| Scenario type | Invest here first |
 |---|---|
 | Customer service / rule-execution | Tool descriptions + policy rules, then consider reasoning mode |
 | Code / complex planning | Reasoning mode + a strong model, tool descriptions and rules second |
 | Long conversation / multi-turn | Compression + observability, or it collapses on its own after dozens of turns |
 | High-concurrency / low-latency | A cheap model + tool-output caching + a simplified tool set |
 
-### 3.3 The mechanism admission gate · every mechanism in the default profile must pass it
+### 3.3 The mechanism admission check: every mechanism in the default configuration must pass it
 
 You cannot enable a mechanism by default just because it "looks reasonable." Before a mechanism enters the main harness's default path, it must meet at least these four:
 
 1. **It changes real behavior**: not just adding a DTO, a schema, or a log field.
-2. **It has an on/off ablation**: turning it off shows a change in pass_rate / cost / latency / reliability.
+2. **It has on/off ablation data**: turning it off shows a change in pass rate, cost, latency, or reliability.
 3. **It has a machine-readable trace**: recording the trigger reason, the rule ID, an input summary, and the result.
-4. **It passes a stability check**: across N reruns, a perturbed prompt, and shuffled irrelevant fields, the gain cannot rest on a lucky pass.
+4. **It passes a stability check**: the gain must not rest on lucky passes. There are three practices. First, rerun the eval several times, each time from a clean state (response caching off, no fixed seed, no shared files, memory, or workspace); otherwise the reruns are not independent and stability gets overestimated (Non-Independent Reruns, AP01, see Appendix F). Second, run an input perturbation test: make small changes to the input that leave the task's meaning intact (for example, a random nonce added to each run, a paraphrase, shuffled irrelevant fields) and see whether the result stays stable. Third, report both pass@1 and pass^k (the fraction of tasks that pass all k times).
 
-A mechanism that falls short of the four stays an **experimental flag**, out of the default profile. **Cut negative-contribution mechanisms promptly** — keeping one **costs you twice** — it burns resources and drags the pass rate down. Being unwilling to cut code that looks right is a common mistake; one ablation shows it.
+A mechanism that falls short of these four stays an **experimental flag** and stays out of the default configuration. **Cut negative-contribution mechanisms promptly**: keeping one means a double loss (it takes up resources and drags the pass rate down). Being reluctant to cut "code that looks correct" is a common mistake, and one ablation run exposes it.
 
 **✅ Phase 3 completion gate**:
 
 - [ ] Spending went in the order above, and the eval set was built **before** the model upgrade.
-- [ ] Every mechanism in the default profile passed the four admission rules (especially the on/off ablation data).
+- [ ] Every mechanism in the default configuration passed the four admission conditions (above all, it has on/off ablation data).
 - [ ] Negative-contribution and near-zero-contribution mechanisms have been cut or demoted to experimental flags.
 
-`↪ Main text: the four getting-started dimensions (at each chapter's end) / mechanism admission discipline (§VII Harness Lab)`
+`↪ Main text: the four getting-started dimensions (at each chapter's end) / mechanism admission rules (§VII Harness Lab)`
 
 ---
 
 ## Cross-cutting · the four-principle self-check · run it at the end of every Phase
 
-When a Phase finishes, run it once against each of the four principles of control theory — if any one is breached, go back and fix it; do not carry a breach into the next Phase. Any bug you hit, place it into one of these four first.
+When a Phase finishes, check it once against each of the four principles of control theory (the book borrows these concepts from control theory as an analogy; see §IX). If any one of them doesn't hold, go back and fix it; don't carry the problem into the next Phase. Whenever you hit a bug, first assign it to one of these four as well.
 
-- **Observable**: any silent failure (an error swallowed by try/catch, producing no event)? Any hidden state (an internal agent state with no corresponding event)? A persistently high `declared_vs_executed gap` (what the agent claims it did vs what the tool/verifier actually observed) is the early warning.
-- **Controllable**: can a control point be bypassed (a hook bypass)? Is the tool granularity so fine the model cannot choose well? Any "fake landing" — a mechanism in the repo but a noop on the production path?
-- **Stable**: does each mechanism have a bound (max_turn / max_token / max_depth / max_retry)? Can those bounds be monitored? Any loop blind spot, context bloat, reward hacking?
-- **Closed-loop feedback**: does every change have ablation data behind it? "I think this is better" with no data = a broken loop.
+- **Observable**: any silent failures (an error swallowed by try/catch, producing no event)? Any hidden state (internal agent state with no corresponding event)? A persistently high "claimed-versus-actual gap" (the declared_vs_executed gap: the difference between what the agent claims it did and what the tools or the verifier actually observed) is a warning signal.
+- **Controllable**: can a control point be bypassed (Hook / Allowlist Bypass, AP13, see Appendix F)? Is the tool granularity so fine that the model can't choose well? Any "fake landing," where a mechanism is in the repo but does nothing on the production path?
+- **Stable**: does each mechanism have a bound (max_turn, max_token, max_depth, max_retry)? Can those bounds be monitored? Any loop blind spot, context bloat, or reward hacking?
+- **Closed-loop feedback**: does every change have ablation data behind it? "I think this is better" without data means closed-loop feedback has not held.
 
-`↪ Main text: the four principles of control theory + the common-pitfall mapping (§IX)`
+`↪ Main text: how the four principles of control theory map to the anti-patterns (§9.2)`
 
 ---
 
-## Advanced judgment lines · when to adopt (not expanded — go back to the main text when needed)
+## Advanced decision criteria · when to adopt (not expanded; go back to the main text when needed)
 
-These two advanced capabilities are **off by default**; adopt them once the judgment line is met:
+The advanced capabilities below are **off by default**; adopt one only when its criteria are met. Apart from those with a cited source, the numbers here are starting defaults, to be tuned to your scenario.
 
-- **multi-agent / sub-agent fork-join**: first answer "what is the single agent's pass rate over N=10 runs on this task?" Never run → run the single agent first; ≥80% → don't add multi-agent, optimizing the single agent is worth more. Multi-agent burns about 15x the tokens of an ordinary chat (an agent is ~4x a chat, multi-agent ~15x), and the worst fit of all is a domain with few parallelizable subtasks and strong dependencies between them — coding above all.
-  - **If the judgment is that you must adopt it** (>60 turns, the subtasks genuinely independent and verifiable): then ask whether the control flow is predictable — which substeps run in parallel, who cross-checks whom, how the results aggregate, all known before the run starts? **Predictable** → write that orchestration as a **deterministic script** that the runtime runs in the background (a dynamic workflow); the model's reasoning happens only when a leaf agent does its work, the lead's context is left with just one aggregated answer, and you save the most expensive tokens of the run — the lead improvising the orchestration — while the orchestration itself becomes re-runnable and auditable. **Unpredictable** (exploratory, the next step depends on the last) → the lead can only improvise the orchestration, and you are back to the 15x cost. Gate: the orchestration script can rerun detached from any one run, and every step's `hands_off` / `calls_tool` enters the trajectory.
-  - **Boundary**: a dynamic workflow lowers orchestration cost, it does not loosen the admission bar — single agent first, N=10 ≥80% don't adopt, coding strong-coupling don't adopt, all still hold.
-  `↪ Main text: Multi-Agent over-decomposition + dynamic workflow (§5.1.5 last passage + footnote / §5.1.6) / fork-join concurrency (§6.6) / the topology axis (§VIII)`
-- **dynamic harness · sub-harness runtime routing**: the next notch up from §2.1's "should I build a sub-harness" — once the harness is running, **routing each task dynamically among several sub-harnesses**. Answer two things first: ① do you genuinely have ≥2 sub-harnesses with a complete five-dimension ontology (if not → finish a single one first, back to §2.1); ② can the task be judged by "entity features" rather than "fuzzy text" to decide which one to take (if not → it is not yet time to route, run a single harness). Once routing is on, meet three verifiable disciplines: routing is based on the task's entity features / the main harness can only invoke an already-mounted sub-harness and cannot conjure one / every routing decision enters the trajectory (write a task and verify the trajectory can answer "why it went to A and not B"). A dynamic harness and the dynamic workflow above are two orthogonal things: the former governs which tools/policy/verifier are mounted, the latter governs how control flow is held. **ReAct + dynamic harness + dynamic workflow** as a combination is a direction the main text's author is actively practicing and still evolving — treat it as a working direction, not a settled conclusion. The dominant dimension for picking sides is reward-signal strength — open-ended, unlabeled weak-reward tasks lean dynamic workflow (cross-checking built into the orchestration stands in for the missing hard verifier); standardized, recurring strong-reward tasks that a Hard Gate can judge (the typical shape of core To B delivery) lean dynamic harness (frozen mechanisms + hard verification to close out). `↪ Main text: main↔sub routing discipline (§8.7) / dynamic harness (§5.1.6)`
-- **The Harness Lab workbench (the five layers Observe-Score-Ablate-Tune-Iterate)**: first answer "of the 8 runtime parts + Safety, how many are stable in my project?" Consider it only at ≥6; while the harness's own pass rate still swings >10pp week to week, running Ablate produces signal that is 95% noise. `↪ Main text: Harness Lab (§VII)`
+- **Multi-agent / sub-agent fork-join**: first answer "what is the single agent's pass rate over 10 runs on this task?" If you haven't run it, run the single agent first. If the pass rate is already 80% or higher, don't add multi-agent; optimizing the single agent pays off better. According to Anthropic's article on its multi-agent research system (2025-06), a single agent uses about 4x the tokens of an ordinary chat, and a multi-agent system about 15x. Avoid it especially in scenarios like coding, where the subtasks depend heavily on one another and little can run in parallel.
+  - **If you judge that you must adopt it** (the task runs past 60 turns, and the subtasks are genuinely independent and can each be verified): then ask whether the control flow can be fixed in advance. Which substeps run in parallel, who cross-checks whom, how the results are aggregated: is all of that clear before the run starts? **If it can be fixed in advance**, write that orchestration as a **deterministic script** and let the runtime run it in the background (a dynamic workflow). Model inference then happens only when the leaf agents do their work, and the main agent's context ends up holding just one aggregated answer. You save the overhead of the main agent improvising the orchestration, and the orchestration itself can be rerun and audited. **If it can't be fixed in advance** (an exploratory task, where the next step depends on the result of the last one), the main agent has to improvise the orchestration, and you are back to expecting roughly 15x the cost. Gate: the orchestration script can be rerun independently of any particular run, and every step's `hands_off` and `calls_tool` are recorded in the trajectory.
+  - **Boundary**: a dynamic workflow lowers the cost of orchestration; it does not lower the admission bar. These rules still hold: single agent first; don't adopt at a 10-run pass rate of 80% or higher; don't adopt for tightly coupled tasks like coding.
+  `↪ Main text: Multi-Agent Over-Decomposition (AP09) + dynamic workflow (§5.1.5 last passage + footnote / §5.1.6) / fork-join concurrency (§6.6) / the topology axis (§VIII)`
+- **Dynamic harness, the runtime routing of sub-harnesses**: this is the next step after §2.1's question, "should I build a sub-harness?" Once the harness is running, it **chooses dynamically among several sub-harnesses per task**. Answer two questions first: ① do you really have two or more sub-harnesses that are complete in all five dimensions (if not, first complete a single one; go back to §2.1)? ② can you decide which one to take by "entity features" rather than "fuzzy text" (if you can't, it isn't yet time for routing; run a single harness)? Once routing is on, it must satisfy 3 verifiable rules: routing is based on the task's entity features; the main harness can invoke only sub-harnesses already mounted and cannot conjure one up; and every routing decision is written into the trajectory (write a task and verify that the trajectory shows "why it went to A and not B"). A dynamic harness and the dynamic workflow above are two independent things: the former governs which tools, policies, and verifiers are mounted, and the latter governs who holds the control flow. The combination **ReAct + dynamic harness + dynamic workflow** is a direction the main text's author is actively practicing and still evolving; it is given here as a direction based on current practice, not as a settled conclusion. Choosing between the two depends mainly on the strength of the reward signal. Open-ended, weak-reward tasks with no standard answer lean toward the dynamic workflow (cross-checking built into the orchestration stands in for the missing hard verifier). Standardized, recurring, strong-reward tasks that a Hard Gate can judge (the typical shape of core B2B delivery) lean toward the dynamic harness (fix the mechanisms in place and close out with hard verification). `↪ Main text: the main-to-sub harness routing rules (§8.7 "What prompts to write") / dynamic harness (§5.1.6)`
+- **The Harness Lab workbench (the five layers Observe-Score-Ablate-Tune-Iterate)**: first answer "of the 8 runtime mechanisms plus Safety, how many are already stable in the project?" Consider it only at 6 or more. If the harness's own pass rate still swings by more than 10 percentage points from week to week, hold off on Ablate (ablation): most of the differences it turns up would be drowned out by noise, so stabilize the evals first. `↪ Main text: Harness Lab (§VII)`
 - **Cross-vendor protocols (A2A and the like)**: at this stage, define your own JSON-RPC schema and document it as an internal standard; do not bind the architecture to an external spec that is still evolving. `↪ Main text: the interaction-boundary axis (§VIII)`
 
 ---
 
 ## The order to use this
 
-1. **Run Phase 0, the Model Probe, first** — a cheap qualitative diagnostic that flags the mechanism search space and the traps before you try them.
+1. **Run Phase 0, behavioral probing, first**: a cheap qualitative diagnostic that marks out the range of mechanisms to try later, and the traps, before you start.
 2. **Phase 1** builds the generic runtime, with no business in mind, just getting the frame running. Pass the gate before moving on.
 3. **Phase 2** narrows it alongside the business; do not wait for "the generic version to be perfect" before narrowing.
-4. **Phase 3** can be consulted at any stage — it decides not "what to do" but "which to do first" and "which money to spend."
+4. **Phase 3** can be consulted at any stage: it decides not "what to do" but "what to do first" and "where to spend the money."
 5. **The four-principle self-check** runs once at the end of each Phase.
 
-The whole logic in one line: **take the model's pulse first, then build something that runs, then sharpen it for the scenario, then spend where it counts — and at every step confirm with a verifiable gate that it was done right; with no gate evidence, treat it as unfinished.**
+The whole logic in one line: **get to know the model's quirks first, then build something that runs, sharpen it for the scenario, and spend where it counts. At every step, confirm with a verifiable gate that it was done right; without gate evidence, treat it as unfinished.**

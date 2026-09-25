@@ -1,165 +1,299 @@
-# 六、工程模式 · 跨件复用的工程组合 pattern
+# 六、工程模式 · 跨机制复用的工程组合 pattern
 
-前面 §五 讲 8 件 runtime + 1 件 Safety 控制面——单件单件讲的是机制。但生产 agent harness 不是机制堆出来的——是机制 + 工程模式两层叠起来跑的。工程模式比机制小一档——不构成完整组件 · 是组件之间的组合 pattern · 跨多件 runtime 复用。这一章把 agent harness 工程里跑出来的几件高复用 pattern 单独抽出来讲。
+前面第五章讲了 8 个 runtime 机制加 1 个 Safety 控制面，逐个讲的是机制。但生产环境的 agent harness 并不是机制堆出来的，而是机制和工程模式两层叠在一起跑的。工程模式比机制小一级：它不构成完整组件，而是组件之间的组合方式，跨多个 runtime 机制复用。这一章把 agent harness 工程里反复出现、复用度高的几种模式单独抽出来讲。
 
-工程模式跟设计模式（GoF）是同一类抽象——把工程实践里反复出现的"问题 + 解法"抽象成可复用形态。GoF 1994 把面向对象编程里的 23 件 pattern（Singleton / Observer / Factory 等）系统化 · 让后来的工程师不用每次重新发明。agent harness 工程也在沉淀类似的 pattern 序列——业界 2026 还在收敛期 · 没有像 GoF 那样的标准命名共识 · 但几件 pattern 已经在 Claude Code / Codex / OpenHands 等业界主流 harness 里反复出现。本章选 6 件已经稳定的工程模式展开——前 5 件是业界共识的 pattern（CacheSafeParams / Constrained 类型 / JSONL Session / Isolation Modes / 三层 history）· 第 6 件 fork-join concurrency 是 multi-agent 场景的工程组合 pattern · 前面 Safety 章已点指针。
+工程模式跟设计模式（GoF）是同一类抽象：把工程实践里反复出现的"问题加解法"提炼成可复用的形态。GoF 1994 年把面向对象编程里的 23 种设计模式（Singleton、Observer、Factory Method 等）系统化，后来的工程师就不用每次重新发明。agent harness 工程也在沉淀类似的模式，但 2026 年还处在收敛期，没有 GoF 那样公认的命名；不过有几种模式已经在 Claude Code、Codex、OpenHands 等主流 harness 里反复出现。本章选 6 种较稳定的工程模式展开。前 5 种在多个主流 harness 中可见：
+
+1. 前缀稳定的 prompt 装配（Claude Code 源码里的实例是 `CacheSafeParams`）；
+2. 类型化权限（typestate）；
+3. 追加写的会话事件日志（常见实现是 JSONL 文件，也有用 SQLite 的）；
+4. sub-agent 执行隔离模式；
+5. 三层 history。
+
+第 6 种 fork-join 并发是多智能体场景的工程组合模式，前面 Safety 那章已经提过。
 
 ![](../diagrams/t1-cardgrid-6-patterns.png)
 
-*图 6.1 · 跨件复用的六个工程模式*
+*图 6.1 · 跨机制复用的六个工程模式*
 
-工程模式跟 runtime 件的边界要分清。**runtime 件是 agent 一次 turn 实打实使用的组件**——Tool Registry / Verifier / Trajectory 这些是机制。**工程模式是机制之间的组合 pattern**——比如 prompt 怎么装让 prompt cache 能命中（CacheSafeParams 跨 Prompt Assets + Model Adapter + Context 三件协作）/ 工具权限怎么编码让编译期就拦住误调（Constrained 类型跨 Tool Registry + Safety 控制面两件协作）。pattern 不是组件——是"组件怎么搭"的工程经验沉淀。读完这一章读者应该知道几件常见组合 pattern 长什么样子 · 跑生产 agent 时能识别并复用。
+工程模式跟 runtime 机制的边界要分清。**runtime 机制是 agent 每一轮实际用到的组件**，Tool Registry、Verifier、Trajectory 这些都是机制。**工程模式是机制之间的组合方式**，例如：
+
+- prompt 怎么装配才能让提示词缓存命中（前缀稳定的 prompt 装配，需要 Prompt Assets、Model Adapter、Context 三个机制协作）；
+- 工具权限怎么编码，才能让 harness 开发者写不出跳过权限检查的代码（类型化权限，需要 Tool Registry 与 Safety 控制面协作）。
+
+模式不是组件，而是"组件怎么搭"的工程经验。读完这一章，读者应该认得出几种常见的组合模式，在做生产 agent 时能识别并复用。
 
 #### 6.0 本节首次出现的术语
 
-前面 §一-§五 已经解释过的术语（runtime 件 / cache / Tool Registry / Trajectory / sandbox / fork-join 等）下面不再重复。这里只列 §六 本节首次出现的术语。
+第一至五章已经解释过的术语（runtime 机制、cache、Tool Registry、Trajectory、sandbox、fork-join 等）下面不再重复，这里只列第六章首次出现的术语。
 
-**工程模式核心术语** —— **工程模式**（engineering pattern · 跨多件 runtime 件复用的组合 pattern · 跟 GoF 设计模式同抽象层 · 业界 2026 还在收敛期没标准命名）。**prefix-stable design**（Anthropic / OpenAI 等 prompt cache 的核心 cache-aware pattern · 保持 prompt prefix 跨 turn 字节级一致 · 让 cache 命中 · [Prompt caching · Claude API Docs](https://platform.claude.com/docs/en/build-with-claude/prompt-caching)）。**cache-safe forking**（Anthropic Claude Code 的 compaction pattern · 保持 system prompt + tools + prefix 不变 · 把 summary 续在末尾 · 让 cached prefix 在 compaction 后仍能 hit · [How Claude Code uses prompt caching](https://code.claude.com/docs/en/prompt-caching)）。
+**工程模式核心术语**
 
-**Constrained 类型相关术语** —— **typestate pattern**（业界主流 Rust pattern · 把运行时状态编码进编译期类型 · 让 invalid 状态转换无法在代码里表达 · [The Typestate Pattern in Rust · Cliffle](https://cliffle.com/blog/rust-typestate/)）。**phantom type / PhantomData**（zero-sized marker type · 不占内存 · 在编译期标关系不在运行时表示 · [Phantom Types in Rust · Ben Ashby](https://www.benashby.com/phantom-types-in-rust/)）。**compile-time enforcement**（编译期强制约束 · 跟 runtime check 相对 · 不通过的代码根本编译不过 · 比 runtime 检查少一档可绕过性）。
+- **工程模式**（engineering pattern）：跨多个 runtime 机制复用的组合方式，跟 GoF 设计模式处在同一抽象层；2026 年业界还在收敛期，没有标准命名。
+- **前缀稳定设计**（prefix-stable design）：让 prompt 前缀在各轮之间逐字节保持一致，从而命中提示词缓存（prompt caching）。Anthropic、OpenAI 等厂商的缓存都按前缀匹配，见 [Prompt caching · Claude API Docs](https://platform.claude.com/docs/en/build-with-claude/prompt-caching)。
+- **cache-safe forking**：Claude Code 在 compaction 时的做法，system prompt、工具集和已有前缀保持不变，只把摘要接在末尾，使已缓存的前缀在 compaction 后仍能命中，见 [How Claude Code uses prompt caching](https://code.claude.com/docs/en/prompt-caching)。
 
-**JSONL Session 术语** —— **JSONL session file**（一次 agent run 的事件流持久化文件 · 每行一个 JSON event · append-only · 跨 process 可恢复 · Claude Code 默认 session 格式 + Codex Rollout 格式 · 前面 Trajectory 那章已经讲 trajectory event taxonomy · 本节讲 session 作为 pattern 的复用维度）。**append-only**（事件流写入只允许追加 · 不允许修改历史 · 让 trajectory 不可篡改 + 可 diff）。
+**类型化权限相关术语**
 
-**Isolation Modes 术语** —— **execution isolation**（agent 跑任务时跟物理工作目录的隔离层次 · 三档梯度：InProcess / Worktree / Remote · §6.4 详讲）。**git worktree**（Git 原生机制 · 一个 repo 多个工作目录 · agent 在独立 worktree 跑不影响主分支 · 跑完合并或丢弃）。
+- **类型状态模式**（typestate pattern）：Rust 中常见的写法，把对象的状态编码进类型，非法的状态转移在代码里写出来就编译不过，见 [The Typestate Pattern in Rust · Cliffle](https://cliffle.com/blog/rust-typestate/)。它约束的是开发者写的代码，不是程序运行时收到的数据。
+- **幻影类型**（phantom type / PhantomData）：零大小的标记类型，不占内存，只在编译期标注关系，运行时不存在，见 [Phantom Types in Rust · Ben Ashby](https://www.benashby.com/phantom-types-in-rust/)。
+- **编译期强制**（compile-time enforcement）：与运行时检查相对，不满足约束的代码根本编译不过。它能挡住的是开发者写错的代码路径；模型在运行时发出什么调用，编译器看不到。
 
-**三层 history 术语** —— **三层 history**（agent session 内部状态分层 pattern · 三层 = Rollout + Compaction + Initial Context · 每层独立 compaction / cache / 持久化策略 · 业界源头是 OpenAI Codex 的做法 · `core/src/session/turn.rs`）。**Rollout layer**（session 全量历史层 · append-only · 完整 turn-by-turn 记录 · 跨 process 可恢复 · 业界 Codex / Claude Code / OpenCode 等主流 CLI agent 都用 JSONL append-only 格式）。**Compaction layer**（压缩后摘要历史层 · 滚动更新 · 早期 turn 被压缩 / 近期 turn 完整保留 · 让 prompt context 在长 session 不超 budget）。**Initial Context layer**（不变上下文层 · 比如 system prompt / 项目元数据 / 工具集 · 跨 turn 不变 · 跟 prefix-stable design 配套让 prompt cache 命中）。
+**会话事件日志术语**
 
-**fork-join 术语** —— **fork-join concurrency**（main agent 把任务拆给多个 sub-agent 并行跑 · 然后聚合结果回 main agent · 业界 multi-agent 主流 pattern · 也是 Anthropic multi-agent research 报告的核心 framing）。**provider 并发槽自适应**（不同 model provider 给的 API rate limit 不同 · provider 之间能并发跑的 sub-agent 数量也不同 · pattern 是按 provider 的 concurrent slot 数量动态调度 sub-agent · 不超 rate limit）。
+- **追加写的会话事件日志**：把一次 agent run 的事件流持久化下来，只追加、不改写，进程重启后可以据此恢复。常见的存储是 JSONL 文件（每行一个 JSON 事件，Claude Code 与 Codex 的 Rollout 都用这种格式）；也有把事件存进 SQLite 的（如 OpenCode）。JSONL 与 SQLite 是两种不同的存储，下文分开说。第五章 Trajectory 那节讲过事件分类，本章讲会话日志作为一种模式怎么复用。
+- **只追加**（append-only）：事件流只允许追加，不允许修改已写入的记录，使 trajectory 不被应用层覆写，也便于 diff。
 
-#### 6.1 CacheSafeParams · prompt 参数装配的 cache 友好 pattern
+**执行隔离术语**
 
-**第一件工程模式** —— prompt 装配方式直接决定 prompt cache 命中率 · 命中率直接决定 agent 跑起来的成本跟延迟。**prefix-stable design** 是业界 2026 收敛的 pattern · 内部命名 CacheSafeParams · 业界叫 "cache-aware parameter passing" · 本质相同。
+- **执行隔离**（execution isolation）：agent 跑任务时与主工作目录的隔离程度，分 InProcess、Worktree、Remote 三种，§6.4 详讲。
+- **git worktree**：Git 原生机制，一个仓库可以有多个工作目录。agent 在独立 worktree 里改动不影响主工作目录，跑完再合并或丢弃。
 
-工程层面这件 pattern 解决什么问题—— prompt cache 是 Anthropic / OpenAI / DeepSeek 等 provider 都在用的 latency 优化机制 · 同样 prompt prefix 重复出现时 provider 缓存中间状态 · 后续请求复用缓存大幅降本（Anthropic 官方数字 · 命中后延迟最高省 ~85% · 命中的 cached token 价格是 base input 的 0.1x · 即省 ~90%）。但 cache 命中条件极严—— **prompt prefix 必须 byte-for-byte identical**（[Claude API Prompt Caching Docs](https://platform.claude.com/docs/en/build-with-claude/prompt-caching)）· 任何一字节不同 cache 就 miss。这件严苛性导致 agent harness 装 prompt 时如果不注意 cache-aware design · 每次 turn 都 cache miss · 跑起来又慢又贵。
+**三层 history 术语**
 
-prefix-stable design 的核心机制是 **把 prompt 拆成稳定段 + 变化段** —— 稳定段（system prompt / tools registry / few-shot examples）放前面 · 变化段（当前 task / latest user input / 最近 turn 历史）放后面。这样跨 turn 时稳定段不变 cache 能 hit · 变化段才让 cache 续接。Anthropic Claude Code 把这件 pattern 进一步做到 **"cache-safe forking"** —— 当 context compaction 触发时（前面端到端 17 turn 那章 Turn 11 已经讲过）· compaction 不重写 prompt prefix · 只把 summary 续在末尾 · 让 cached prefix 在 compaction 后仍能命中（[How Claude Code uses prompt caching](https://code.claude.com/docs/en/prompt-caching)）。
+- **三层 history**：把 agent session 的内部状态分三层管理，分别是 Rollout、Compaction、Initial Context，每层有各自的压缩、缓存与持久化策略。这套分法来自 OpenAI Codex 的实现（`core/src/session/turn.rs`）。
+- **Rollout 层**：session 的全量历史，只追加，逐轮完整记录，进程重启后可以恢复。Codex、Claude Code 等 CLI agent 用 JSONL 文件保存这一层。
+- **Compaction 层**：压缩后的摘要历史，滚动更新，早期轮次被压缩，近期轮次完整保留，使长 session 的上下文不超出预算。
+- **Initial Context 层**：基本不变的上下文，比如 system prompt、项目元数据、工具集，各轮之间保持不变，配合前缀稳定设计让提示词缓存命中。
 
-工程实现细节有几条要讲清楚。**第一条 · model 是 cache key 一部分** —— 切换 model（比如 Flash → Pro escalation）会让整个 cached prefix invalidate · 因为不同 model 有独立 cache pool。这件 framing 让 escalation 决策不只是"换更强 model" · 还要 weigh 进 "失去 cache 的成本"。**第二条 · tools 是 prefix 一部分** —— 加一个 tool 或改一个 tool description 会让那个 tool 之后的所有 cache invalidate。这件让 Tool Registry 的 `select_for(query)` 动态子集机制（前面 Tool Registry 那章讲过）变成 cache-aware 必须的——但子集变化会 cache miss · pattern 是把"通用工具 stable subset"放前面 / "task-specific subset" 放后面 · 让 stable subset 跨 turn 复用。**第三条 · 内容字节序敏感** —— JSON 字段顺序 / 空格 / 换行 / 编码（UTF-8 vs UTF-16）都影响 cache · agent harness 装 prompt 时要标准化 serializer（pretty-print 或固定 key 顺序）让序列化输出 byte-for-byte 稳定。
+**fork-join 术语**
 
-**provider 的 cache 接口形态不同 · DeepSeek 式自动前缀缓存的适配**。上面 cache_control 断点、cache-safe forking 是 Anthropic 路径——但不是所有 provider 都走手动 cache 管理。**DeepSeek 走 Context Caching on Disk** · 默认对所有用户开启 / 无需改代码 / 客户端没有也不发 `cache_control` · 后端自动按前缀匹配判定命中（"只有完全匹配某个 cache prefix unit 才命中" · 以 **64 token 为存储单元 · 不足 64 token 不缓存**）（[DeepSeek API · Context Caching](https://api-docs.deepseek.com/guides/kv_cache) · [2024-08 发布公告](https://api-docs.deepseek.com/news/news0802)）。这跟 Anthropic 显式声明 cache_control 断点（最多 4 个）正好相反——一个后端全自动 / 一个客户端手动 opt-in。接口更省心 · 但前缀稳定性的纪律一样严（命中要前缀整单匹配）· 两条适配要点：**第一 · system prompt 会话内彻底静态** —— system 是前缀最前段 · 任何每请求变动的字段（日期 / 时间戳 / 动态状态）让整条缓存从头失效 · 工程对策是把这类信息从 system 前段下沉到 system 末尾独立片段（其前所有静态段仍命中 · 只重算末尾那行）· 或下沉到首条 user message。**第二 · 严格 append-only** —— 重写对话前缀（把前段历史替换成摘要 / 改变前缀位置）是最隐蔽的缓存杀手 · 会让压缩后第一轮缓存大面积 miss · 工程对策是摘要锚点固定（压一次后位置不再变 · 后续只在尾部 append）/ 只摘要最新输出不改写历史 / prompt 裁剪只删不重排。
+- **fork-join 并发**（fork-join concurrency）：主 agent 把任务拆给多个 sub-agent 并行执行，再把结果汇总回主 agent。这是常见的多智能体组织方式，也是 Anthropic 多智能体研究系统文章的核心结构。
+- **provider 并发槽自适应**：不同模型服务商给的 API 限流额度不同，能同时跑的 sub-agent 数也不同；做法是按各服务商当前可用的并发槽动态调度 sub-agent，不超出限流。
 
-这里 **reasoning_content 的跨轮处理是个容易踩坑的工程权衡 · 不能一刀切**。官方契约是基线：deepseek-reasoner 输入带 reasoning_content 直接报 400（下一轮请求前必须删掉）· deepseek-v4 thinking mode（flash / pro 同）**工具调用轮必须把 reasoning_content 完整回传**、否则报 400 · 非工具轮回传则被服务端忽略（中性）（[DeepSeek API · reasoning model](https://api-docs.deepseek.com/guides/reasoning_model) · [thinking mode](https://api-docs.deepseek.com/guides/thinking_mode)）。基线之上有个真实权衡：按 DeepSeek-V4 技术报告 Interleaved Thinking · 工具场景跨轮保留 reasoning 能维持长周期 agent 的累积 CoT（有收益）· 但 reasoning 进前缀会占 billable prompt token · 还可能扰动缓存稳定。**agent reasonix（"engineered around prefix-cache stability"）选了相反一侧**——回传时剥离 reasoning_content（response-only field · 不为重传付费）· 用 thought harvesting（把 reasoning 蒸馏成结构化 state 再用）补偿 · 把 cache 稳定 + 省 token 放在 reasoning 累积之上（[esengine/DeepSeek-Reasonix](https://github.com/esengine/DeepSeek-Reasonix)）。但有个坑：relay / proxy（litellm、claude-code-router 都报过）若在**工具轮**简单剥离 reasoning_content 会撞上那条 400——剥离要么只在非工具轮 · 要么配 harvesting · 不能无脑删。
+#### 6.1 前缀稳定的 prompt 装配 · 让提示词缓存命中
 
-CacheSafeParams pattern 适用边界要分清。**适用场景** —— long context agent 任务（context 跨 turn 累积大）/ 高频 short turn agent（每 turn cache 节省累积可观）/ 长上下文 system prompt（CC 风格的大 system prompt 装 1000+ token）。**不适用场景** —— short single-turn 任务（cache 没机会累积价值）/ context 跨 turn 频繁大改的 task（cache 总是 miss · pattern 反而引入复杂度没收益）/ provider 不支持 prompt cache 的（比如某些早期 open-source model · 或者只支持 KV cache 不支持 prefix cache 的）。
+**第一种工程模式**：prompt 的装配方式直接决定提示词缓存的命中率，命中率又直接决定 agent 的成本和延迟。前缀稳定设计（prefix-stable design）在多个主流 harness 中可见；Claude Code 源码里对应的数据结构叫 `CacheSafeParams`（本节末再讲），这里只把它当作一个实例。
 
-这件 pattern 在 multi-agent 场景的实测效益值得单独提。**Claude Code 的做法是**用一个 `CacheSafeParams` 数据结构封装 systemPrompt / userContext / systemContext / toolUseContext / forkContextMessages 五个字段——sub-agent 启动时通过 CacheSafeParams **继承 parent agent 的 cache prefix**——也就是 sub-agent 不重新计算 system prompt + tools registry 这些 stable 段 · 直接复用 parent 已经缓存好的 prefix。这件做下来 **sub-agent cost 比从头跑省下可观一块**（system prompt + tools registry 这些 stable 段直接复用 parent 缓存 · 不重算）—— 这是 multi-agent 场景里 cache-aware design 最大的工程价值。也是为什么主流 CLI agent harness 都把 cache-safe forking 当作 compaction 的核心 invariant —— 不只是 cache 命中省钱 · 是让 multi-agent fork 在 cost 上可行。
+这种模式要解决的问题是：提示词缓存是 Anthropic、OpenAI、DeepSeek 等厂商都提供的优化机制，同样的 prompt 前缀重复出现时，服务端缓存中间计算结果，后续请求直接复用，大幅降本（Anthropic 官方数字：命中后延迟最多可降约 85%；命中部分的价格是基础输入价的 0.1 倍，即省约 90%）。但命中条件极严：**prompt 前缀必须逐字节一致**（[Claude API Prompt Caching Docs](https://platform.claude.com/docs/en/build-with-claude/prompt-caching)），差一个字节就不命中。harness 装配 prompt 时如果不考虑缓存，每一轮都可能不命中，跑起来又慢又贵。
 
-#### 6.2 Constrained 类型 · 编译期权限收窄 pattern
+前缀稳定设计的核心做法是 **把 prompt 拆成稳定段和变化段**：稳定段（system prompt、工具注册表、few-shot 示例）放前面，变化段（当前任务、最新的用户输入、最近几轮历史）放后面。这样各轮之间稳定段不变，缓存能命中，变化段接在后面。Claude Code 把这种模式进一步做成 **cache-safe forking**：触发上下文压缩时（§5.11 端到端示例中编号 11 的那次压缩讲过，它发生在两轮之间），压缩不重写 prompt 前缀，只把摘要接在末尾，已缓存的前缀在压缩后仍能命中（[How Claude Code uses prompt caching](https://code.claude.com/docs/en/prompt-caching)）。
 
-**第二件工程模式** —— 把工具权限编码进编译期类型 · 让 invalid 权限调用根本写不出来 · 不依赖运行时检查兜底。业界主流叫 **typestate pattern**（[Cliffle blog 经典讲解](https://cliffle.com/blog/rust-typestate/) · [Microsoft RustTraining book Ch 3](https://microsoft.github.io/RustTraining/rust-patterns-book/ch03-the-newtype-and-type-state-patterns.html)）· OpenAI Codex 源码用这件 pattern 给 tool 权限封装 · 命名是 `Constrained<T>` · 本节按业界主流名 typestate pattern 讲 + 引 Codex 作为业界案例点缀。
+实现上有三条细节要讲清楚：
 
-工程层面这件 pattern 解决什么问题—— Tool Registry 给 agent 提供工具集 · 但不同工具有不同权限（read-only / workspace-write / dangerous）· 如果用 runtime check（每次工具调用前问 "你有这个权限吗"）· 检查逻辑分散在代码各处 · 容易漏检 / 容易被 bypass / 容易 hot-path 引入开销。typestate pattern 把权限编码进**工具的类型**——比如 `Tool<ReadOnly>` 跟 `Tool<WorkspaceWrite>` 是两个不同类型 · `git_status: Tool<ReadOnly>` / `write_file: Tool<WorkspaceWrite>` · agent harness 的 dispatcher 只接受跟当前 permission mode 类型匹配的工具 · 类型不匹配的代码根本编译不过。
+- **模型是缓存键的一部分。** 切换模型（比如从 Flash 升级到 Pro）会让整段已缓存前缀失效，因为不同模型的缓存彼此独立。所以升级模型的决策不只是"换更强的模型"，还要算上"失去缓存的成本"。
+- **工具定义是前缀的一部分。** 加一个工具或改一个工具的描述，会让它之后的所有缓存失效。这让 Tool Registry 的 `select_for(query)` 动态子集机制（第五章 Tool Registry 那节讲过）必须考虑缓存：子集一变就不命中。做法是把"通用工具的稳定子集"放前面、"与任务相关的子集"放后面，让稳定子集在各轮之间复用。
+- **内容对字节顺序敏感。** JSON 字段顺序、空格、换行、编码（UTF-8 还是 UTF-16）都会影响缓存命中。harness 装配 prompt 时要统一序列化方式（固定缩进与字段顺序），让序列化结果逐字节稳定。
 
-Rust 实现的核心 mechanism 是 **phantom type + PhantomData** —— phantom type 是 zero-sized marker · 不占内存也不在运行时存在 · 只在编译期参与类型检查。**编译期强制的优势** —— invalid 状态在代码里写不出来 · 不需要 runtime check · zero overhead · audit 时只要 review 类型签名就知道权限边界。**对应到 agent harness 几个工程价值**：第一 · permission gating 不会被某段忘记 check 的代码 bypass（前面 Safety 常见误区 AP13 Hook Bypass 的工程对策之一就是 typestate pattern）；第二 · 工具集变化时 IDE 自动报错 · 不会被某个不熟悉权限边界的 contributor 误调到 dangerous tool；第三 · audit log 跟权限边界对齐 · 因为权限是类型 · 类型在编译产物 metadata 里都能看到。
+**不同厂商的缓存接口不同：DeepSeek 式自动前缀缓存的适配。** 上面讲的 cache_control 断点和 cache-safe forking 是 Anthropic 的做法，但并非所有厂商都需要手动管理缓存。**DeepSeek 用硬盘上的上下文缓存（Context Caching on Disk）**：默认对所有用户开启，无需改代码，客户端也不发 `cache_control`，服务端按前缀自动判定是否命中（"只有完全匹配某个缓存前缀单元才命中"，以 **64 token 为存储单元，不足 64 token 的部分不缓存**）（[DeepSeek API · Context Caching](https://api-docs.deepseek.com/guides/kv_cache)，[2024-08 发布公告](https://api-docs.deepseek.com/news/news0802)）。这跟 Anthropic 由客户端显式声明 cache_control 断点（最多 4 个）正好相反：一个由服务端全自动处理，一个由客户端手动开启。DeepSeek 的接口更省心，但对前缀稳定性的要求一样严（命中要求前缀完全匹配）。适配要点有两条：
 
-工程实现的几个细节。**第一 · permission mode 用 phantom type 标** —— Rust 用 `Tool<ReadOnly>` / `Tool<WorkspaceWrite>` / `Tool<Dangerous>` 三档 phantom type · ToolPolicy registry 按 mode 给 agent 暴露对应子集（agent 跑在 ReadOnly mode 时只看到 `Tool<ReadOnly>` 集合 · 看不到 dangerous 工具的类型也意味着不可能调）。**第二 · state transition 显式建模** —— 从 `Tool<Unverified>` 经过 `verify()` 转 `Tool<Verified>` · 没 verify 过的工具不可调（编译错误）。**第三 · 权限提升要 explicit ceremony** —— 提权（比如临时给某个工具 dangerous 权限）必须显式走 `Tool<ReadOnly>::elevate(approval_token) -> Tool<WorkspaceWrite>` · approval_token 是来自 HITL approval 的不可伪造凭证 · 没 token 的代码升不了权。
+- **system prompt 在会话内保持完全静态。** system 位于前缀最前面，任何每次请求都会变的字段（日期、时间戳、动态状态）都会让整段缓存从头失效。对策是把这类信息从 system 前部移到 system 末尾的独立片段（它之前的静态段仍能命中，只重算末尾那一段），或者移到第一条 user 消息里。
+- **严格只追加。** 重写对话前缀（把前面的历史替换成摘要，或改变前缀位置）是最隐蔽的缓存杀手，会让压缩后第一轮大面积不命中。对策是：摘要锚点固定（压缩一次后位置不再变，之后只在尾部追加）；只摘要最新输出，不改写已发送的前缀；裁剪 prompt 时只删不重排。
 
-这件 pattern 不适用的语言要讲清楚。**typestate pattern 强依赖语言的类型系统强度** —— Rust / Haskell / OCaml / TypeScript（部分） 这种类型系统足够表达的语言能完整实施 · Python / JavaScript / Go 等动态类型或类型系统受限的语言只能用 runtime check 模拟 · 失去编译期保证。这件不可移植性是 typestate pattern 的工程限制——选语言 / 选框架时要 weigh 进。OpenAI Codex 用 Rust 写 harness 一部分原因就是要拿 typestate pattern 的编译期保证 · Anthropic Claude Code 用 TypeScript 写 harness 用 branded type 模拟 typestate（弱化版 · 但仍有 IDE 静态检查）。
+这里 **reasoning_content 的跨轮处理是一个容易踩坑的权衡，不能一刀切**。官方约定是底线：deepseek-reasoner 的输入如果带 reasoning_content 会直接报 400（下一轮请求前必须删掉）；deepseek-v4 的思考模式（flash 与 pro 相同）在**工具调用轮必须把 reasoning_content 完整回传**，否则报 400，非工具轮回传则被服务端忽略（[DeepSeek API · reasoning model](https://api-docs.deepseek.com/guides/reasoning_model)，[thinking mode](https://api-docs.deepseek.com/guides/thinking_mode)）。在这条底线之上有一个真实的权衡：按 DeepSeek-V4 技术报告中的交错思考（Interleaved Thinking），工具场景下跨轮保留推理内容能维持长周期 agent 累积的思维链，有收益；但推理内容进入前缀会占用计费的 prompt token，还可能影响缓存稳定。**Reasonix 这个 agent（自述"engineered around prefix-cache stability"，即围绕前缀缓存稳定性设计）选了另一边**：回传时剥离 reasoning_content（它只是响应字段，不为重传付费），再用"思考收割"（thought harvesting，把推理内容提炼成结构化状态再利用）来补偿，把缓存稳定和省 token 放在推理累积之上（[esengine/DeepSeek-Reasonix](https://github.com/esengine/DeepSeek-Reasonix)）。但有一个坑：中转服务或代理（litellm、claude-code-router 都有人报过）如果在**工具轮**简单剥离 reasoning_content，会撞上前面那条 400。剥离要么只在非工具轮做，要么配合思考收割，不能一律删掉。
 
-业界实现对照值得看。**OpenAI Codex 用 `Constrained<T>` newtype pattern** 把工具权限 + Safe/Write/Dangerous 三档编码进类型 · 配 `AskForApproval` 三档触发 HITL approval · 这件设计是 Codex Rust 实现的核心 invariant 之一。**OpenCode 走 Go 实现** —— Go 类型系统比 Rust 弱一档 · 不能完整实施 typestate · OpenCode 用 interface + role-based check 走 runtime 路径 + 把权限策略放进 SQLite session storage 让 audit 可查（[opencode-ai/opencode GitHub](https://github.com/opencode-ai/opencode) · [OpenCode Docs](https://opencode.ai/docs/cli/)）。**OpenHands Python 走 runtime check + decorator** 模拟权限 · 没法做编译期保证 · 全靠 import-time + call-time check（[OpenHands Agent Control Plane](https://www.openhands.dev/blog/agent-control-plane)）。三档实现强度从强到弱 —— Rust（编译期）> Go（半运行时 + 持久化）> Python（纯运行时）—— 跟语言类型系统强度直接相关。这件 framing 让 harness 选语言不只是性能 / 团队偏好考虑 · Safety 边界的编译期保证也是真实约束。
+这种模式的适用边界要分清：
 
-#### 6.3 JSONL Session · session 持久化 pattern
+- **适用场景**：长上下文 agent 任务（上下文跨轮累积大）；高频短轮次的 agent（每轮省下的缓存费用累积可观）；system prompt 很长的场景（Claude Code 风格的 system prompt 动辄上千 token）。
+- **不适用场景**：单轮短任务（缓存没机会累积价值）；上下文每轮都大幅改动的任务（缓存总是不命中，这种模式只增加复杂度、没有收益）；不支持提示词缓存的服务（比如某些早期开源模型的部署，或只有单次请求内 KV cache、不支持跨请求前缀缓存的服务）。
 
-**第三件工程模式** —— 一个 agent run 的全部事件流写到一个 JSONL 文件里 · 每行一个 JSON event · append-only · 跨 process 可恢复。这件 pattern 业界 CLI agent 主流都在用 —— Codex 的 Rollout / Claude Code 的 sessionStorage / OpenCode 的 SQLite-backed session 都是 JSONL session 这件 pattern 的不同实现。
+这种模式在多智能体场景的收益值得单独提。**Claude Code 的做法**是用一个 `CacheSafeParams` 数据结构封装 systemPrompt、userContext、systemContext、toolUseContext、forkContextMessages 五个字段；sub-agent 启动时通过它**继承父 agent 的缓存前缀**，也就是不重新计算 system prompt、工具注册表这些稳定段，直接复用父 agent 已经缓存好的前缀。这样 **sub-agent 的成本比从头跑省下可观的一块**。这是多智能体场景里缓存友好设计最大的工程价值，也是 Claude Code 把 cache-safe forking 作为 compaction 核心约束的原因之一：它不只是省缓存费，还让多智能体 fork 在成本上可行。
 
-工程层面这件 pattern 解决什么问题—— agent run 跑下来产生大量事件（前面 Trajectory 那章详细讲过 event taxonomy）· 这些事件要持久化下来才能 trajectory replay / debug / audit / self-evolution。持久化的格式选择有几条路径：**单 JSON 文件**（短 run + 人审场景 · SWE-agent 用）/ **JSONL append-only**（长 run + production 量大 · 业界主流）/ **数据库**（结构化查询场景 · 比如 OpenCode 用 SQLite）。JSONL append-only 是业界共识的工程默认 —— 三件工程优势让它成为主流。
+#### 6.2 类型化权限 · 用类型约束权限相关的代码路径
 
-**第一件优势 · append-only 性能** —— append 是文件系统最便宜的写操作 · 不需要 seek / 不需要 rewrite · 1KB 事件 append 通常 < 1ms · 即使长 run 累积几千事件也不影响 agent turn latency。**第二件优势 · 流式恢复** —— agent run 中途断电 / 进程崩溃 · JSONL 文件已写到第 N 行 · restart 时从第 N+1 行接续 · 不需要 replay 整个 session。流式恢复通常很快 · 用户基本无感（业界 CLI agent 普遍走这条路径）。**第三件优势 · git diff 友好** —— JSONL 每行一个独立 JSON · 跨 turn diff 时只显示新增行 · 不像 JSON 改一个 key 整个文件重排。这件 diff 友好性让 trajectory 可以进 git · 支持跨 commit 的 audit / 多人协作 / replay。
+**第二种工程模式**：把工具权限编码进类型，让 harness 开发者写不出"没经过权限检查就执行工具"的代码。通用的名字是 **类型状态模式（typestate pattern）**（[Cliffle blog 经典讲解](https://cliffle.com/blog/rust-typestate/)，[Microsoft RustTraining book Ch 3](https://microsoft.github.io/RustTraining/rust-patterns-book/ch03-the-newtype-and-type-state-patterns.html)）。
 
-JSONL session 的工程实现有几个细节要讲清楚。**第一 · Entry 类型分类** —— JSONL 不是单一 event type · 通常按 5-8 类 entry 分类。Claude Code 的做法是用 5 类 entry —— TranscriptMessage（user/assistant 消息）/ FileHistorySnapshot（文件状态快照）/ ContextCollapseCommit（compaction 事件）/ ContentReplacement（context 内容替换）/ AttributionSnapshot（产物归属）。每类有独立 schema · 反序列化时按 type 字段 dispatch。**第二 · 长 session 的 bounded with spillover pattern** —— session 文件不能无限增长 · 实现上通常给一个行数 / 字节上限 · 超限自动截断 + 警告 + 拆分指导。bounded with spillover 让 session 文件不会无限增长拖垮 agent restart。**第三 · session 跨 session 关联** —— 一个长任务可能跨多个 session 文件（前一个 session 的 compaction 摘要作为下一个 session 的 initial context）· 这件关联通过 session-id 链 + summary checkpoint 实现。
+先把它的作用范围说清楚：**typestate 只约束 harness 开发者写的代码，约束不了模型运行时发出的调用。** 模型每一轮发出调用哪个工具、带什么参数，是运行时才出现的数据，编译器看不到。类型能保证的是：执行工具的函数只接受"已通过策略检查"的类型，开发者不可能漏掉检查这一步；但检查本身（这个调用在当前权限模式下允不允许）仍然要在运行时做。所以它是运行时策略检查的补充，不是替代。
 
-JSONL session 这件 pattern 的工程价值最终落到 **跨 run audit 跟 replay 都依赖它**。前面 Trajectory 那章讲过 trajectory 是 agent harness 的 first-class data · 这件"first-class"性质就是通过 JSONL session 的持久化具体落地的——session 文件不只是 debug 工具 · 是 agent run 的 audit log / training data / self-evolution input 三重角色合一的载体。
+这种模式要解决的问题是：Tool Registry 给 agent 提供工具集，但不同工具权限不同（只读、可写工作区、危险操作）。如果只靠散落在各处的运行时检查（每次调用前问一句"有没有这个权限"），检查逻辑分散，容易有代码路径漏检，热路径上也有开销。typestate 把权限编码进**工具的类型**，例如 `Tool<ReadOnly>` 与 `Tool<WorkspaceWrite>` 是两个不同类型，`git_status: Tool<ReadOnly>`、`write_file: Tool<WorkspaceWrite>`；harness 的分发器只接受与当前权限模式匹配的类型，开发者把类型用错的代码编译不过。
 
-JSONL session 之上还能再立一个组合 pattern：**checkpoint / resume**——长任务断点续跑。它需要三件配合：JSONL session 恢复执行状态（读到最后一行完整 event 重建 State）· artifact 版本恢复产物状态（Trajectory 那章讲过的"回退"能力）· 工具幂等防重放副作用（恢复时最后一个 tool_call 可能"已执行未记录" · 重放前先对账执行记录）。三件少一件 · resume 就只是"从头再跑一遍"的另一个名字。这里还有一条 append-only 自己的细节坑——**崩溃一致性**：进程在写半行 JSONL 时死掉 · 恢复逻辑要能容忍丢尾行（按最后一个完整 event 截断 · 半行丢弃）· fsync 策略决定你最多丢几个 event。append-only 不等于 crash-safe——这两件经常被当成一件。
+Rust 实现的核心是 **幻影类型（phantom type）加 PhantomData**：幻影类型是零大小的标记，不占内存，运行时也不存在，只在编译期参与类型检查。**编译期强制的好处**是：非法状态在代码里写不出来，这部分不需要额外的运行时检查，零开销，审计时看类型签名就知道代码层面的权限边界。对应到 agent harness，有几项工程价值：
 
-#### 6.4 Isolation Modes · sub-agent 执行隔离 pattern
+- 权限相关的代码路径不会因为某段代码忘了调用检查而被跳过；
+- 工具集变化时 IDE 直接报错，不熟悉权限边界的贡献者不会在代码里误把危险工具接进只读路径；
+- 审计记录与权限边界对齐，因为权限就是类型，读代码时一目了然。
 
-**第四件工程模式** —— sub-agent 跑任务时跟 main agent 工作目录的物理隔离 pattern · 业界主流三档梯度。这件 pattern 跟 Safety 那章讲的 sandbox 物理隔离是同一类工程思路 · 但作用对象不同 —— sandbox 隔离 agent 跟 host system · Isolation Modes 隔离 sub-agent 跟 main agent。
+下面是一种可能的实现，用来说明思路，不代表某个产品的真实代码：
 
-业界主流的三档 Isolation Mode 是 **InProcess / Worktree / Remote**。
+- **用幻影类型标注权限模式。** 用 `Tool<ReadOnly>`、`Tool<WorkspaceWrite>`、`Tool<Dangerous>` 三种幻影类型区分权限级别，ToolPolicy 注册表按模式向 agent 暴露对应子集（agent 在 ReadOnly 模式下只看到 `Tool<ReadOnly>` 集合）。模型如果仍然发出调用危险工具的请求，由运行时的策略检查拒绝。
+- **显式建模状态转换。** 从 `Tool<Unverified>` 经 `verify()` 转成 `Tool<Verified>`，执行函数只接受 `Tool<Verified>`，开发者不可能写出跳过验证就执行的代码（写出来编译不过）。
+- **提权要显式走流程。** 临时给某个工具更高权限，必须显式调用 `Tool<ReadOnly>::elevate(approval_token) -> Tool<WorkspaceWrite>`，approval_token 只能从人工审批（HITL）流程拿到，代码里拿不到 token 就升不了权。审批本身仍是运行时发生的事。
+
+这种模式对语言有要求，这一点要讲清楚。**typestate 依赖语言类型系统的表达能力**：
+
+- Rust、Haskell、OCaml 能完整实施；TypeScript 可以用品牌类型（branded type）部分实现。
+- Go 是静态类型语言，可以用不同的类型表示不同状态，但没有 Rust 那样的所有权转移，状态转换后旧状态的值仍然能被使用，约束力弱一些。
+- Python、JavaScript 是动态类型，主要只能靠运行时检查模拟（Python 可借类型标注加静态检查工具补一部分），拿不到编译期保证。
+
+这种不可移植性是 typestate 的工程限制，选语言、选框架时要考虑进去。OpenAI Codex 用 Rust 写 harness，一种可能的考量就是能拿到这类编译期保证。
+
+业界实现对照值得看。**OpenAI Codex 的源码里有一个名为 `Constrained<T>` 的 newtype 包装**，并有审批策略 `AskForApproval` 控制何时触发人工审批。`Constrained<T>` 是否用来把权限级别编码进类型，本书未能核实，所以上面的三级示例只当作一种可能的实现，不当作 Codex 的实际设计。**OpenCode 用 Go 实现**：Go 是静态类型语言，但缺少所有权转移，完整实施 typestate 较难；OpenCode 用接口加基于角色的检查走运行时路径，并把会话存进 SQLite，便于审计查询（[opencode-ai/opencode GitHub](https://github.com/opencode-ai/opencode)，[OpenCode Docs](https://opencode.ai/docs/cli/)）。**OpenHands 用 Python**，靠运行时检查加装饰器实现权限控制，拿不到编译期保证，全靠导入时和调用时的检查（[OpenHands Agent Control Plane](https://www.openhands.dev/blog/agent-control-plane)）。三者在编译期能约束的范围上 Rust 最大、Go 次之、Python 主要靠运行时，跟语言类型系统的表达能力直接相关。但不管用哪种语言，模型发出的工具调用都必须经过运行时策略检查；语言差异影响的只是"开发者会不会写出绕过检查的代码"这一层。所以选 harness 的实现语言时，除了性能和团队偏好，这层编译期保证也是一个真实的考量。
+
+#### 6.3 追加写的会话事件日志 · session 持久化模式
+
+**第三种工程模式**：把一次 agent run 的全部事件按顺序追加写入日志，只追加、不改写，进程重启后可以据此恢复。CLI agent 普遍在用这种模式，存储有两种：
+
+- **JSONL 文件**：每行一个 JSON 事件。Codex 的 Rollout、Claude Code 的会话记录都是这种。
+- **数据库**：OpenCode 把会话存在 SQLite 里。SQLite 不是 JSONL，是另一种存储选择，下面分开讨论。
+
+这种模式要解决的问题是：agent run 跑下来会产生大量事件（第五章 Trajectory 那节详细讲过事件分类），这些事件要持久化，才能做 trajectory 回放、调试、审计和自我演进。持久化格式有几条路：
+
+- **单个 JSON 文件**：适合短 run 加人工审阅的场景，SWE-agent 用这种；
+- **JSONL 只追加文件**：适合长 run、生产环境量大的场景，在 CLI agent 中最常见；
+- **数据库**：适合需要结构化查询的场景，比如 OpenCode 用 SQLite。
+
+JSONL 只追加文件之所以常见，有三项工程优势：
+
+- **追加写性能好。** 追加是文件系统最便宜的写操作，不需要 seek，也不需要重写，1KB 的事件追加通常不到 1 毫秒，长 run 累积几千个事件也不影响每一轮的延迟。
+- **恢复简单。** agent run 中途断电或进程崩溃时，已写入的事件都在文件里。重启后读出全部已写入的完整事件、重建状态，再从下一步接着跑；已经完成的工具调用不需要重新执行，结果直接从日志里读。读一遍日志通常很快，用户基本感觉不到。
+- **便于 git diff。** JSONL 每行一个独立的 JSON，跨轮 diff 时只显示新增的行，不像单个 JSON 文件改一个 key 可能整个文件重排。所以 trajectory 可以进 git，支持跨提交的审计、多人协作和回放。
+
+实现上有几个细节要讲清楚：
+
+- **事件类型分类。** 日志里不是单一的事件类型，通常分 5 到 8 类。Claude Code 的做法是 5 类：TranscriptMessage（user 与 assistant 消息）、FileHistorySnapshot（文件状态快照）、ContextCollapseCommit（compaction 事件）、ContentReplacement（上下文内容替换）、AttributionSnapshot（产物归属）。每类有独立的 schema，反序列化时按 type 字段分发。
+- **长 session 的"有界加溢出"（bounded with spillover）。** session 文件不能无限增长，实现上通常设一个行数或字节上限，超限时截断、告警，并提示如何拆分，避免 session 文件过大拖慢 agent 重启。
+- **跨 session 关联。** 一个长任务可能跨多个 session 文件（前一个 session 的压缩摘要作为下一个 session 的初始上下文），靠 session-id 链加摘要检查点关联起来。
+
+这种模式的工程价值最终体现在：**跨 run 的审计和回放都依赖它**。第五章 Trajectory 那节讲过，trajectory 是 agent harness 需要单独设计的一类数据，这一点正是靠会话事件日志的持久化来实现的。session 文件不只是调试工具，同时是 agent run 的审计日志、训练数据和自我演进的输入。
+
+在会话事件日志之上还能再搭一个组合模式：**检查点与续跑（checkpoint / resume）**，也就是长任务断点续跑。它需要三样东西配合：
+
+- 会话事件日志恢复执行状态：读出全部已写入的完整事件，重建状态；
+- 产物版本恢复产物状态：第五章 Trajectory 那节讲过的"回退"能力；
+- 工具幂等防止重复副作用：恢复时最后一个工具调用可能"已执行但未记录"，重新执行前先和执行记录对账。
+
+三样缺一样，续跑就只是"从头再跑一遍"的另一个名字。这里还有一个只追加写法本身的细节坑，即**崩溃一致性**：进程在写到半行时死掉，恢复逻辑要能容忍丢掉尾行（按最后一个完整事件截断，半行丢弃），fsync 策略决定你最多丢几个事件。只追加不等于崩溃安全，这两者经常被混为一谈。
+
+#### 6.4 Isolation Modes · sub-agent 执行隔离模式
+
+**第四种工程模式**：sub-agent 跑任务时，与主 agent 的工作目录隔离开。常见的有三个层次。这种模式跟 Safety 那章讲的 OS 级沙箱是同一类思路，但作用对象不同：沙箱隔离的是 agent 与宿主系统，执行隔离隔离的是 sub-agent 与主 agent。
+
+常见的三种隔离模式是 **InProcess、Worktree、Remote**。
 
 ![](../diagrams/t2-comparison-6-isolation.png)
 
-*图 6.2 · sub-agent 执行隔离的三档模式*
+*图 6.2 · sub-agent 执行隔离的三级模式*
 
-**InProcess** —— sub-agent 跑在跟 main agent 同一个 process · 共享内存 / 共享 file system · 只在逻辑上分 agent boundary。这件 mode 最轻量 —— sub-agent 启动几乎 zero cost · 跟 main agent 直接 share data structure · 适合**短任务 / 高频协作 / 没有副作用风险的子任务**（比如 sub-agent 只是分析 main agent 的 context 给 review 意见 · 不写产物）。InProcess 的代价是隔离弱 —— sub-agent 跑错可能污染 main agent state · multi-agent 并发要小心 thread safety。
+**InProcess**：sub-agent 与主 agent 跑在同一个进程里，共享内存和文件系统，只在逻辑上划分 agent 边界。这种模式最轻量，sub-agent 启动几乎没有开销，可以直接共享数据结构，适合**短任务、高频协作、没有副作用风险的子任务**（比如 sub-agent 只是分析主 agent 的上下文、给出审阅意见，不写产物）。代价是隔离弱：sub-agent 出错可能污染主 agent 的状态，多个 agent 并发时要小心线程安全。
 
-**Worktree** —— sub-agent 跑在独立 git worktree 目录 · 跟 main agent 的工作目录物理隔离。git worktree 是 Git 原生机制（一个 repo 多个工作目录 · 共享 .git 但工作目录独立）· 让 sub-agent 在独立分支跑实验性改动 · 跑完合并或丢弃 · 不影响 main agent 当前工作目录。Claude Code 的做法是把 sub-agent worktree 放在 `.claude/worktrees/<agent-id>/` 下面 · 用 sub-agent ID 标识。这件 mode 适合**写产物的 sub-agent 任务**（比如 sub-agent 要 edit file / 跑 build / 跑 test · 需要独立 workspace 不污染 main agent）。Worktree 的代价是 setup 重一档 —— 每个 sub-agent 启动要 git worktree add · 完成后要 cleanup · 比 InProcess 慢但比 Remote 快。
+**Worktree**：sub-agent 跑在独立的 git worktree 目录里，与主 agent 的工作目录分开。git worktree 是 Git 的原生机制（一个仓库多个工作目录，共享 .git，工作目录各自独立），sub-agent 可以在独立分支上做实验性改动，跑完合并或丢弃，不影响主 agent 当前的工作目录。Claude Code 的做法是把 sub-agent 的 worktree 放在 `.claude/worktrees/<agent-id>/` 下，用 sub-agent ID 标识。这种模式适合**要写产物的 sub-agent 任务**（比如要改文件、跑构建、跑测试，需要独立的工作区，不能污染主 agent）。代价是准备工作更重：每个 sub-agent 启动要 `git worktree add`，完成后要清理，比 InProcess 慢，但比 Remote 快。
 
-**Remote** —— sub-agent 跑在独立 process / container / cloud worker pod · 完全跟 main agent 物理隔离。OpenHands Agent Control Plane 推荐 enterprise scale 走 K8s container 路径 · 每个 sub-agent run 在独立 container · 配 per-container resource quota + network policy。这件 mode 隔离最强 —— sub-agent 跑死了 / 跑爆 memory / 跑越权 都不影响 main agent · 适合**dangerous 任务 / multi-tenant 部署 / 不信任的 sub-agent**（比如 user 给的 task spec 不可信 · 或者 sub-agent 用第三方插件）。Remote 的代价是延迟最高 —— container 启动几秒 + 跨 process 通信 latency + 数据传递 serialization 开销。
+**Remote**：sub-agent 跑在独立的进程、容器或云端 worker pod 里，与主 agent 完全隔离。OpenHands Agent Control Plane 推荐企业规模部署走 K8s 容器路线：每个 sub-agent run 一个独立容器，配每容器的资源配额和网络策略。这种模式隔离最强，sub-agent 崩溃、内存爆掉、越权操作都不影响主 agent，适合**危险任务、多租户部署、不可信的 sub-agent**（比如用户给的任务描述不可信，或 sub-agent 用了第三方插件）。代价是延迟最高：容器启动要几秒，加上跨进程通信延迟和数据序列化开销。
 
-三档 Isolation Mode 选哪个的判断流程几条。**第一 · sub-agent 写不写产物** —— 不写（只读 / 给意见）走 InProcess；写（edit file / 创建产物）走 Worktree 或 Remote。**第二 · sub-agent 信任度** —— main agent 自己 spawn 的 sub-agent 信任高 · 走 Worktree；user 给的 task spec / 第三方插件信任低 · 走 Remote。**第三 · 部署场景** —— local dev 单 user · Worktree 够；enterprise multi-tenant · 必须 Remote container。OpenCode 在这件上走 client/server 架构 · server 端可以按部署模式选 Worktree 或 Remote · client 端透明（[OpenCode v1.3.3 Deep Dive · sanj.dev](https://sanj.dev/post/opencode-deep-dive-2026)）。
+选哪种隔离模式，可以按下面几条判断：
 
-#### 6.5 三层 history · session state 分层 pattern
+- **sub-agent 写不写产物**：不写（只读、给意见）用 InProcess；要写（改文件、生成产物）用 Worktree 或 Remote。
+- **sub-agent 的可信度**：主 agent 自己派生的 sub-agent 可信度高，用 Worktree；用户给的任务描述或第三方插件可信度低，用 Remote。
+- **部署场景**：本地开发、单用户，Worktree 就够；企业多租户，必须用 Remote 容器。
 
-**第五件工程模式** —— 把 session state 按"变化速率 + 持久化策略"分三层管理 · 不是一个数组装所有 history。业界源头是 OpenAI Codex 的做法 · `core/src/session/turn.rs` 里把 session history 显式拆成 Rollout / Compaction / Initial Context 三层 · 每层独立 compaction / cache / 持久化策略。
+OpenCode 在这点上用客户端/服务端架构，服务端可以按部署模式选 Worktree 或 Remote，对客户端透明（[OpenCode v1.3.3 Deep Dive · sanj.dev](https://sanj.dev/post/opencode-deep-dive-2026)）。
 
-工程层面这件 pattern 解决什么问题—— 早期 agent harness 把 session history 当一个数组装所有事件 —— user 消息 / assistant 回复 / tool call / tool result / system note 全堆在一起。这件做法在 short session 工作 · 但 long session（10+ turn / 100K+ token）开始出问题 —— context 不断膨胀 / cache 不断 miss / compaction 选哪段压不清楚 / 跨 session 复用没有 anchor。三层 history 把 session history 按抽象层分开 · 每层有不同的工程策略。
+#### 6.5 三层 history · session 状态分层模式
 
-**第一层 · Rollout** —— session 全量历史。完整 turn-by-turn 记录 · append-only · 跨 process 可恢复。这一层是 audit / replay / debug 的 ground truth · 不能丢任何细节。持久化策略是 JSONL append-only（前面 JSONL Session 那节讲过）· 不参与 prompt context 装配。Rollout 是"所有事件最终归宿" · 但 agent 跑下一 turn 时不直接读 Rollout · 读的是经过 Compaction 处理后的 context。
+**第五种工程模式**：把 session 状态按"变化速度和持久化策略"分三层管理，而不是用一个数组装下所有历史。这套分法来自 OpenAI Codex：`core/src/session/turn.rs` 里把 session history 显式拆成 Rollout、Compaction、Initial Context 三层，每层有各自的压缩、缓存和持久化策略。
 
-**第二层 · Compaction** —— 压缩后摘要历史。Rollout 里早期 turn 经过 LLM 摘要后形成 Compaction layer · 滚动更新 · 近期 turn 完整保留。这一层是真正参与下一 turn prompt 装配的 context。Compaction 策略有几种 —— Anthropic Claude Code 走 AutoCompact（threshold-based · 默认 70% token 阈值 + `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` 调整）+ MicroCompact（time-based · 工具结果按 retentionMs 单独 expire · 8 类 COMPACTABLE_TOOLS：FILE_READ / SHELL / GREP / GLOB / WEB_SEARCH / WEB_FETCH / FILE_EDIT / FILE_WRITE）。Codex 走 turn-based + budget-based 双触发。三层 history 的核心 invariant 之一是 **Compaction 不破坏 cache prefix** —— compaction 后的 context 必须能跟 Initial Context 拼成 cache-friendly prefix · 否则 compaction 每次都 invalidate cache 反而更贵。
+这种模式要解决的问题是：早期的 agent harness 用一个数组装 session 里的所有事件，用户消息、assistant 回复、工具调用、工具结果、系统提示全堆在一起。这种做法在短 session 里没问题，但到了长 session（十几轮以上、10 万 token 以上）就开始出问题：上下文不断膨胀，缓存不断不命中，压缩时不清楚该压哪一段，跨 session 复用也没有锚点。三层 history 按抽象层把 session history 分开，每层用不同的工程策略。
 
-**第三层 · Initial Context** —— 不变上下文。system prompt / 项目元数据（CLAUDE.md / AGENTS.md / project README） / 工具集 schema 等跨 turn 不变的内容。这一层放在 prompt 装配的最前面 · 跟 prefix-stable design 配套让 prompt cache 命中率最大化。Initial Context 几乎不变 —— 除非 user 显式改 CLAUDE.md 或加新工具 · 否则跨整个 session 稳定。这件稳定性让 prompt provider 的 cache 能跨多个 session 复用 · 不只是同 session 内复用。
+**第一层 Rollout：session 的全量历史。** 逐轮完整记录，只追加，进程重启后可以恢复。这一层是审计、回放、调试的真相源，不能丢任何细节。持久化方式是 JSONL 只追加文件（见 §6.3 追加写的会话事件日志），不直接参与 prompt 装配。Rollout 是所有事件的最终归宿，但 agent 跑下一轮时不直接读 Rollout，读的是经过 Compaction 处理后的上下文。
 
-三层 history 的工程价值在于**让每层有独立优化空间**。Rollout 优化 audit + storage（JSONL 压缩 / 归档 / cross-session 链）· Compaction 优化 prompt 装配（threshold / 摘要 LLM 选 / 保留 recent turn 数）· Initial Context 优化 cache（prefix-stable / 跨 session 共享）。如果三层混在一起 · 任何一件优化都互相牵制 —— compaction 改一下 cache miss / 改 cache 让 audit 不完整 / 改 audit storage 影响 prompt latency。三层分开后每件独立工程化 · 跨 release 演进风险也小。
+**第二层 Compaction：压缩后的摘要历史。** Rollout 里的早期轮次经模型摘要后形成这一层，滚动更新，近期轮次完整保留。这一层才真正参与下一轮的 prompt 装配。压缩策略各家不同：Claude Code 既有按上下文占用比例触发的自动压缩，也有按时间单独清理旧工具结果的轻量压缩，具体阈值和适用的工具范围随版本变化，以官方文档为准；Codex 用按轮数和按预算两种条件触发。三层 history 的核心约束之一是 **压缩不破坏缓存前缀**：压缩后的上下文必须能和 Initial Context 拼成缓存友好的前缀，否则每次压缩都让缓存失效，反而更贵。
 
-业界 CLI agent 主流都在走三层 history 这条路径 —— 不一定都用 "Rollout / Compaction / Initial Context" 这套命名 · 但语义都是同一件。这件命名跟分层是 Codex 实现的精确 framing · 但 OpenCode / 主流框架都在走类似分层 · 只是术语略不同。
+**第三层 Initial Context：基本不变的上下文。** 包括 system prompt、项目元数据（CLAUDE.md、AGENTS.md、项目 README）、工具集 schema 等各轮之间不变的内容。这一层放在 prompt 装配的最前面，配合前缀稳定设计让缓存命中率最高。除非用户显式修改 CLAUDE.md 或新增工具，这一层在整个 session 内保持稳定。只要前缀逐字节一致，且仍在缓存有效期内（Anthropic 默认 5 分钟，可选 1 小时），新开的 session 也能命中同一段缓存；超出有效期就要重新写入。
 
-#### 6.6 fork-join concurrency · sub-agent 并发协作 pattern
+三层 history 的工程价值在于**每层都有独立的优化空间**：
 
-**第六件工程模式** —— main agent 把任务拆给多个 sub-agent 并行跑 · 然后聚合结果回 main agent。这件是本卷在前面 Safety 那章已经点过指针的 pattern —— Safety 维度的两个约束（approval mode 父子传递 + sub-agent 深度 / token budget 必须 hard cap）已经讲了 · 这一节展开工程实现细节。
+- Rollout 优化审计与存储（JSONL 压缩、归档、跨 session 链接）；
+- Compaction 优化 prompt 装配（触发阈值、摘要用哪个模型、保留多少近期轮次）；
+- Initial Context 优化缓存（前缀稳定、在缓存有效期内跨 session 复用）。
 
-工程层面这件 pattern 解决什么问题—— single-agent 跑长任务（>30 turn）容易出几件事：context 累积超 budget / 推理路径线性串行慢 / 失败一次整个 session 都要 rollback。fork-join 把一件大任务拆成多件可并行的子任务 · sub-agent 各跑各的 · 结果聚合回 main agent 决策。理论上能拿到 2-5x 吞吐量提升（取决于任务可并行度）。**但 fork-join 不是免费的**——multi-agent 比普通对话多用约 15 倍 token，放大来自 orchestration（前面 Multi-Agent Over-Decomposition 那节拆过 token 烧在哪、为什么 coding 任务尤其不划算）。这一节不重复算账，只展开 fork-join 真要落地时的工程实现。
+如果三层混在一起，任何一处优化都会互相牵制：改压缩导致缓存不命中，改缓存让审计不完整，改审计存储又影响 prompt 延迟。三层分开后各自独立演进，跨版本升级的风险也更小。
 
-fork-join 的工程实现有几个关键 mechanism。**第一 · fork 触发条件** —— main agent 在什么决策点决定 spawn sub-agent。业界主流走两条路径：**显式 tool call**（main agent 调一个 `spawn_subagent` 工具显式指定 sub-agent 任务）/ **隐式 LLM 决策**（main agent 在 reasoning 阶段判断"这件任务适合 sub-agent"自己 spawn）。Claude Code 走显式 tool call 路径 · Codex 走隐式决策路径。**第二 · sub-agent 任务边界** —— sub-agent 拿到什么 context / 输出什么。业界主流是 main agent 给 sub-agent 一段 task spec（natural language description）+ 关键 artifact_id 指针 + tools subset · sub-agent 跑完返回 final answer + 完整 trajectory。**第三 · 结果聚合策略** —— 多个 sub-agent 返回的结果怎么合并。简单场景走 concatenation（每个 sub-agent 一段总结 · main agent 读全部）· 复杂场景走 LLM-as-aggregator（main agent 用 LLM 把多 sub-agent 结果合并成 coherent 答案）。**第四 · 错误传播** —— sub-agent 跑失败怎么处理。业界主流走 graceful degradation（一个 sub-agent fail · 其他成功的结果仍然给 main agent · main agent 决定是否 retry 失败的）· 不走 fail-fast（一个 fail 全部 abort）—— 因为 fail-fast 在 multi-agent 场景里浪费成功 sub-agent 的产出。
+多个 CLI agent 中可以看到类似的分层，不一定都叫 Rollout、Compaction、Initial Context，但含义相近。这套命名和分法是 Codex 实现里的具体做法，OpenCode 等也有类似分层，只是术语略有不同。
 
-**provider 并发槽自适应**是 fork-join 在生产 agent harness 里必备的工程考虑。不同 model provider 给的 API rate limit 不同 —— 各家按 usage tier 给 RPM / TPM 限额 · 并发能力是这些限额隐含出来的 · 没有统一的固定并发数。fork-join 的 sub-agent 数量如果不按 provider 当前 rate limit 动态调度 · 容易撞限流。业界主流的工程对策是 **dynamic slot pool** —— harness 维护一个 provider × concurrent_slot 的池子 · sub-agent spawn 时从池子取 slot · 完成后归还 slot · slot 全占用时 spawn 排队等 · 不让 sub-agent 超 provider 当前 rate limit。这件 pattern 让 multi-agent 系统在限流条件下 graceful 退化 · 不直接报 429。
+#### 6.6 fork-join concurrency · sub-agent 并发协作模式
 
-fork-join 适用场景跟前面 Safety 常见误区段讲过的判定条件一致 —— **任务长度 ≤30 turn 单 agent 单进程足够** · **任务长度 30-60 turn 慎用 multi-agent · 需要明确 single-agent 跑不通的瓶颈** · **任务长度 >60 turn 才考虑 multi-agent · 必须配 sub-agent depth cap（≤2-3）+ token budget cap + early abort**。这件判定不是任意约束 · 是从 Anthropic 实测 15x cost 数据反推的工程线。OpenCode 在 fork-join 设计上更保守 —— OpenCode 主打 Build + Plan 两个 agent 协作 · 不深度 fork sub-agent · 这件设计取舍是开源 CLI agent 在 multi-agent overhead 权衡上的另一条路径。
+**第六种工程模式**：主 agent 把任务拆给多个 sub-agent 并行执行，再把结果汇总回主 agent。前面 Safety 那章已经讲过这种模式在安全上的两条约束（审批模式沿父子链传递；sub-agent 的深度与 token 预算必须设硬上限），这一节展开工程实现细节。
 
-#### 6.7 常见误区 · 工程模式落地的三类典型
+这种模式要解决的问题是：单个 agent 跑长任务（按作者经验，30 轮以上）容易出几类问题：上下文累积超出预算；推理路径线性串行，速度慢；一次失败整个 session 都要回滚。fork-join 把一个大任务拆成多个可并行的子任务，sub-agent 各跑各的，结果汇总回主 agent 决策；能提升多少吞吐量取决于任务的可并行程度。**但 fork-join 不是免费的**：多智能体系统消耗的 token 约为普通对话的 15 倍（Anthropic 多智能体研究系统文章，2025-06），大头来自各子 agent 在各自独立的上下文里并行消耗，编排本身还有一层额外开销。第五章 §5.1 讲多 agent 过度拆分（AP09，见附录 F）时拆过 token 花在哪里，以及为什么编码任务往往不划算（多数编码任务可真正并行的部分较少）。这一节不重复算账，只讲 fork-join 真要落地时的工程实现。
 
-工程模式落地最容易踩的常见误区有三类——这一节单独展开 · 让读者识别。
+fork-join 的工程实现有几个关键环节：
 
-**第一类 · 假落地** —— pattern 在仓库代码里 · 在 README / design doc 里都有 · 但生产 runtime 路径上不真生效。这跟前面 Safety 那章的 AP06 假落地同根——根因（配置层跟运行时层接线缺失）和三条判定（trace 里 pattern 有没有 fire / 改配置行为变不变 / 开关 benchmark 有没有差异）那节已展开 · 这里不重复。要补的是工程模式特有的接线断点——比 Safety 控制面更容易踩，因为 pattern 是"应该这样设计"不是"这样设计就跑通"：typestate pattern 写好了 · 但 ToolPolicy registry 没按 phantom type 分发 · agent 仍能调 dangerous tool；CacheSafeParams 定义好了 · 但 Model Adapter 装 prompt 时没用 stable prefix · cache miss 仍然 100%。
+- **fork 触发条件**：主 agent 在什么决策点派生 sub-agent。常见两种做法：**显式工具调用**（主 agent 调一个 `spawn_subagent` 之类的工具，明确指定 sub-agent 的任务）；**隐式由模型决定**（主 agent 在推理过程中判断"这个任务适合交给 sub-agent"，自行派生）。Claude Code 用显式工具调用，Codex 用隐式决策。
+- **sub-agent 任务边界**：sub-agent 拿到什么上下文、输出什么。常见做法是主 agent 给 sub-agent 一段任务描述（自然语言）、关键 artifact_id 指针和工具子集，sub-agent 跑完返回最终答案和完整 trajectory。
+- **结果汇总策略**：多个 sub-agent 的结果怎么合并。简单场景直接拼接（每个 sub-agent 一段总结，主 agent 全部读一遍）；复杂场景用模型汇总（主 agent 调用模型把多个结果合并成一份连贯的答案）。
+- **错误传播**：sub-agent 失败了怎么处理。常见做法是优雅降级（graceful degradation）：一个 sub-agent 失败，其他成功的结果照样交给主 agent，由主 agent 决定要不要重试失败的那个；不采用快速失败（一个失败就全部中止），因为那样会浪费其他 sub-agent 已经成功的产出。
 
-**第二类 · 过度抽象** —— pattern 用了好处但抽象掉了 too much · 让代码不可读 / 不可调 / 不可演进。机制层面这件踩坑的根因是 **pattern 被当作目的而不是工具** —— 工程师为了"用 typestate pattern" 把所有工具都包成 typestate · 包括根本不需要权限分级的 read-only 工具 · 反而让代码膨胀。数据层面业界经验显示生产 agent 项目里有一部分 pattern application 属于 over-engineering · 拿走没影响。判定条件三件——**第一**这件 pattern 在代码里有没有真的解决一个具体 case（具体的 bug / 攻击面 / 性能问题）· 如果只有"看起来更优雅" 是过度抽象；**第二**移除这件 pattern 有没有让代码退化（编译不过 / 测试 fail / 功能丢）· 没退化就是装饰品；**第三**新 contributor 上手时间——pattern 多到让新人花一周看代码才能改一行 · 是过度抽象信号。
+**provider 并发槽自适应**是生产环境里 fork-join 必须考虑的一点。不同模型服务商给的 API 限流额度不同，各家按使用等级给出每分钟请求数（RPM）、每分钟 token 数（TPM）的上限，并发能力是由这些上限间接决定的，没有统一的固定并发数。如果 sub-agent 数量不按服务商当前的限流动态调度，很容易被限流。常见对策是 **动态槽位池（dynamic slot pool）**：harness 维护一个"服务商 × 并发槽位"的池子，派生 sub-agent 时从池里取槽位，完成后归还，槽位占满时新的派生请求排队，保证 sub-agent 不超出服务商当前的限流。这样多智能体系统在限流条件下能平稳降级，而不是直接报 429。
 
-**第三类 · Silent Try/Catch** —— 工程模式的 happy path 写好了 · 但 error path 用 silent try/catch 吞了 · 让 pattern 在 error case 下静默失效。机制层面这件踩坑的根因是 **error 处理在 pattern 应用时被当 afterthought** —— CacheSafeParams 装载失败 fallback 到 unsafe params · 没 log / 没 alarm；Constrained\<T\> 类型转换失败 catch 后用 default permission · 没人知道权限降级了。这件常见误区的工程化对策是 **每个 pattern 的 error path 显式建模 + 必须 log + 不允许 silent fallback** —— Rust 用 Result + ? 强制 propagate · Go 用 error return 显式 check · Python 用 typed exception。本教程配套实现项目踩过一个具体 case · poison-safe lock 修复后变成 §6 常见误区的正面对照——原来的 lock 实现 panic 后 lock state 被 poison · runtime 走 silent fallback；修复版本走 explicit error propagation + 上层 graceful degradation · 让 lock poison 在 audit trail 里清晰可见。
+fork-join 的适用范围，跟 §5.9 反模式段讲过的判断条件一致。下面的轮数阈值是作者的经验值，按场景调整：
 
-这三类常见误区合起来构成 §6 工程模式落地的核心警示。pattern 不是写到代码里就生效——必须配假落地检测 + 抽象度审计 + error path 显式建模三件齐 · 才是真正生产可用的 pattern。
+- **任务长度在 30 轮以内**：单 agent、单进程就够；
+- **30 到 60 轮**：慎用多智能体，先明确单 agent 跑不通的瓶颈在哪；
+- **60 轮以上**：才考虑多智能体，并且必须配 sub-agent 深度上限（2 到 3 层）、token 预算上限和提前中止。
+
+OpenCode 在 fork-join 上更保守：它主打 Build 与 Plan 两个 agent 协作，不做深层的 sub-agent 派生。这是开源 CLI agent 在多智能体开销上做的另一种取舍。
+
+#### 6.7 反模式 · 工程模式落地的三类典型
+
+工程模式落地时最容易出现的反模式（anti-pattern）有三类，这一节单独展开，帮读者识别。
+
+**第一类：假落地。** 模式在仓库代码里有，在 README 和设计文档里也有，但在生产运行路径上并没有真正生效。这跟 Safety 那章讲的假落地机制（AP06，见附录 F）同根：根因是配置层与运行时层之间的接线缺失，三条判断条件（trace 里模式有没有触发；改配置后行为变不变；开关前后的评测有没有差异）那一节已经展开，这里不重复。要补充的是工程模式特有的接线断点，它们比 Safety 控制面更容易出问题，因为模式说的是"应该这样设计"，而不是"这样设计就一定跑通"。例如：类型化权限写好了，但运行时的策略检查没有接上，模型发出的危险工具调用照样被执行；`CacheSafeParams` 定义好了，但 Model Adapter 装配 prompt 时没用稳定前缀，缓存照样全部不命中。
+
+**第二类：过度抽象。** 用了模式，但抽象过头，代码变得难读、难调、难演进。根因是 **把模式当成了目的而不是工具**：工程师为了"用上 typestate"，把所有工具都包成 typestate，包括根本不需要权限分级的只读工具，反而让代码膨胀。按作者经验，生产 agent 项目里有一部分模式的应用属于过度工程，拿掉也没影响。判断条件有三条：
+
+- 这个模式在代码里有没有真正解决一个具体问题（一个具体的 bug、攻击面或性能问题）。如果只是"看起来更优雅"，就是过度抽象。
+- 移除这个模式后代码有没有退化（编译不过、测试失败、功能丢失）。没有退化，它就是装饰品。
+- 新贡献者上手要多久。模式多到新人要花一周读代码才敢改一行，就是过度抽象的信号。
+
+**第三类：静默吞异常（Silent Try/Catch，AP10，见附录 F）。** 工程模式的正常路径写好了，但错误路径被一个静默的 try/catch 吞掉，模式在出错时悄悄失效。根因是 **错误处理在应用模式时被当成事后补充**：`CacheSafeParams` 装载失败，回落到不安全的参数，既没有日志也没有告警；权限类型转换失败，被 catch 后改用默认权限，没人知道权限已经降级。对策是 **给每个模式的错误路径显式建模，必须记日志，不允许静默回落**：Rust 用 `Result` 加 `?` 强制向上传递，Go 显式检查返回的 error，Python 用带类型的异常。本教程的配套实现项目遇到过一个具体例子，修复后成了这一反模式的正面对照：原来的锁实现在 panic 后锁状态被毒化（poison），运行时静默回落；修复版改为显式传递错误，由上层优雅降级，让锁被毒化这件事在审计记录里清晰可见。
+
+这三类反模式合起来，是本章工程模式落地的核心警示：模式不是写进代码就会生效，必须同时做到假落地检测、抽象程度审查、错误路径显式建模这三点，才算真正可以上生产。
 
 #### 6.8 业界实现对照
 
-业界主流 agent harness 在 §6 这六件工程模式上的实现路径各有侧重。
+主流 agent harness 在本章这六种工程模式上的实现路线各有侧重。
 
-**Codex（OpenAI）的工程模式实现**走 Rust 强类型路径 —— Constrained\<T\> typestate 是核心 invariant / 三层 history Rollout-Compaction-InitialContext 是 session 管理基础 / Rollout JSONL append-only 持久化 / sub-agent fork-join 走隐式 LLM 决策。Codex 选 Rust 一部分原因就是要让 typestate / phantom type 这些 pattern 有编译期保证 · 不依赖 runtime check。Rust 类型系统的强度让 Constrained\<T\> 这套 ceremony 写出来 · 这是其他语言（Python / JavaScript）做不到的。
+**Codex（OpenAI）** 走 Rust 强类型路线：三层 history（Rollout、Compaction、Initial Context）是 session 管理的基础；Rollout 用 JSONL 只追加文件持久化；sub-agent 的 fork-join 由模型隐式决定。源码里有 `Constrained<T>` 这样的类型包装，但它是否用于类型化权限，本书未能核实。Codex 选 Rust 的考量里，一种可能是让 typestate、幻影类型这类写法拿到编译期保证；在 Python、JavaScript 里，同样的约束只能靠运行时检查。
 
-**OpenCode（开源）的工程模式实现**走 client/server 多 provider 路径 —— Go TUI + Bun/JS HTTP server 客户端服务器分离 · SQLite 作 session storage 替代 JSONL（结构化 query 友好 · 但失去一些 git diff 友好性）/ 75+ provider adapter 配统一接口 / 两个内置 agent（Build full-access + Plan read-only）走轻量 fork-join。OpenCode 的开源属性让它的工程模式有公开可读的实现细节——任何团队都能 fork 学这些 pattern。它的取舍跟 Codex 不同——Codex 走 strong type + 单一 provider；OpenCode 走 multi-provider + runtime check。两条路径各有 trade-off。
+**OpenCode（开源）** 走客户端/服务端、多服务商路线：Go 写的终端界面加 Bun/JS 写的 HTTP 服务端，客户端与服务端分离；会话存在 SQLite 里而不是 JSONL 文件（结构化查询方便，但少了一些 git diff 上的便利）；通过统一接口适配 75 个以上的服务商；两个内置 agent（完全权限的 Build 与只读的 Plan）做轻量的 fork-join。OpenCode 开源，实现细节公开可读，任何团队都能拿来学习这些模式。它的取舍跟 Codex 不同：Codex 侧重强类型、单一服务商；OpenCode 侧重多服务商、运行时检查。两条路线各有利弊。
 
-**Claude Code 的工程模式实现**走 TypeScript 灵活路径 —— branded type 模拟 typestate / sessionStorage JSONL 持久化 / 十几种 Hook event 支持用户扩展 / Forked Agent + 三档 Isolation Mode。Claude Code 在工程模式的工程化深度上是业界先行者之一 · 但要注意 **2026-03/04 公开 leak 的版本经过明显降智 + 简化** · 这版的代码细节不能直接拿来作 SOTA 标杆 · 应该当作"业界主流走过这条路径的旧版 case"理解。后续闭源版本的工程模式实现细节业界看不到 · 只能从官方 doc + blog 推测。
+**Claude Code** 走 TypeScript 路线：用 JSONL 文件保存会话记录；十几种 Hook 事件供用户扩展；Forked Agent 加多种执行隔离方式。Claude Code 在工程模式的工程化深度上是业界先行者之一。但要注意，2026 年 3、4 月公开泄露的那一版源码未必代表当前实现，代码细节不宜直接当作最新标杆，更适合当作"主流产品走过这条路的某个旧版本"来看。之后的闭源版本细节外界看不到，只能从官方文档和博客推测。
 
-**OpenHands（开源）的工程模式实现**走 Python + K8s container 路径 —— Python 类型系统弱 · 主要靠 runtime check + decorator 模拟 typestate · 但 K8s container Remote Isolation Mode 强 · 用物理隔离弥补语言层的弱保证（[OpenHands Agent Control Plane](https://www.openhands.dev/blog/agent-control-plane)）。这件设计取舍是 "用部署架构补语言不足" 的工程示范。
+**OpenHands（开源）** 走 Python 加 K8s 容器路线：Python 是动态类型，权限主要靠运行时检查加装饰器；但 K8s 容器的 Remote 隔离很强，用部署层的隔离弥补语言层保证的不足（[OpenHands Agent Control Plane](https://www.openhands.dev/blog/agent-control-plane)）。这是"用部署架构补语言不足"的一个工程示范。
 
-业界 2026 整体趋势是 **工程模式正在收敛但还没标准化**——CacheSafeParams 类的 cache-aware design 是普遍共识 · typestate 在 Rust 系 harness 里成主流 · JSONL session 已是事实标准 · 但 Isolation Modes 三档 / 三层 history 命名 / fork-join 细节各家还有差异。这件不收敛性让 §6 工程模式比 §5 runtime 件演进得更快——未来 2-3 年可能新加几件 pattern · 也可能某几件被淘汰。读者读这一章应该建工程模式 mental model · 不应该当成长期不变的 SOP。
+2026 年的整体趋势是 **工程模式正在收敛，但还没有标准化**：前缀稳定的 prompt 装配在多个主流 harness 中可见；类型化权限在 Rust 实现的 harness 里更容易做到；追加写的会话事件日志在 CLI agent 中很常见（存储有 JSONL 也有 SQLite）；但隔离模式怎么分、三层 history 怎么命名、fork-join 的细节，各家仍有差异。正因为还没收敛，第六章的工程模式比第五章的 runtime 机制演进得更快，未来两三年可能新增几种，也可能有几种被淘汰。读者读这一章，应该是建立关于工程模式的思维框架，而不是把它当成长期不变的操作规程。
 
 #### 6.9 起步建议 · 四维度
 
-**注意什么** —— 工程模式落地最大的坑是 **追潮流不追问题** —— 看到业界 SOTA 用 typestate 就跟着用 typestate · 不问"我项目有没有 typestate 解决的具体问题"。这件追潮流让 pattern 变装饰品 · 反而拖累工程演进。具体几条警示信号：**第一** pattern 引入后没有可观察的指标改善（latency 不变 / cost 不变 / bug 不减少）· 是装饰品红线；**第二** pattern 让新人上手时间增加 · 比 pattern 自身收益还大 · 是 over-engineering 红线；**第三** pattern 跟当前项目的语言 / runtime / 部署架构不匹配（在 Python 项目硬上 typestate · 在 short-session 任务硬上 三层 history）· 是错配红线。
+**注意什么**：工程模式落地最大的坑是 **追潮流而不追问题**。看到业界领先产品用 typestate 就跟着用，不问"我的项目有没有 typestate 能解决的具体问题"。这样引入的模式只是装饰品，反而拖累工程演进。几条警示信号：
 
-**怎么设计** —— 按"问题驱动 + 渐进引入"路径选 pattern。从 day 1 就把六件 pattern 全部上 production 是 over-engineering · 也是不可维护的。业界主流的渐进引入顺序——**第一阶段** JSONL session（最早上 · trajectory 持久化是其他 pattern 的前提）；**第二阶段** CacheSafeParams（如果 long context agent 跑成本高就上 · 短任务可以暂不上）；**第三阶段** Isolation Modes（如果有 sub-agent 协作或 dangerous operations 就上）；**第四阶段** 三层 history（long session > 30 turn 就上 · 短任务暂不需要）；**第五阶段** Constrained\<T\>（如果 Rust 实现 + 有权限审计需求 就上 · 不强求其他语言模拟）；**第六阶段** fork-join concurrency（multi-agent 场景才上 · single-agent 不上）。这件渐进顺序让每件 pattern 都解决一个真实问题 · 不是为了"用全六件"上 pattern。
+- 模式引入后没有可观察的指标改善（延迟没变、成本没变、bug 没减少），说明它是装饰品；
+- 模式让新人上手的时间增加得比它本身的收益还多，说明过度工程；
+- 模式跟项目的语言、运行时、部署架构不匹配（在 Python 项目里硬上 typestate，在短 session 任务里硬上三层 history），说明错配。
+
+**怎么设计**：按"问题驱动、渐进引入"的思路选模式。第一天就把六种模式全部上生产，是过度工程，也难以维护。一个可参考的渐进引入顺序：
+
+1. **会话事件日志**：最早上，trajectory 持久化是其他模式的前提；
+2. **前缀稳定的 prompt 装配**：长上下文 agent 成本高时上，短任务可以暂时不上；
+3. **执行隔离模式**：有 sub-agent 协作或危险操作时上；
+4. **三层 history**：长 session（按作者经验，超过 30 轮）时上，短任务暂时不需要；
+5. **类型化权限**：用 Rust 实现、且有权限审计需求时上，其他语言不必强行模拟；
+6. **fork-join 并发**：多智能体场景才上，单 agent 不上。
+
+这个顺序让每种模式都在解决一个真实问题时才引入，而不是为了"凑齐六种"。
 
 ![](../diagrams/t3-timeline-6-pattern-order.png)
 
-*图 6.3 · 六件工程模式的渐进引入顺序*
+*图 6.3 · 六种工程模式的渐进引入顺序*
 
-**怎么测试** —— 工程模式都要 adversarial test + 性能 benchmark 双轨。**第一类测试 · pattern 假落地 test** —— 关掉 pattern 跟开启 pattern 的 benchmark 看有没有可观察差异（cost / latency / cache hit rate / bug count）· 没差异说明 pattern 是装饰品。**第二类测试 · pattern bypass test** —— 用 adversarial 输入试图绕过 pattern 边界（Constrained\<T\> 试图传 wrong type / CacheSafeParams 故意改 prefix 看 cache hit rate / Isolation Modes 试图越界访问 main agent state）· 看 pattern 能不能拦住。**第三类测试 · pattern 演进 test** —— pattern 一段时间后看代码 review 时新人能不能看懂 · 看不懂就是抽象度过高的早期信号。**第四类测试 · production trace 验证** —— 跑 representative agent run · 在 trace 里看每个 pattern 应该 fire 的事件次数 · 0 次 fire 的 pattern 是 dead code 或假落地。
+**怎么测试**：工程模式都要做对抗测试和性能基准两类测试，具体分四种：
 
-**写什么 prompt** —— 工程模式大部分跟 agent 自身 prompt 关系不大（pattern 在 harness runtime 层 · agent 看不到）· 但有几条 prompt 纪律值得跟前面 Prompt Assets 那章配套。**第一**给 agent 写 system prompt 时提一句 "你跑在一个用 typestate / Constrained 等强类型 pattern 的 harness 里 · 你的工具调用会被编译期类型检查 · 调错类型直接编译错误而不是 runtime fail · 这件让 you should expect 工具调用边界很硬"——让 agent 不试图绕过类型边界。**第二**fork-join 场景下 system prompt 里说 "你可以 spawn sub-agent · 但 multi-agent 很烧 token（普通 chat 的约 15 倍）· 慎用 · 任务长度 ≤30 turn 单 agent 跑完不要 fork"——把成本数据让 agent 自身感知 · 不依赖 harness 一刀切兜底。**第三**JSONL session 持久化让 agent 知道"你的 trajectory 全部被持久化 · 后续 audit 可查 · 也是 self-evolution 训练数据"——让 agent 写 reasoning 时更负责 · 不写敷衍的 thought。
+- **假落地测试**：对比模式开和关时的评测结果，看有没有可观察的差异（成本、延迟、缓存命中率、bug 数）。没有差异，说明模式是装饰品。
+- **绕过测试**：用对抗输入试图绕过模式的边界，看它能不能拦住。例如：类型化权限要检查代码里是否存在不经策略检查就能执行工具的路径，同时让模型发出越权调用，确认运行时检查能拦下；前缀稳定装配要故意改动前缀，看缓存命中率的变化；执行隔离要试图越界访问主 agent 的状态。
+- **演进测试**：模式用了一段时间后，看新人在代码审查时能不能看懂，看不懂就是抽象程度过高的早期信号。
+- **生产 trace 验证**：跑一批有代表性的 agent run，在 trace 里数每个模式应当触发的事件次数。触发 0 次的模式是死代码或假落地。
+
+**写什么 prompt**：工程模式大多跟 agent 自身的 prompt 关系不大（模式在 harness 运行时层，agent 看不到），但有两条做法值得跟第五章 Prompt Assets 那节配套：
+
+- fork-join 场景下，在 system prompt 里说明"你可以派生 sub-agent，但多智能体很耗 token（约为普通对话的 15 倍），要慎用；任务长度在 30 轮以内（经验值）就由你自己跑完，不要派生"，让 agent 自己感知成本，而不是全靠 harness 一刀切兜底。
+- 让 agent 知道"你的 trajectory 会被完整持久化，之后可以审计，也会作为自我演进的训练数据"，促使它在推理内容里写得更认真，不敷衍。
 
 ---
 
-§六 工程模式的核心 framing 收束在三件上。**第一件** —— 工程模式是机制之间的组合 pattern · 不是 runtime 件。前面 §五 8 件 runtime + 1 件 Safety 控制面是 agent 跑起来的件 · §六 六件 pattern 是这些件的组合方式。pattern 跟 GoF 设计模式同抽象层——是工程实践沉淀 · 不是产品功能列表。**第二件** —— 业界 2026 在工程模式上正在收敛但还没标准化 —— Codex / OpenCode / Claude Code / OpenHands 各家的实现路径各有侧重 · 共同的 pattern 是 cache-aware design / 强类型权限 / JSONL session / 多档 isolation / 三层 history / fork-join 这六件 · 但命名 / 细节 / 取舍 各家不同。**第三件** —— 工程模式落地的核心警示是 **追问题不追潮流** + **假落地检测** + **error path 显式建模** 三件齐 · 三件缺一件 pattern 都容易变装饰品反而拖累工程演进。
+本章的核心观点可以归结为三点：
 
-这六件工程模式不构成"完整的 agent harness 工程"——是工程实践沉淀的可复用组合。生产 agent harness 项目走完这六件之后还有大量项目特定的工程取舍——provider 选型 / runtime 选语言 / 部署架构 / observability 工具链 / CI/CD 集成等。这些都是项目维度的 trade-off · 不是通用 pattern · 本章不展开。读完这一章读者应该建工程模式 mental model · 在自己项目里识别哪几件 pattern 能用 + 怎么按渐进顺序引入 + 怎么避开三类常见误区。
+1. **工程模式是机制之间的组合方式，不是 runtime 机制。** 第五章的 8 个 runtime 机制加 1 个 Safety 控制面是 agent 跑起来所需的部件，本章的六种模式是这些部件的组合方式。模式跟 GoF 设计模式处在同一抽象层，是工程实践的沉淀，不是产品功能清单。
+2. **2026 年业界在工程模式上正在收敛，但还没有标准化。** Codex、OpenCode、Claude Code、OpenHands 的实现路线各有侧重，共同可见的是这六种：前缀稳定的 prompt 装配、类型化权限、追加写的会话事件日志、多层次的执行隔离、三层 history、fork-join；命名、细节和取舍各家不同。
+3. **工程模式落地的核心警示是三点同时做到：追问题而不追潮流、做假落地检测、给错误路径显式建模。** 缺任何一点，模式都容易变成装饰品，反而拖累工程演进。
+
+这六种工程模式并不构成"完整的 agent harness 工程"，只是工程实践中可复用的组合。生产 agent harness 项目在这六种之外，还有大量项目特有的取舍：选哪家服务商、用什么语言写 runtime、怎么部署、用什么可观测性工具链、怎么接入 CI/CD 等。这些是具体项目层面的权衡，不是通用模式，本章不展开。读完这一章，读者应该建立起关于工程模式的思维框架，能在自己的项目里识别哪几种模式用得上、按什么顺序引入，以及怎么避开这三类反模式。
