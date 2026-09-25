@@ -1,11 +1,14 @@
 # Harness Study · 第二卷《架构与工程卷》
 
-> **本卷定位**：怎样构造一个语义正确、可中断、可恢复、可验证的 Agent Harness runtime。入门卷（[`../introduction/`](../introduction/)）讲部件学；本卷讲这些部件怎样组成一个正确的运行时。生产工程（数据库运维、安全治理、发布、SRE、成本）在第三卷。
+本卷 2026 年 9 月修订，读过旧版的读者请先看[修订记录](00-revision-notes.md)。
+
+> **本卷定位**：怎样构造一个语义正确、可中断、可恢复、可验证的 Agent Harness runtime。入门卷（[`../introduction/`](../introduction/)）讲各个部件是什么；本卷讲这些部件怎样组成一个正确的运行时。生产工程（数据库运维、安全治理、发布、SRE、成本）在第三卷。
 
 ## 目录
 
 | 章 | 文件 |
 |---|---|
+| 修订记录 | [`00-revision-notes.md`](./00-revision-notes.md) |
 | 一、参考架构与检验坐标系 | [`01-architecture.md`](./01-architecture.md) |
 | 二、什么叫"正确的 runtime" | [`02-correct-runtime.md`](./02-correct-runtime.md) |
 | 三、一次"数据丢失"事故：判据的反向验证 | [`03-incident.md`](./03-incident.md) |
@@ -26,7 +29,7 @@
 
 ## 配图
 
-全卷 34 张编号配图与 80 张排版替换图（表格与 ASCII 图的图片化）统一存放在仓库根 [`../diagrams/`](../diagrams/)，与入门卷共用一个图库，正文以 `../diagrams/*.png` 引用。图源（html）、出图脚本与表格内容 SSOT 维护在配套工程仓，不入本仓；改表走 SSOT 重渲，不手改 PNG。
+全卷 34 张编号配图与 80 张排版替换图（表格与 ASCII 图的图片化）统一存放在仓库根 [`../diagrams/`](../diagrams/)，与入门卷共用一个图库，正文以 `../diagrams/*.png` 引用。图源（html）、出图脚本与表格内容的单一真相源（SSOT）维护在配套工程仓，不入本仓；修改表格时改 SSOT 后重新渲染，不直接修改 PNG。
 
 ## 编辑区说明
 
