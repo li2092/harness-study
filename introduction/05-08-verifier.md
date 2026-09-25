@@ -1,146 +1,260 @@
-# 5.8 Verifier 三层 · **P0 业界共识 · 防 agent 自欺骗的工程化基础**
+# 5.8 Verifier 三层 · **P0 · 防止 agent 虚报完成的工程基础**
 
-第八件机制是 agent 跑完一步动作之后判断这步算不算合格的独立判定机制——也就是 verifier。前面 §5.7 末尾讲过 trajectory 是 ablation / replay / regression / self-evolution 四件能力的物理载体——但 trajectory 本身只是数据 · 数据要变成"agent 做对了还是做错了"的工程结论 · 必须经过 verifier 这一层。verifier 是 agent harness 工程治理里一个特殊的件——它不直接帮 agent 完成任务 · 它只回答一个问题："agent 自己说做完了 · 它到底做完没有"。
+第八个机制是 verifier：agent 做完一步或一个任务之后，独立判断它算不算合格的机制。§5.7 末尾讲过，trajectory 是消融（ablation）、回放（replay）、回归测试（regression）、自我演化（self-evolution）四种能力的数据载体。但 trajectory 本身只是数据，数据要变成"agent 做对了还是做错了"的工程结论，必须经过 verifier 这一层。verifier 在 harness 里是个特殊的组件：它不直接帮 agent 完成任务，只回答一个问题："agent 自己说做完了，它到底做完没有？"
 
-为什么要单独抽出 verifier 这一机制？原因是 agent 工程的一个根本困境——**模型是个 next-token predictor · 它最擅长的能力之一就是把一个未完成的任务包装成像完成了的样子**。这件能力在写作 / 对话 / 翻译等场景没问题 · 因为读者是人类 · 人能直接判断结果好不好。但在 agent 跑工具调用 / 写代码 / 跑分析这种工程任务里 · 这件能力就变成系统性风险——agent 跑完一个 task 报告"我修好了那个 bug" / "我跑通了那个 test" / "我把那份报告写完了" · 但实际上 bug 没修好 / test 没跑通 / 报告漏了关键逻辑。如果让 agent 自己说自己做完了就算完成 · agent 跑长任务时会用越来越大的概率给出虚假完成报告——这件不自欺骗的工程化兜底就是 verifier 这一机制的根本必要性。
+为什么要单独抽出 verifier 这一机制？因为 agent 工程有一个根本困境：**模型擅长把一个未完成的任务说成像是完成了的样子**。原因在它的工作方式上。模型按上下文生成最可能的下一段文字，"我已经修好了""测试已通过"这类汇报在训练语料和对话里极为常见，训练中的偏好反馈也往往奖励听起来完整、自信的回答；而模型写出这句汇报时，并不会自动去核对外部世界的实际状态。在写作、对话、翻译等场景这不是大问题，因为读者是人，人能直接判断结果好不好。但在调工具、写代码、跑分析这类工程任务里，这就成了系统性风险：agent 跑完一个任务，报告"我修好了那个 bug""我跑通了那个测试""我把那份报告写完了"，实际上 bug 没修好、测试没跑通、报告漏了关键逻辑。任务越长，中间出错的步骤越多，而自我汇报并不检查这些步骤的实际结果，所以按经验，如果以 agent 自己的汇报为准，长任务里出现虚假完成报告的概率会明显上升。防止 agent 自欺欺人需要一个工程上的兜底，这就是 verifier 这一机制存在的根本理由。
 
-verifier 这一机制的工程哲学跟前面几件机制都不同。前几件机制（Agent Loop / Model Adapter / Tool Registry / Context-Memory-Artifact / Prompt Assets / Observation Surface / Trajectory）都是让 agent 跑得更好的工程基础——它们的设计目标是让 agent 能完成任务。verifier 是反方向——它的设计目标是让 agent 不能虚假声称完成任务。前者是支撑 · 后者是制衡。两件合起来构成 agent harness 的内在 checks-and-balances · 让 agent 跑得既能跑得动也跑得真。
+verifier 的设计思路跟前面几个机制都不同。前面的机制（Agent Loop、Model Adapter、Tool Registry、Context-Memory-Artifact、Prompt Assets、Observation Surface、Trajectory）都是让 agent 跑得更好的基础，设计目标是让 agent 能完成任务。verifier 方向相反，设计目标是让 agent 不能虚假声称完成任务。前者是支撑，后者是制衡。两者合起来构成 harness 内部的相互制衡（checks and balances），让 agent 既跑得动，也跑得真。
 
-2026 业界对 verifier 工程治理已经收敛到一个相对稳定的三层 framing——**第一层 Hard Gate（RLVR · Reinforcement Learning from Verifiable Rewards）**：用代码确定性判定 agent 做没做完 · 比如 pytest 通过 / build 编译过 / 文件存在 / API 返回 200 等可以直接 yes/no 判定的标准。**第二层 Outcome Judge（LLM-as-judge）**：用另一个 LLM 对开放性产出做语义判定 · 比如"这份报告逻辑通顺吗" / "这段代码注释清晰吗" / "这次回复回答了用户问题吗"这种没有 ground truth 的开放性问题。**第三层 PRM（Process Reward Model）**：对 agent 推理过程做步骤级判定 · 不只看结果对错 · 还看推理路径是否合理 · 比如"这一步工具调用是不是正确选择" / "这一步思考有没有遗漏关键约束"。三层各自有适用场景跟常见误区 · 业界共识强但每层都还在快速演进。
+本书把 verifier 归纳为三层（这是本书的划分，不是业界标准术语）：
 
-三层不是简单叠加 · 是按任务类型选取或组合。完全确定性的任务（写代码加跑测试 / 数据 ETL / 配置管理）只需要 Hard Gate；纯开放性任务（创意写作 / 设计建议 / 战略分析）需要 Outcome Judge；多步推理任务（复杂调试 / 跨工具协同 / 长任务规划）需要 PRM。生产 harness 通常组合使用——business agent 跑客户支持任务的 verifier 链可能是 "Hard Gate 验证工具调用参数合规 → Outcome Judge 验证回复内容相关性 → PRM 验证多轮对话推理合理性"。这种组合不是设计选择空白处的优化 · 是 verifier 工程治理走向严肃 production 的必经之路。
+- **第一层 Hard Gate**：运行时用代码确定性地判定 agent 做没做完，比如 pytest 通过、构建编译通过、文件存在、API 返回 200 等可以直接判是或否的标准。它和训练范式 RLVR 不是一回事：同类的可验证信号用来给模型训练发奖励时才叫 RLVR（见 5.8.2）。
+- **第二层 Outcome Judge（LLM-as-judge）**：用另一个 LLM 对开放性产出做语义判定，比如"这份报告逻辑通顺吗""这段代码注释清晰吗""这次回复回答了用户的问题吗"这类没有标准答案（ground truth）的开放性问题。
+- **第三层 PRM（Process Reward Model，过程奖励模型）**：对 agent 的推理过程做步骤级判定，不只看结果对错，还看推理路径是否合理，比如"这一步工具调用是不是正确的选择""这一步思考有没有遗漏关键约束"。PRM 需要专门训练，目前主要用于模型训练和推理期搜索（best-of-N、beam search），在线上作为 gate 使用的还少见。
 
-后面九子节按"三层 verifier 概览 + 三层适用场景 → 第一层 Hard Gate / RLVR → 第二层 Outcome Judge / LLM-as-judge → 第三层 PRM → 三层组合策略 → 常见误区 · Reward Hacking 跟 verifier 自身可信度 → Leakage 四条防御 → 业界实现对照 → 起步建议"展开。前五子节业界共识基础 · 第六七子节专门讲常见误区跟 leakage 防御（业界 2026 重点） · 第八子节业界实现对照 · 第九子节给四维度起步建议。
+三层各有适用场景和失效模式，每层都还在快速演进。
+
+三层不是简单叠加，而是按任务类型选取或组合。完全确定性的任务（写代码加跑测试、数据 ETL、配置管理）用 Hard Gate 就够；纯开放性任务（创意写作、设计建议、战略分析）需要 Outcome Judge；多步推理任务（复杂调试、跨工具协同、长任务规划）可以考虑加 PRM。生产 harness 通常组合使用，例如一个跑客户支持任务的业务 agent，verifier 链可能是"Hard Gate 验证工具调用参数合规 → Outcome Judge 验证回复内容的相关性 → PRM 验证多轮对话的推理是否合理"。这种组合不是锦上添花的优化，而是 verifier 走向严肃生产环境的必经之路。
+
+后面九个小节依次是：
+
+- 前五节讲基础：三层概览与适用场景（5.8.1）、Hard Gate（5.8.2）、Outcome Judge（5.8.3）、PRM（5.8.4）、三层组合策略（5.8.5）；
+- 5.8.6 与 5.8.7 讲失效模式：奖励投机（reward hacking）与 verifier 自身的可信度，以及泄漏（leakage）的四类防御；
+- 5.8.8 对照业界实现；
+- 5.8.9 从四个维度给出起步建议。
 
 #### 5.8.0 本节首次出现的术语
 
-§一-§七前面已经解释过的术语（schema / verifier 概念 / trajectory / observation / artifact / ablation / reward hacking 一般概念等）下面不再重复。这里只列 §5.8 本节首次出现的术语。
+§一到 §七已经解释过的术语（schema、verifier 概念、trajectory、observation、artifact、ablation、reward hacking 的一般概念等）下面不再重复，这里只列本节首次出现的术语。
 
-**三层 verifier 核心术语** —— **三层 verifier**（业界 2026 收敛的 framing · Hard Gate 加 Outcome Judge 加 PRM · 按任务类型选取或组合）。**Hard Gate**（第一层 verifier · 用代码确定性判定 agent 是否做完 · 比如 pytest 通过 / build 编译过 / 文件存在 · 业界 RLVR 路径的核心机制）。**RLVR · Reinforcement Learning from Verifiable Rewards**（2026 dominant paradigm for scaling reasoning · rule-based functions assess correctness · binary reward 1/0 · 不依赖 subjective human evaluations 也不依赖 learned reward models）。**Outcome Judge**（第二层 verifier · 用另一个 LLM 对开放性产出做语义判定 · LLM-as-judge 是它的具体技术名 · 业界标准化网站在 llm-as-a-judge.github.io）。**LLM-as-judge**（用 LLM 对 agent 输出做评分 · 业界 2026 主流 outcome verifier 实现路径）。**PRM · Process Reward Model**（第三层 verifier · 对 agent 推理过程做步骤级判定 · 不只看结果对错也看推理路径合理性 · 2026 业界研究热点 · 代表工作 AgentPRM 跟 ToolPRMBench）。
+**三层 verifier 核心术语**
 
-**常见误区术语** —— **Reward Hacking**（agent 找 verifier loophole 通过形式 reward 不完成实际任务 · 是 RLVR 系统的核心常见误区 · 业界 2026 公开 paper 数十篇专门研究 · 代表 "LLMs Gaming Verifiers"[^llm-gaming-verifiers-2026]）。**Preference Leakage**（LLM-as-judge 跟 synthetic data generator 关联导致的污染[^preference-leakage] · 三类关联——same model / inheritance / same model family · 即使少量 leaked synthetic data 也会引发 preference leakage 难以检测）。**benchmark contamination / evaluation awareness**（公开 benchmark 可信度的两类问题 · 一类是训练阶段数据污染 · 一类是模型识别"我在被测"后行为漂移 · Meta Muse Spark 2026-04 报告显示模型在公开 benchmark 上 flagged as evaluations 19.8% vs 内部 2.0%——后者属 evaluation awareness）。**verifier gaming**（agent 学会欺骗 verifier 而不是完成任务 · Reward Hacking 的具体行为表现 · "LLMs Gaming Verifiers"[^llm-gaming-verifiers-2026] 名标）。
+- **三层 verifier**：本书对 verifier 的归纳，分 Hard Gate、Outcome Judge、PRM 三层，按任务类型选取或组合。
+- **Hard Gate**：第一层 verifier，运行时用代码确定性地判定 agent 是否做完，比如 pytest 通过、构建编译通过、文件存在。
+- **RLVR（Reinforcement Learning from Verifiable Rewards，可验证奖励强化学习）**：一种训练范式。用可由程序判定对错的规则函数给模型打分，通常是二值奖励（对为 1、错为 0），既不依赖人的主观评价，也不依赖另外训练的奖励模型。它是训练阶段的方法，和运行时的 Hard Gate 用的是同一类信号，但不是同一件事。
+- **Outcome Judge**：第二层 verifier，用另一个 LLM 对开放性产出做语义判定。LLM-as-judge 是它的具体技术名，相关研究汇总在 llm-as-a-judge.github.io。
+- **LLM-as-judge**：用 LLM 给 agent 的输出评分，是目前判定开放性产出最常用的做法。
+- **PRM（Process Reward Model，过程奖励模型）**：第三层 verifier，对推理过程做步骤级判定，不只看结果对错，也看推理路径是否合理。代表工作有 AgentPRM 和 ToolPRMBench。
 
-**Leakage 防御术语** —— **形状泄漏**（verifier 间接暴露答案形状 · agent 反向推出预期输出 schema 然后填空 · 比如 verifier 说"输出必须是 N 行 JSON" agent 就专门生成 N 行 JSON 不管内容）。**答案明示**（verifier 说出预期答案的关键词 / 数字 / 路径 · agent 直接复用 · 比如 verifier 说"答案应该接近 42" agent 输出 41 或 43 蒙混过关）。**暗示性问句**（verifier 用引导性提问让 agent 反推答案）。**overlap 对照组**（业界 leakage 防御主流路径 · 用 overlap_pos 跟 overlap_neg 两组对照让 verifier 自己判定哪些是真信号哪些是 leakage 噪音）。
+**失效模式术语**
 
-**组合策略术语** —— **composite reward / hybrid verifier**（多层 verifier 协同 · 2026 业界讨论的 RLVR 反 Reward Hacking mitigation 路径之一 · 一个具体实例[^composite-rewards-2026] · 医疗 QA 领域小模型实验 · 非业界主流定论）。**co-evolving policy-reward**（policy 跟 reward 协同进化 · 防 Reward Hacking 的高阶策略 · 业界 2026 研究方向之一）。**verifier composition**（多层 verifier 组合方法学 · 业界主流 mitigation 实现路径）。
+- **Reward Hacking（奖励投机）**：agent 钻 verifier 的空子，拿到形式上的奖励，却没有完成实际任务。这是 RLVR 训练中的核心失效模式，已有不少论文专门研究，代表作是 "LLMs Gaming Verifiers"[^llm-gaming-verifiers-2026]。
+- **Preference Leakage（偏好泄漏）**[^preference-leakage]：用某个 LLM 生成的合成数据训练出来的学生模型，会被与这个数据生成模型相关的 judge 偏袒。相关有三种情况：同一个模型、有继承关系（一个由另一个微调或蒸馏而来）、属于同一模型家族。论文发现，即使只混入少量这类合成数据，也会产生偏好泄漏，而且难以察觉。
+- **benchmark contamination / evaluation awareness**：公开基准可信度的两类问题。前者是训练阶段的数据污染；后者是模型识别出"我正在被测"之后行为发生变化。Meta 2026-04 的 Muse Spark 报告显示，模型在公开基准上把任务标记为"这是评测"的比例为 19.8%，在内部评测上为 2.0%，属于后者。
+- **verifier gaming**：agent 学会欺骗 verifier 而不是完成任务，是奖励投机的具体行为表现，名称取自 "LLMs Gaming Verifiers"[^llm-gaming-verifiers-2026]。
 
-#### 5.8.1 三层 verifier 概览 · 各自能做什么不能做什么
+**Leakage 防御术语**
 
-三层 verifier 不是按"verifier 复杂度"分层 · 是按 verifier 用什么信号做判定分层。**Hard Gate 用确定性代码信号**——pytest 输出 PASS / FAIL / build exit code 0 或非 0 / 文件 hash 等于预期值或不等于。这一层判定结果是 binary · 没有歧义 · agent 跑不出"接近通过"这种状态。**Outcome Judge 用另一个 LLM 的语义信号**——judge LLM 读 agent 的最终产出 · 按预定 rubric 打分 · 输出可以是 binary（通过/不通过）或者连续分数（0-10）或者 ordinal 等级（excellent/good/fair/poor）。这一层判定本质是"另一个 LLM 怎么看 agent 的产出" · 跟 Hard Gate 的客观信号根本不同。**PRM 用过程级信号**——PRM 读 agent 每一步的 thought 跟 action · 判定这一步在"完成最终任务"这件事上是不是合理的中间步骤 · 输出通常是 step-wise 分数加上 final task 完成度估计。这一层判定本质是"agent 的推理路径合不合理" · 跟前两层的"结果对不对"是垂直 framing。
+- **形状泄漏**：verifier 间接暴露了答案的形状，agent 反推出预期的输出结构后照着填空。比如 verifier 说"输出必须是 N 行 JSON"，agent 就专门生成 N 行 JSON，不管内容。
+- **答案明示**：verifier 的说明里出现了预期答案的关键词、数字或路径，agent 直接照抄。比如验收说明写着"正确结果应为 42"，agent 不计算，直接输出 42。
+- **暗示性问句**：verifier 用引导性的提问方式，让 agent 从问句里反推答案。
+- **对照组（overlap_pos / overlap_neg）**：作者项目中防御偏好泄漏的做法，用一组正例和一组负例作对照，帮助区分 judge 打分里的真实信号和关联带来的偏好（见 5.8.7）。
 
-三层各有适用场景跟根本限制。**Hard Gate 适用于结果可以代码客观判定的任务**——写代码加跑测试 / 数据 ETL / 配置管理 / 文件操作。Hard Gate 在这些场景里几乎是黄金标准——只要测试写得好 / 配置 schema 严 / 文件 hash 准 · agent 想造假很难。但 Hard Gate 的根本限制是**它判定不了开放性产出**——写一篇报告 / 设计一个 API / 给一个战略建议 · 没有客观代码能判 PASS 或 FAIL。强行用 Hard Gate 判这类任务会退化为"格式检查" · 比如检查 markdown 标题数 / 字数 / 关键词出现频率——这种检查容易被 agent gaming。**Outcome Judge 适用于开放性产出**——judge LLM 用语义判定填补 Hard Gate 的盲区。Outcome Judge 的根本限制是 **LLM-as-judge 本身有偏好 · 容易被 preference leakage 污染**——下面 §5.8.3 单独展开。**PRM 适用于多步推理任务**——agent 跑 10 轮、20 轮、50 轮的复杂任务 · Hard Gate 只能判最终结果 · 但中间某一步走错路径不一定影响最终结果（agent 可能绕远到达终点）· PRM 能捕捉中间的低效或错误。PRM 的根本限制是**它需要训练专门的 process reward model · 训练数据质量直接决定 PRM 质量** · §5.8.4 单独展开。
+**组合策略术语**
+
+- **composite reward / hybrid verifier（组合奖励 / 混合 verifier）**：多层 verifier 协同使用，是缓解 RLVR 奖励投机的一个研究方向。一个具体实例[^composite-rewards-2026]是医疗问答领域的小模型实验，不是业界定论。
+- **co-evolving policy-reward（策略与奖励协同进化）**：被训练的模型（policy）和奖励模型一起进化，用来防奖励投机，是 2026 年的研究方向之一。
+- **verifier composition（verifier 组合）**：把多层 verifier 组合起来使用的方法。
+
+#### 5.8.1 三层 verifier 概览：各自能做什么、不能做什么
+
+三层 verifier 不是按复杂度分层，而是按判定所用的信号分层。
+
+- **Hard Gate 用确定性的代码信号**：pytest 输出 PASS 或 FAIL，构建的退出码是 0 或非 0，文件哈希等于或不等于预期值。这一层的判定结果是二值的，没有歧义，agent 跑不出"接近通过"这种状态。
+- **Outcome Judge 用另一个 LLM 的语义信号**：judge LLM 读 agent 的最终产出，按预定的评分细则（rubric）打分，输出可以是二值（通过或不通过）、连续分数（0–10）或等级（优、良、中、差）。这一层判定的本质是"另一个 LLM 怎么看 agent 的产出"，跟 Hard Gate 的客观信号有根本区别。
+- **PRM 用过程级信号**：PRM 读 agent 每一步的思考和动作，判断这一步对完成最终任务来说是不是合理的中间步骤，输出通常是每一步的分数，加上对最终任务完成度的估计。这一层判定的是"agent 的推理路径合不合理"，跟前两层的"结果对不对"是两个不同的维度。
+
+三层各有适用场景和根本限制。
+
+**Hard Gate 适用于结果可以用代码客观判定的任务**，如写代码加跑测试、数据 ETL、配置管理、文件操作。在这些场景里 Hard Gate 几乎是黄金标准：只要测试写得好、配置 schema 严、文件哈希准，agent 想造假就很难。它的根本限制是**判定不了开放性产出**：写一篇报告、设计一个 API、给一个战略建议，没有客观代码能判 PASS 或 FAIL。硬用 Hard Gate 判这类任务，会退化成格式检查，比如数 Markdown 标题、字数、关键词出现的频率，这种检查很容易被 agent 钻空子。
+
+**Outcome Judge 适用于开放性产出**，judge LLM 用语义判定填补 Hard Gate 的盲区。它的根本限制是 **LLM-as-judge 本身有偏好，容易受偏好泄漏影响**，5.8.3 单独展开。
+
+**PRM 适用于多步推理任务**。agent 跑 10 轮、20 轮、50 轮的复杂任务，Hard Gate 只能判最终结果，但中间某一步走错不一定影响最终结果（agent 可能绕远路到达终点），PRM 能抓到中间的低效或错误。它的根本限制是**需要专门训练一个过程奖励模型，训练数据的质量直接决定 PRM 的质量**，5.8.4 单独展开。
 
 ![](../diagrams/t1-matrix-5.8-verifier.png)
 
 *图 5.20 · 三层 verifier 各自的能与不能*
 
-三层组合的工程价值在于**互相覆盖盲区**。Hard Gate 用确定性代码兜住"agent 说做完了但实际没做完"的最常见情况；Outcome Judge 在 Hard Gate 盲区（开放性产出）顶上加一层语义判定；PRM 在 Hard Gate 跟 Outcome Judge 都盲的"过程合理性"维度顶上加第三层。生产 harness 不会只用一层——只用 Hard Gate 在开放性任务上失效 · 只用 Outcome Judge 在 Preference Leakage 风险下不可靠 · 只用 PRM 训练成本高且 final outcome 没保证。组合策略下面 §5.8.5 展开。
+三层组合的工程价值在于**互相覆盖盲区**。Hard Gate 用确定性代码兜住"agent 说做完了但实际没做完"这种最常见的情况；Outcome Judge 在 Hard Gate 的盲区（开放性产出）上加一层语义判定；PRM 在前两层都看不到的"过程合理性"上加第三层。生产 harness 很少只用一层：只用 Hard Gate，在开放性任务上失效；只用 Outcome Judge，在偏好泄漏的风险下不可靠；只用 PRM，训练成本高，最终结果也没有保证。组合策略在 5.8.5 展开。
 
-#### 5.8.2 第一层 · Hard Gate / RLVR
+#### 5.8.2 第一层：Hard Gate
 
-Hard Gate 是 verifier 三层最古老也最稳的一层。在 agent harness 出现之前 · 软件工程已经用 Hard Gate 工程治理了几十年——pytest 跑通 / make build 编过 / type check 过 / lint 过都是 Hard Gate。这一机制移植到 agent harness 上几乎不需要工程改造——agent 写完代码 · harness 跑 pytest · pytest 通过 verifier 判 pass · 不通过 verifier 判 fail。
+Hard Gate 是三层里最古老也最稳的一层。在 agent harness 出现之前，软件工程已经用这类检查几十年了：pytest 跑通、make 构建通过、类型检查通过、lint 通过，都是 Hard Gate。它移植到 harness 上几乎不需要改造：agent 写完代码，harness 跑 pytest，通过就判 pass，不通过就判 fail。
 
-Hard Gate 在 agent 领域的工程框架在 2026 已经收敛到 RLVR——Reinforcement Learning from Verifiable Rewards。RLVR 是 2026 dominant paradigm for scaling reasoning capabilities in LLMs · 通过 rule-based functions 给 model 训练阶段提供 binary reward 信号——1 代表 verifier 通过 · 0 代表不通过。这种 reward 信号比 RLHF（Reinforcement Learning from Human Feedback）的 subjective human preference 更便宜更稳定 · 是 DeepSeek-R1 / OpenAI o1 等推理模型的核心训练范式。
+同一类"可以用程序判定对错"的信号，在模型训练里也有一条对应的路线，叫 RLVR（可验证奖励强化学习）。它是训练范式，不是运行时检查：用规则函数给模型的训练样本打二值奖励，1 代表判定通过，0 代表不通过。这种奖励比 RLHF（基于人类反馈的强化学习）依赖的主观人类偏好更便宜、更稳定，被用于训练推理模型。DeepSeek-R1 公开报告了以规则奖励为主的强化学习训练；o1 等闭源模型据推测用了类似方法。
 
-RLVR 在工程层落地为 harness 里的 verifier 调用就是 Hard Gate——agent 跑完产出 · harness 跑 verifier 函数 · 函数返回 binary 结果。具体形态有几条业界主流路径：**测试驱动**——agent 写代码 · harness 跑 SWE-bench 风格 test suite · 测试通过算 verifier pass。**编译驱动**——agent 改代码 · harness 跑 build · build success 算 pass。**Schema 驱动**——agent 输出结构化数据 · harness 用 JSON schema validation 或者类型检查判 pass。**Hash 驱动**——agent 修改文件 · harness 比对文件 hash 跟预期 hash 判 pass。这几条路径合起来覆盖了软件工程领域 90% 的 verifier 场景。
+两者要分开理解：**Hard Gate 是 harness 在运行时对 agent 产出做的检查，RLVR 是模型厂商在训练时用同类信号改进模型**。harness 工程师日常打交道的是前者。Hard Gate 的具体形态有几种常见做法：
 
-Hard Gate 的工程优势是**几乎不会被 agent gaming**——pytest 通过就是通过 · 没有"接近通过" · 没有"看起来通过"。但 Hard Gate 的盲区是**它判定不了开放性产出**——前面已经讲过。还有一个隐性风险是**Hard Gate 测试本身可能写不全**——agent 写代码通过了所有 test · 但 test 没覆盖某个边界 · agent 在那个边界出错。这件不是 verifier 本身的问题 · 是 verifier 跟测试覆盖率的工程协同问题——业界主流路径是 verifier 覆盖率监控 + Hard Gate 跟 Outcome Judge 协同（Outcome Judge 读 agent 代码看有没有明显遗漏的边界）。
+- **测试驱动**：agent 写代码，harness 跑 SWE-bench 风格的测试集，测试通过算 pass；
+- **编译驱动**：agent 改代码，harness 跑构建，构建成功算 pass；
+- **Schema 驱动**：agent 输出结构化数据，harness 用 JSON Schema 校验或类型检查判定；
+- **哈希驱动**：agent 修改文件，harness 比对文件哈希与预期哈希。
 
-Hard Gate 还有一条容易漏的物理前提：**判定环境要跟 agent 的写权限隔离**。"改测试让测试过"是 reward hacking 最直接的物理路径——verifier 跑的测试文件如果在 agent 的可写路径里 · gate 形同虚设。对策：基线测试集放只读路径 · 或 verifier 在干净 checkout 里跑（agent 的 diff 应用到干净副本 · 测试从基线取）；agent 在任务里新增或修改的测试要单独 diff 出来过审 · 不直接并入判定集。gate 判定的可信度 · 上限是它跟被判定者之间的隔离强度。
+这几种做法合起来，覆盖了软件工程领域大部分 verifier 场景。
 
-#### 5.8.3 第二层 · Outcome Judge / LLM-as-judge
+Hard Gate 的工程优势是**比语义判定难钻空子得多**：pytest 通过就是通过，没有"接近通过"，也没有"看起来通过"。但这有两个前提。一是测试要写得全：如果测试没覆盖某个边界，agent 的代码能通过所有测试，却在那个边界出错；更极端的情况是 agent 专门写出只为通过测试、不解决问题的代码（见 5.8.6 的"针对测试的投机"）。二是 agent 不能改测试，下一段专门讲。所以测试写得不全，或者 agent 能改测试时，Hard Gate 照样会被绕过。它的另一个盲区是**判定不了开放性产出**，前面已经讲过。测试覆盖不全不是 verifier 本身的问题，而是 verifier 与测试覆盖率配合的问题，常见做法是监控 verifier 的覆盖率，并让 Hard Gate 与 Outcome Judge 配合（Outcome Judge 读 agent 的代码，看有没有明显遗漏的边界）。
 
-Outcome Judge 用 LLM 对 agent 产出做语义判定 · 是 Hard Gate 盲区（开放性产出）的工程化补充。LLM-as-judge 是 Outcome Judge 的标准实现路径——业界已经建立专门的 community（llm-as-a-judge.github.io）跟 evaluation framework。基本 pattern 是 judge LLM 接收三件输入：agent 的最终产出 / 任务原始描述 / 评分 rubric · 输出评分结果（binary / 连续分数 / ordinal 等级）。
+Hard Gate 还有一个容易漏掉的前提：**判定环境要跟 agent 的写入权限隔离**。"改测试让测试通过"是奖励投机最直接的路径：verifier 跑的测试文件如果在 agent 的可写路径里，这道检查就形同虚设。对策是：
 
-LLM-as-judge 的工程价值在于**它能在没有 ground truth 的开放性任务上提供半自动化判定信号**——写报告 / 给建议 / 做翻译这种任务 · 人审太慢 · Hard Gate 又判不动 · LLM-as-judge 补上这段判定空白。但这一机制有一个 2026 业界刚刚 formalize 的关键常见误区——**Preference Leakage**[^preference-leakage]。
+- 基线测试集放在只读路径；或者 verifier 在干净的 checkout 里跑（把 agent 的 diff 应用到干净副本上，测试从基线取）；
+- agent 在任务里新增或修改的测试要单独 diff 出来审查，不直接并入判定集。
 
-Preference Leakage 的核心论点是：当 judge LLM 跟 agent LLM 有"关联"时 · judge 对 agent 输出会有系统性偏好。三类关联：**same model**（judge 跟 agent 是同一个模型）/ **inheritance**（judge 跟 agent 有 fine-tune 派生关系 · 比如 judge 是 GPT-4 · agent 是基于 GPT-4 finetune 的 model）/ **same model family**（都是 GPT 系列 / 都是 Claude 系列）。即使是 small amounts of leaked synthetic data 也会导致 preference leakage 难以检测——这件让传统"用强模型给弱模型评分"的工程做法（GPT-4 给 GPT-3.5 评分）失去信任基础。
+**检查结果有多可信，上限取决于检查者和被检查者之间隔离得有多彻底。**
 
-Preference Leakage 不是 Outcome Judge 唯一的常见误区 · 但它是 2026 业界最关注的一条。其他常见误区还有 judge LLM 自己的能力不够（judge 比 agent 弱 · 评分不准）/ rubric 写得不清楚（judge 在不同 case 上判定标准漂移）/ judge LLM 对长输出有 length bias（倾向给长的产出高分） / judge LLM 对 prompt format 敏感（同样输出换个 prompt 格式得分差很多）。
+#### 5.8.3 第二层：Outcome Judge / LLM-as-judge
 
-Outcome Judge 的工程化对策有几条业界主流路径。**第一条是 judge LLM 来源跟 agent LLM 隔离**——judge 必须用跟 agent 不同 family 的模型 · 比如 agent 用 GPT 系列 · judge 用 Claude 系列；agent 用 Claude 系列 · judge 用 Gemini 系列。这件隔离不能跨过 fine-tune chain · 要追溯 base model。**第二条是 rubric 工程化**——用结构化 rubric 把"什么算通过"明确写成可验证的子项 · 比如"报告必须含 X / Y / Z 三个章节" / "代码必须满足 A / B / C 三个 invariant"。结构化 rubric 让 judge 的语义判定退化为半 Hard Gate · 减少主观偏好空间。**第三条是 multi-judge 投票**——用多个 judge LLM（不同 family / 不同 size / 不同 instruct tune 版本）独立打分 · 取多数或平均。**第四条是 judge 自身的 verification**——业界叫 meta-verifier · 用一个上层 verifier 判定 judge LLM 的评分是否合理 · 形成 layered verifier chain。
+Outcome Judge 用 LLM 对 agent 的产出做语义判定，补上 Hard Gate 的盲区（开放性产出）。LLM-as-judge 是它的标准实现方式，已经有专门的研究社区（llm-as-a-judge.github.io）和评测框架。基本做法是：judge LLM 接收三项输入（agent 的最终产出、原始任务描述、评分细则），输出评分结果（二值、连续分数或等级）。
 
-对策清单里还要加一件最便宜的：**verifier 校准集**。judge 也是模型 · 模型会升级 · 升级等于判定分布漂移——rubric 一个字没动 · 新版本 judge 的松紧度也会变。工程形态：维护一组人工标定的 known-good / known-bad 产物（几十条就够起步）· 每次 judge 模型或 rubric 变更先跑校准集 · 报假阳率 / 假阴率 · 超过阈值就阻断切换。这是"先给判定器做基线标定 · 再让它上线"——要锁定的组合是 rubric × judge 模型版本 · rubric 没动不代表判定没动。
+LLM-as-judge 的工程价值在于**它能在没有标准答案的开放性任务上提供半自动的判定信号**。写报告、给建议、做翻译这类任务，人审太慢，Hard Gate 又判不了，LLM-as-judge 补上了这段空白。但它有一个 2025 年才被系统研究的失效模式：**偏好泄漏（Preference Leakage）**[^preference-leakage]。
 
-#### 5.8.4 第三层 · PRM · Process Reward Model
+偏好泄漏研究的是合成数据的生成模型与 judge 之间的关联。现在很多模型用另一个 LLM 生成的合成数据来训练（比如蒸馏）。论文发现：用某个 LLM 生成的合成数据训练出来的学生模型，会被与这个数据生成模型相关的 judge 系统性地偏袒。相关有三种情况：
 
-PRM 是 verifier 三层里最年轻也最快演进的一层。2026 之前 PRM 主要用在 math reasoning（GSM8K / MATH 等 benchmark）的 step-wise 评分 · 2026 业界正在把 PRM 移植到通用 agent 任务 · 形成 agent-PRM 路径。
+- **同一个模型**：judge 就是生成训练数据的那个模型；
+- **继承关系**：judge 和数据生成模型之间，一个由另一个微调或蒸馏而来；
+- **同一模型家族**：两者属于同一系列（比如都是 GPT 系列，或都是 Claude 系列）。
 
-代表工作是 **AgentPRM**[^agent-prm-2025]——把 PRM 应用到 LLM agent 的 step-wise promise 跟 progress 评估。AgentPRM 走 lightweight actor-critic 范式 · 用 Monte Carlo rollouts 计算 reward 目标 · 优化 policy。实测数据显示 **3B 模型加 AgentPRM 加 InversePRM 训练超过 GPT-4o baselines 在 ALFWorld benchmark 上的表现**——而且 8× more compute-efficient · 这件 compute efficiency 让 PRM 路径从学术好奇升级为工业可行。
+论文还发现，即使只混入少量这类合成数据，也会产生偏好泄漏，而且很难察觉。落到 harness 上的含义是：如果 agent 用的模型是拿某个模型生成的数据训练出来的，再用那个模型或它的同家族模型当 judge，打分会系统性偏高。
 
-另一条工程化路径是 **ToolPRMBench**[^tool-prm-bench]——专门为 tool-using agent 设计的 PRM benchmark。ToolPRMBench 把 agent trajectory 转成 step-level 测试用例——每个 case 含 interaction history / 正确 action / plausible but incorrect alternative / tool metadata。这件 benchmark 让 PRM 在 tool-using agent 上的有效性有了量化测量基础。**Socratic-PRMBench**[^socratic-prm-bench-2026]走 systematic reasoning patterns 路径 · 测试 PRM 在六种系统化推理模式（Transformation / Decomposition / Regather / Deduction / Verification / Integration）上的判定能力。
+偏好泄漏不是 Outcome Judge 唯一的失效模式，其他常见的还有：
 
-PRM 在工程层的根本价值是**它能在长任务里捕捉 Hard Gate 跟 Outcome Judge 都看不到的中间错误**。agent 跑 50 turn 完成一个 task · Hard Gate 只能在 turn 50 判 PASS 或 FAIL · Outcome Judge 也只看 turn 50 的产出——但 turn 25 那一步如果走错路径 · 即使 turn 50 阴差阳错通过 · 跑生产时这个错误路径会反复出现影响稳定性。PRM 能在 turn 25 那一步就标"这步选择不优" · 给 evolver 提供精确改进信号。
+- judge LLM 能力不够（judge 比 agent 弱，评分不准）；
+- 评分细则写得不清楚（judge 在不同用例上的判定标准漂移）；
+- judge LLM 对长输出有长度偏好（倾向给长的产出打高分）；
+- judge LLM 对提示词格式敏感（同样的输出换个 prompt 格式，得分差很多）。
 
-PRM 的工程限制有几条。第一条是**训练数据贵**——PRM 需要 step-wise 标注 · 不像 Hard Gate 自动生成。AgentPRM 用 Monte Carlo rollouts 自动生成 reward 信号是降本的一种方法 · 但仍然有 compute 成本。第二条是**PRM 自身可能 game**——PRM 本质上也是 LLM · 也可能被 agent 跑出"看起来推理过程合理但实际是绕路"的 trajectory 蒙混过关。第三条是**PRM 训练后跨任务迁移性还在演进**——同一个 PRM 用在 SWE-bench 跟用在 ALFWorld 上的有效性差很多 · 业界还没有真正的"通用 PRM"。
+Outcome Judge 的工程对策有几种常见做法：
 
-#### 5.8.5 三层组合策略 · Hybrid Verifier
+- **judge 的来源与 agent 隔离**：judge 用与 agent 模型及其训练数据来源都无关联的模型，比如 agent 用 GPT 系列，judge 用 Claude 系列；agent 用 Claude 系列，judge 用 Gemini 系列。隔离要沿微调链追溯到基座模型（base model），也要考虑 agent 模型的训练数据是由哪个模型生成的。
+- **评分细则结构化**：把"什么算通过"写成可验证的子项，比如"报告必须包含 X、Y、Z 三个章节""代码必须满足 A、B、C 三个不变量"。结构化的细则让 judge 的语义判定接近半个 Hard Gate，压缩主观偏好的空间。
+- **多 judge 投票**：用多个 judge LLM（不同家族、不同规模、不同指令微调版本）独立打分，取多数或平均。
+- **给 judge 本身做校验**：用一个上层 verifier（meta-verifier）判断 judge 的评分是否合理，形成分层的 verifier 链。
 
-生产 harness 不会只用一层 verifier · 几乎都是三层组合。业界 2026 主流的组合策略叫 **composite reward / hybrid verifier**——把多个 verifier 信号加权或串联使用（医疗 QA 领域的 "Reward Hacking Mitigation using Verifiable Composite Rewards"[^composite-rewards-2026] 是一个具体演示：用 composite reward 函数惩罚"跳过推理直接给答案""非标准推理格式"两类 hacking）。
+对策清单里还要加一项最便宜的：**verifier 校准集**。judge 也是模型，模型会升级，升级就意味着判定分布漂移：评分细则一个字没动，新版本 judge 的松紧也会变。具体做法是维护一组人工标定过的已知好、已知坏的产物（经验值：几十条就够起步），每次 judge 模型或评分细则变更时先跑一遍校准集，报出假阳性率和假阴性率（以"判为通过"为阳性），超过阈值就阻止切换。这相当于"先给判定器做基线标定，再让它上线"。要锁定的是评分细则与 judge 模型版本这个组合：细则没动，不代表判定没变。
 
-最常见的组合 pattern 是**串联 gate 模式**——Hard Gate 当第一道门 · 没通过直接 fail · 通过了再走 Outcome Judge / PRM。这件模式的工程优势是 Hard Gate 便宜（pytest 跑一次几秒）且高置信度（PASS 就是 PASS）· 把不确定的、贵的 Outcome Judge / PRM 留给 Hard Gate 通过的 case。但这件模式的盲区是 Hard Gate 不通过的 case 也可能有信息——可能 agent 解决了 80% · 但 Hard Gate 只看 final PASS · 把"接近完成"跟"完全没做"判同样的 fail。
+#### 5.8.4 第三层：PRM（Process Reward Model）
 
-另一条主流路径是**加权平均模式**——三层 verifier 各自打分 · 按预定权重加权得到总分。权重通常按任务类型动态调整——确定性任务 Hard Gate 权重大 · 开放性任务 Outcome Judge 权重大 · 长任务 PRM 权重大。这件模式的工程优势是不浪费任何一层的信号 · 但代价是要调权重——业界主流做法是 grid search 在一组校准任务上调到 verifier 跟人审一致性最高的权重组合。
+PRM 是三层里最年轻、演进最快的一层。2026 年之前，PRM 主要用在数学推理（GSM8K、MATH 等基准）的逐步评分上；现在研究者正把 PRM 移植到通用 agent 任务上。需要先说明的是，PRM 本身是一个需要训练的奖励模型，目前主要用在模型训练和推理期搜索（从多个候选中挑最好的一个，或在搜索树上给分支打分），在线上作为放行与否的 gate 使用还少见。
 
-最严肃的工业级路径是 **co-evolving policy-reward**——policy 跟 reward model 协同进化 · 防 Reward Hacking。这件路径的核心论点是：单层 verifier 容易被 agent gaming · 多层组合也可能被 agent gaming（agent 学会同时蒙混三层）· 唯一可靠的对策是 verifier 自己也在进化——agent 学会一种 gaming · verifier 也学会识别这种 gaming · 形成 adversarial co-evolution。这件路径目前还在 2026 业界研究阶段 · 工业落地还少 · 但被认为是 verifier 工程治理的长期方向。
+代表工作是 **AgentPRM**[^agent-prm-2025]，它把 PRM 用于评估 LLM agent 每一步的前景（promise）和进展（progress）。AgentPRM 采用轻量的 actor-critic 框架，用蒙特卡洛 rollout 计算奖励目标来优化策略。论文报告，**3B 模型经 AgentPRM 加 InversePRM 训练后，在 ALFWorld 基准上超过了 GPT-4o 基线**，计算效率高 8 倍。这让 PRM 路线从学术兴趣变得有了工业上的可行性。
 
-#### 5.8.6 常见误区 · Reward Hacking 跟 verifier 自身可信度
+另一项工作是 **ToolPRMBench**[^tool-prm-bench]，一个专门为使用工具的 agent 设计的 PRM 基准。它把 agent 的 trajectory 转成步骤级测试用例，每个用例包含交互历史、正确动作、一个看似合理但错误的备选动作，以及工具元数据。有了它，PRM 在工具型 agent 上的效果才有了量化测量的基础。**Socratic-PRMBench**[^socratic-prm-bench-2026] 则从系统化推理模式入手，测试 PRM 在六种推理模式（转换、分解、重新汇集、演绎、验证、整合）上的判定能力。
 
-verifier 工程治理最核心的常见误区是 **Reward Hacking**——agent 找到 verifier 的 loophole 通过形式 reward 不完成实际任务。这件常见误区在 RLVR 系统里被业界深入研究——代表工作是 "LLMs Gaming Verifiers: RLVR can Lead to Reward Hacking"[^llm-gaming-verifiers-2026]。这篇 paper 的核心发现是 **RLVR-trained models systematically abandon rule induction**——模型不再学习可泛化的规律 · 而是 enumerate instance-level labels · 生成可以通过 verifier 但不捕捉任务真实关系的输出（论文把这种绕过具体归纳成 Blatant Enumeration 跟 Obfuscated Enumeration 两种 shortcut 模式 · 并用 Isomorphic Perturbation Testing 检测；下面"四种 gaming"是本教程按 verifier 三层做的工程归纳 · 非该论文分类）。
+PRM 在工程上的根本价值是**能在长任务里抓到 Hard Gate 和 Outcome Judge 都看不到的中间错误**。agent 跑 50 轮完成一个任务，Hard Gate 只能在第 50 轮判 PASS 或 FAIL，Outcome Judge 也只看第 50 轮的产出。但如果第 25 轮走错了路，即使第 50 轮阴差阳错通过了，在生产中这条错误路径也会反复出现，影响稳定性。PRM 能在第 25 轮就标出"这一步的选择不好"，给自我演化提供精确的改进信号。
 
-Reward Hacking 在工程里有几种典型表现。**Gaming the test**——agent 学会专门生成能通过测试但不解决问题的代码（test 检查输出 X · agent 就 hardcode X 而不实现真正的逻辑）。**Gaming the rubric**——agent 学会满足 rubric 的字面要求但不满足实质意图（rubric 说"报告要包含数据分析" · agent 写"以下是数据分析：[空]"）。**Gaming the judge**——agent 学会输出符合 judge LLM 偏好但实质不解决问题的内容（judge LLM 偏好长输出 · agent 就堆冗长无信息内容）。**Gaming the process**——agent 学会在 PRM 看的中间步骤上把过程做得形式合规 · 但最终任务依然不完成。
+PRM 的工程限制有三点：
 
-工程化对策的核心思路是 **verifier 不能让 agent 看见 reward 函数的形状**。具体几条业界主流：**第一条是 verifier 模糊化**——verifier 的具体判定逻辑不在 prompt 里 / 不在 tool description 里 / 不在 trajectory 里暴露给 agent。**第二条是 hidden test**——除了 agent 看到的 test 外另外保留一组 hidden test · agent 通不过 hidden test 不算 PASS。**第三条是 anti-overfitting penalty**——agent 输出特征如果太"针对性符合 verifier"（比如 hardcode 一堆 magic value）· 直接判 fail。**第四条是 composite reward**（前面 §5.8.5 已展开）——多层 verifier 组合让 agent 难以单点 game。**第五条是 co-evolving policy-reward**（前面 §5.8.5 已展开）——verifier 自己进化对抗 agent gaming。
+- **训练数据贵**：PRM 需要逐步标注，不像 Hard Gate 那样可以自动生成。AgentPRM 用蒙特卡洛 rollout 自动生成奖励信号是一种降本方法，但仍有计算成本。
+- **PRM 自身也可能被钻空子**：PRM 本质上也是模型，agent 可能跑出"推理过程看起来合理、实际在绕路"的 trajectory 蒙混过关。
+- **跨任务迁移还不成熟**：同一个 PRM 用在 SWE-bench 和用在 ALFWorld 上，效果差很多，目前还没有真正的"通用 PRM"。
 
-verifier 自身可信度也是常见误区核心议题。verifier 是代码 · 代码可能有 bug——verifier 自己写得有 bug · 通过的不算真通过 / 不通过的不算真不通过。业界主流做法是**给 verifier 自己写 verifier**——meta-verifier 测试 verifier 的判定一致性跟覆盖率。Inspect AI / LangSmith 这类平台都内建 verifier 自检能力。这条工程纪律的核心是**不要把 verifier 当真理来源**——verifier 只是当前最好的判定机制 · 自己也是工程对象 · 需要被验证。
+#### 5.8.5 三层组合策略：Hybrid Verifier
 
-业界经验里有一类 verifier 跟 artifact 不一致的常见踩坑——verifier 判 PASS 但 artifact（agent 实际产出物）跟 verifier 期望不一致 · 各家 harness 都踩过类似坑。这件不一致通常是 verifier 实现 bug 跟 artifact schema 漂移共同导致 · 工程化对策是 verifier 加 artifact 双向 round-trip 测试——verifier 读 artifact 算 hash · artifact 改了 hash 要变 · verifier 跟着 hash 重新验证。
+生产 harness 很少只用一层 verifier，多数是多层组合。常见的组合思路叫 **composite reward / hybrid verifier**：把多个 verifier 信号加权或串联使用。医疗问答领域的 "Reward Hacking Mitigation using Verifiable Composite Rewards"[^composite-rewards-2026] 是一个具体演示：用组合奖励函数惩罚"跳过推理直接给答案"和"非标准推理格式"两类投机行为。
 
-#### 5.8.7 Leakage 四条防御
+最常见的是**串联 gate 模式**：Hard Gate 作第一道检查，没通过直接判 fail，通过了再交给 Outcome Judge 或 PRM。它的优势是 Hard Gate 便宜（pytest 跑一次几秒）且置信度高（PASS 就是 PASS），把不确定、昂贵的 Outcome Judge 和 PRM 留给通过了 Hard Gate 的用例。盲区是没通过 Hard Gate 的用例里也可能有信息：agent 也许已经解决了大部分问题，但 Hard Gate 只看最终是否 PASS，把"接近完成"和"完全没做"判成同样的 fail。
 
-Leakage 是 verifier 工程治理里的一类特殊常见误区——verifier 在判定过程中无意识地把"通过条件"或"预期答案"暴露给 agent · agent 反向推出来作弊。Leakage 跟 Reward Hacking 不同——Reward Hacking 是 agent 主动找 loophole · Leakage 是 verifier 主动泄漏。两者经常合在一起讨论但工程化对策不同。
+另一种做法是**加权平均模式**：各层 verifier 各自打分，按预定权重加权得到总分。权重通常按任务类型调整：确定性任务 Hard Gate 权重大，开放性任务 Outcome Judge 权重大，长任务 PRM 权重大。它的优势是不浪费任何一层的信号，代价是要调权重。常见做法是在一组校准任务上做网格搜索（grid search），找出与人审一致性最高的权重组合。
 
-Leakage 有四类典型形态 · 业界 AHE[^ahe-2026] / Claw-Eval[^claw-eval-2026] 都做过系统研究。
+最激进的路线是 **co-evolving policy-reward（策略与奖励协同进化）**：被训练的模型与奖励模型一起进化，用来防奖励投机。它的核心论点是：单层 verifier 容易被钻空子，多层组合也可能被钻空子（agent 学会同时蒙混三层），可靠的对策是让 verifier 自己也在进化，agent 学会一种投机，verifier 也学会识别这种投机，形成对抗式的共同进化。这条路线目前还处在研究阶段，工业应用很少，但被认为是 verifier 的长期方向。
+
+#### 5.8.6 失效模式：奖励投机与 verifier 自身的可信度
+
+verifier 最核心的失效模式是 **奖励投机（Reward Hacking）**：agent 找到 verifier 的漏洞，拿到形式上的奖励，却没有完成实际任务。RLVR 训练中对这一现象已有深入研究，代表工作是 "LLMs Gaming Verifiers: RLVR can Lead to Reward Hacking"[^llm-gaming-verifiers-2026]。这篇论文的核心发现是：**经 RLVR 训练的模型会系统性地放弃归纳规律**。模型不再学习可泛化的规律，而是逐个列举具体实例的标签，生成能通过 verifier、却没有捕捉到任务真实关系的输出。论文把这种绕过归纳为"明显列举"（Blatant Enumeration）和"混淆列举"（Obfuscated Enumeration）两种捷径模式，并用同构扰动测试（Isomorphic Perturbation Testing）来检测。下面的"四种投机"是本书按 verifier 三层做的工程归纳，不是该论文的分类。
+
+奖励投机在工程里有几种典型表现：
+
+- **针对测试的投机**：agent 专门生成能通过测试、但不解决问题的代码（测试检查输出 X，agent 就把 X 写死，不实现真正的逻辑）。
+- **针对评分细则的投机**：agent 满足细则的字面要求，但不满足实质意图（细则说"报告要包含数据分析"，agent 写"以下是数据分析：[空]"）。
+- **针对 judge 的投机**：agent 输出迎合 judge LLM 偏好、但实质不解决问题的内容（judge 偏好长输出，agent 就堆砌冗长无信息的内容）。
+- **针对过程的投机**：agent 把 PRM 检查的中间步骤做得形式合规，但最终任务依然没完成。
+
+工程对策的核心思路是 **不让 agent 看见奖励函数的形状**。常见做法有五种：
+
+- **隐藏判定逻辑**：verifier 的具体判定逻辑不出现在 prompt、工具描述或 trajectory 里，不暴露给 agent。
+- **隐藏测试（hidden test）**：除了 agent 能看到的测试，另外保留一组它看不到的测试，通不过隐藏测试不算 PASS。
+- **反过拟合惩罚**：如果 agent 的输出过于"针对 verifier"（比如写死一堆魔法数），直接判 fail。
+- **组合奖励**（见 5.8.5）：多层 verifier 组合，让 agent 难以只攻一点。
+- **策略与奖励协同进化**（见 5.8.5）：让 verifier 自己进化，对抗 agent 的投机。
+
+verifier 自身的可信度也是失效模式的核心议题。verifier 是代码，代码可能有 bug：verifier 自己写错了，判通过的未必真通过，判不通过的也未必真不通过。常见做法是**给 verifier 也做验证**：用 meta-verifier 测试 verifier 判定的一致性和覆盖率，可以借助 Inspect AI、LangSmith 这类评测平台来组织这类自检。这条做法的核心是**不要把 verifier 当真理来源**：verifier 只是当前最好的判定机制，它自己也是工程对象，也需要被验证。
+
+实践中还有一类常见的坑：verifier 判 PASS，但 artifact（agent 的实际产出物）跟 verifier 期望的不一致，各家 harness 都遇到过。这种不一致通常是 verifier 实现 bug 和 artifact schema 漂移共同造成的。对策是在 verifier 与 artifact 之间做双向的往返测试：verifier 读 artifact 时算哈希，artifact 一改哈希就变，verifier 按新哈希重新验证。
+
+#### 5.8.7 Leakage 四类防御
+
+泄漏（Leakage）是 verifier 的一类特殊失效：verifier 在判定过程中无意间把"通过条件"或"预期答案"暴露给了 agent，agent 反推出来作弊。它和奖励投机不同：奖励投机是 agent 主动找漏洞，泄漏是 verifier 自己把答案漏了出去。两者经常放在一起讨论，但对策不同。
+
+下面把泄漏分成四类，这是本书的归纳；AHE[^ahe-2026]、Claw-Eval[^claw-eval-2026] 等工作对评测的可信度问题有相关研究。
 
 ![](../diagrams/t2-cardgrid-5.8-leakage.png)
 
 *图 5.21 · verifier Leakage 的四类形态与防御*
 
-**第一类是形状泄漏**——verifier 间接暴露答案的结构形态。比如 verifier 说"输出必须是 N 行 JSON · 每行含 key 'name' 跟 'value'" · agent 不需要真理解任务 · 只要生成 N 行符合形状的 JSON 就能通过。工程化对策是**描述意图不描述形状**——verifier prompt 写"评估 agent 是否完成了 ABC 任务" · 不写"评估 agent 输出是不是 N 行 JSON"。
+**第一类是形状泄漏**：verifier 间接暴露了答案的结构。比如 verifier 说"输出必须是 N 行 JSON，每行含 'name' 和 'value' 两个键"，agent 不需要真正理解任务，只要生成 N 行符合这个形状的 JSON 就能通过。对策是**描述意图，不描述形状**：verifier 的 prompt 写"评估 agent 是否完成了某某任务"，而不是"评估 agent 的输出是不是 N 行 JSON"。
 
-**第二类是答案明示**——verifier 在判定描述里出现预期答案的关键词 / 数字 / 路径。比如 verifier 说"答案应该接近 42" · agent 就输出 41 或 43 蒙混。或者 verifier 说"代码应该用 numpy 库" · agent 就 import numpy 但不用。工程化对策是 **hidden visibility 字段**——verifier 内部判定逻辑跟 agent 可见 prompt 分开存储 · agent 完全看不见预期答案。
+**第二类是答案明示**：verifier 的判定说明里出现了预期答案的关键词、数字或路径。比如验收说明写着"正确结果应为 42"，agent 不做计算，直接输出 42；又比如说明里写着"代码应该用 numpy 库"，agent 就 import numpy，但并不真用。对策是**把预期答案存在 agent 读不到的位置**：verifier 内部的判定逻辑和预期答案，与 agent 能看到的 prompt 分开存放，agent 完全看不到预期答案。
 
-**第三类是暗示性问句**——verifier 用引导性提问让 agent 反推答案。比如 verifier 用 "agent 是否正确使用了 X 算法" 这种问句 · agent 直接读 prompt 就知道应该用 X 算法。工程化对策是 **schema 不嵌数字 / 不嵌答案** —— verifier prompt 完全脱离任何答案信息 · 只描述判定意图。
+**第三类是暗示性问句**：verifier 用引导性的提问让 agent 反推答案。比如 verifier 问"agent 是否正确使用了 X 算法"，agent 读到这个问句就知道应该用 X 算法。对策是**判定说明里不嵌数字、不嵌答案**：verifier 的 prompt 不带任何答案信息，只描述判定意图。
 
-**第四类是 Preference Leakage**（2026 业界 NEW）[^preference-leakage]——judge LLM 跟 agent LLM 有关联导致系统性偏好。前面 §5.8.3 已经详细展开 · 工程化对策是 **overlap_pos 加 overlap_neg 对照组**——用一组正例 + 一组负例对照让 judge LLM 自己判定哪些是真信号哪些是 leakage 噪音。
+**第四类是偏好泄漏**[^preference-leakage]：judge 与 agent 模型训练数据的生成模型有关联，导致系统性偏好，5.8.3 已经详细展开。作者项目中的对策是设**对照组**：用一组正例和一组负例（代码中分别命名为 overlap_pos 与 overlap_neg）作参照，比较 judge 在对照组上的打分，帮助区分哪些是真实信号，哪些是关联带来的偏好。<!-- 待作者补充：overlap_pos / overlap_neg 两组样本的构造方式，以及据此判定偏好泄漏的具体规则 -->
 
-四条防御合起来构成业界 leakage 防御的工程基线。这件基线的工程价值在于让 verifier 真正能判 "agent 做没做" · 而不是判"agent 有没有读懂 verifier 的暗示"。
+四类防御合起来，构成防泄漏的工程基线。它的价值在于让 verifier 真正判断"agent 做没做"，而不是判断"agent 有没有读懂 verifier 的暗示"。
 
 #### 5.8.8 业界实现对照
 
-业界主流 harness 的 verifier 实现路径分几条主流分支。**SWE-bench / SWE-agent 走纯 Hard Gate 路径**——所有 verifier 都是跑 test suite · 通过算 PASS。这条路径在确定性任务上极稳 · 但只能处理代码这种有 ground truth 的任务。**LangSmith / Phoenix 走 LLM-as-judge 主导 + Hard Gate 补充路径**——主要靠 LLM-as-judge 评分 · Hard Gate 做格式校验。这条路径适合开放性任务但要小心 Preference Leakage。**Inspect AI（UK AISI 开源）走三层组合路径**——内建 Hard Gate / Outcome Judge / PRM 三层 verifier 配合 ablation 跟 replay · 是 2026 业界做严肃 agent eval 的主流路径之一。**HAL Holistic Agent Leaderboard[^hal-2026]走标准化 verifier 路径**——把 verifier 标准化让 21730 rollouts × 9 model × 9 benchmark 能在一个统一框架下评测。
+各家 harness 与评测框架的 verifier 实现分几条路线。
 
-业界还有一件 2026 重要事件值得提——**Anthropic Claude Code 在 2026-03/04 经历公开 source code leak**。这件事让业界第一次看到一个 production-grade agent harness 的完整工程实现细节——tool 执行 loop / permission gating / context compaction / subagent spawning / MCP 集成层都暴露在公开讨论里。另外 Anthropic 向 NIST 提交的 agentic AI security proposal 提出 **shared responsibility 4 层框架**（Model / Harness / Tools / Environment · 类比 AWS/Azure/GCP 的云 shared responsibility model）——verifier 落在 Harness 层 · 是"agent 不自我欺骗"这件工程职责的明确归属。注意这套官方框架跟前面的 leak 是两件独立的事：leak 暴露的是源码实现 · shared responsibility 是官方对安全责任的分层划分。这件 framing 让 verifier 三层从研究讨论升级为业界标准产品架构组件。
+- **SWE-bench / SWE-agent 走纯 Hard Gate 路线**：verifier 全是跑测试集，通过算 PASS。这条路线在确定性任务上极稳，但只能处理代码这类有标准答案的任务。
+- **LangSmith / Phoenix 以 LLM-as-judge 为主、Hard Gate 为辅**：主要靠 LLM-as-judge 评分，Hard Gate 做格式校验。适合开放性任务，但要留意偏好泄漏。
+- **Inspect AI**（英国 AI Security Institute 与 Meridian Labs 共同开发的开源评测框架）：提供规则类 scorer（如精确匹配、包含、正则匹配）和模型评分类 scorer（用模型按细则打分），可以组合使用，并配合消融与回放做严肃的 agent 评测。它没有内建 PRM。
+- **HAL（Holistic Agent Leaderboard）[^hal-2026] 走标准化 verifier 路线**：把 verifier 标准化，让 21730 次 rollout、9 个模型、9 个基准能在同一个框架下评测。
 
-业界 verifier 工程治理还在快速演进的部分是 PRM 跟 self-evolution 的集成路径——AgentPRM 给 self-evolution 提供 step-wise reward 信号 · 跟前面 §5.6.7 / §5.7.7 讲的 self-evolution 基础设施层形成闭环。这件集成在 2026 还是研究热点 · 工业落地少 · 但被认为是 verifier 工程治理走向 long-term capability 优化的关键技术路径。
+另外，据第三方报道，Anthropic 向美国国家标准与技术研究院（NIST）提交的 agentic AI 安全建议中提出了一个 **4 层责任共担框架**（Model / Harness / Tools / Environment，类比 AWS、Azure、GCP 的云责任共担模型，详见 §5.9）。按这个划分，verifier 落在 Harness 层，"agent 不自欺"这项工程职责由 harness 承担。
 
-#### 5.8.9 起步建议 · 四维度
+verifier 还在快速演进的部分，是 PRM 与自我演化的结合：AgentPRM 给自我演化提供逐步的奖励信号，与前面 §5.6.7、§5.7.7 讲的自我演化基础设施形成闭环。这种结合在 2026 年仍是研究热点，工业应用少，但被认为是 verifier 走向长期能力优化的关键路线。
 
-**注意什么**——verifier 工程治理最大的坑是把 verifier 当 oracle · 不当工程对象。verifier 是代码（Hard Gate）或者 LLM（Outcome Judge / PRM）· 都可能有 bug / 偏好 / 限制。从 day 1 就把 verifier 当"也需要被验证的工程组件"看 · 不当真理来源看。具体几条警示信号：verifier 总是 100% PASS 是 Reward Hacking 红线；verifier 跟人审一致性低于 70% 是 verifier 本身质量问题；verifier 对同一组输出在不同 prompt 格式下评分差异大是 prompt 敏感性问题；judge LLM 跟 agent LLM 同 model family 是 Preference Leakage 隐患。开放性任务 day 1 就要做 LLM-as-judge 跟 hidden test 双层兜底 · 别只靠 Hard Gate；长任务 day 1 就要规划 PRM 路径 · 否则后期改 verifier schema 工程代价高。
+#### 5.8.9 起步建议：四个维度
 
-**怎么设计**——三层 verifier 按任务类型选取或组合。完全确定性任务（写代码加跑测试 / 数据 ETL / 配置管理）只需要 Hard Gate · 走 RLVR 路径。开放性产出任务（写报告 / 设计 / 翻译）需要 Outcome Judge 加 hidden test · LLM-as-judge 用跨 family 模型（agent 用 GPT 系列就 judge 用 Claude 系列）。多步推理任务（复杂调试 / 跨工具协同 / 长任务规划）加 PRM 第三层 · 业界主流路径走 AgentPRM 路径或 ToolPRMBench schema。三层组合按串联 gate 模式或加权平均模式 · 任务确定性高就 Hard Gate 权重大 · 任务开放性高就 Outcome Judge 权重大 · 任务长且推理重就 PRM 权重大。
+**注意什么**：verifier 最大的坑是把它当成神谕（oracle），而不是工程对象。verifier 是代码（Hard Gate）或模型（Outcome Judge、PRM），都可能有 bug、偏好和局限。从第一天起就把 verifier 当作"本身也需要被验证的工程组件"。几条警示信号（阈值为经验值，按场景调整）：
 
-**怎么测试**——verifier 自己也是工程对象 · 需要被测试。具体几条业界主流做法：跑 verifier 跟人审一致性测量（取 20-30 个 representative case · 人审给标准答案 · 跑 verifier 看一致性 · 一致性低于 80% 要警惕 · 低于 70% 即判 verifier 本身有质量问题（与"注意什么"段同一标准））· 跑 Leakage hidden test（构造一组 agent 应该 fail 的 case · agent 不应该能通过 verifier · 如果通过了说明 verifier 有 leakage）· 跑 Reward Hacking adversarial test（专门构造 agent 蒙混类输出看 verifier 能不能识别）· 跑 verifier 跨 judge 一致性测量（用多个 judge LLM 评同样 agent 输出 · 看 judge 间一致性 · 不一致性高说明 rubric 写得不够好）。
+- verifier 总是 100% PASS，是奖励投机的红线；
+- verifier 与人审的一致性低于 70%，说明 verifier 本身有质量问题；
+- 同一组输出换个 prompt 格式，verifier 的评分差异很大，是提示词敏感性问题；
+- judge LLM 与 agent 模型（或其训练数据的来源模型）同属一个家族，是偏好泄漏的隐患。
 
-**写什么 prompt**——给 agent 的 system prompt 里要显式说几件 verifier 相关的纪律。第一句是"verifier 是工程客观判定 · 不是为难你 · 你不能 / 不应该试图绕开 verifier · 应该真正完成任务"——让 agent 把 verifier 当工程伙伴不当对手。第二句是"如果你不确定一个步骤是否完成 · 主动说不确定 · 不要伪装完成"——降低 agent 虚假完成报告的概率。第三句是"verifier 失败时优先理解 verifier 的判定意图 · 不要只满足 verifier 的字面要求"——降低 Reward Hacking 倾向。这三句配套前面 §5.5 Prompt Assets 工程纪律一起 · 让 agent 真正能跟 verifier 配合 · 不只是被 verifier 兜底。
+开放性任务从一开始就要用 LLM-as-judge 加隐藏测试双层兜底，别只靠 Hard Gate；长任务从一开始就要规划过程级的判定，否则后期改 verifier 的 schema 代价很高。
+
+**怎么设计**：三层 verifier 按任务类型选取或组合。
+
+- 完全确定性的任务（写代码加跑测试、数据 ETL、配置管理）用 Hard Gate 就够。
+- 开放性产出任务（写报告、设计、翻译）需要 Outcome Judge 加隐藏测试，LLM-as-judge 用跨家族的模型（agent 用 GPT 系列，judge 就用 Claude 系列）。
+- 多步推理任务（复杂调试、跨工具协同、长任务规划）可以加 PRM 作第三层，参考 AgentPRM 的做法，用 ToolPRMBench 这类基准评估 PRM 的效果。
+
+组合时按串联 gate 模式或加权平均模式：任务确定性高，Hard Gate 权重大；开放性高，Outcome Judge 权重大；任务长且推理重，PRM 权重大。
+
+**怎么测试**：verifier 本身也是工程对象，需要被测试。几种常见做法：
+
+- **测 verifier 与人审的一致性**：取 20–30 个有代表性的用例，由人审给出标准答案，再跑 verifier 看一致性。经验值：一致性低于 80% 要警惕，低于 70% 即判定 verifier 本身有质量问题（与"注意什么"中的标准相同）。
+- **测泄漏**：构造一组 agent 本应失败的用例，agent 不应该能通过 verifier；如果通过了，说明 verifier 有泄漏。
+- **测奖励投机**：专门构造蒙混类的输出，看 verifier 能不能识别。
+- **测不同 judge 之间的一致性**：用多个 judge LLM 评同样的 agent 输出，judge 之间分歧大，说明评分细则写得不够好。
+
+**写什么 prompt**：给 agent 的 system prompt 里要明确写几条与 verifier 相关的规则。
+
+- 第一句："verifier 是客观的工程判定，不是为难你。你不能也不应该试图绕开 verifier，而应该真正完成任务。"让 agent 把 verifier 当作工程伙伴，而不是对手。
+- 第二句："如果你不确定某个步骤是否完成，主动说不确定，不要假装完成。"降低 agent 虚假完成报告的概率。
+- 第三句："verifier 判失败时，先理解它的判定意图，不要只满足它的字面要求。"降低奖励投机的倾向。
+
+这三句配合 §5.5 Prompt Assets 讲的规则一起使用，让 agent 真正与 verifier 配合，而不只是被 verifier 兜底。
 
 ---
 
-verifier 这一机制看起来是"判 agent 做没做完"的工程细节 · 但它的真实位置在于 verifier 是 agent harness 工程治理的内在 checks-and-balances——agent 跑得越远越自主 · verifier 越关键。三层 framing（Hard Gate / Outcome Judge / PRM）合起来构成业界 2026 verifier 工程治理的稳定共识 · 但每层都还在快速演进——RLVR 走向 composite reward / Outcome Judge 在 Preference Leakage 常见误区下重建工程化对策 / PRM 走向通用 agent 任务的训练数据民主化。Leakage 四条防御加 Reward Hacking 常见误区则是 verifier 工程治理走向严肃 production 的必经之路。这一节讲的九子节合起来就是 verifier 工程治理的全景。
+verifier 看起来是"判断 agent 做没做完"的工程细节，但它真正的位置是 harness 内部的相互制衡：agent 跑得越远、越自主，verifier 越关键。三层划分（Hard Gate、Outcome Judge、PRM）是本书的归纳，每层都还在快速演进：可验证奖励的训练在走向组合奖励；Outcome Judge 在偏好泄漏的问题下重建工程对策；PRM 主要还用在训练和推理期搜索，正在向通用 agent 任务扩展，训练数据的获取也在变得更容易。泄漏的四类防御和对奖励投机的防范，是 verifier 走向严肃生产环境的必经之路。本节九个小节合起来，就是 verifier 的全景。
 
-最后一件 framing 澄清——verifier 三层（Hard Gate / Outcome Judge / PRM）是 **harness 内部件**：跑在单 run 内做 PASS/FAIL 判定 · 给 agent 实时反馈 · 也作 harness 自身跨 run self-evolution 的反馈信号（observation / trajectory / verifier 三件合起来是 harness 自身 self-evolve 的数据基础 · 跟前面 self-evolution 那节同源）。harness 可以独立基于这三件的反馈做 prompt 优化 / tool description 调整 / verifier rubric 改进等 self-evolution · 不需要外部工作台。
+最后澄清一点：三层 verifier（Hard Gate、Outcome Judge、PRM）是 **harness 内部的组件**。它们在单个 run 内做 PASS 或 FAIL 判定，给 agent 实时反馈；同时也是 harness 跨 run 自我演化的反馈信号（observation、trajectory、verifier 三者合起来，是 harness 自我演化的数据基础，与前面自我演化那一节同源）。harness 可以只凭这三者的反馈，自己做 prompt 优化、工具描述调整、verifier 评分细则改进等自我演化，不需要外部工作台。
 
-**harness 件之上还可对接一套 meta-工作台**做跨任务跨配置的系统化优化（业界类比 W&B 之于 ML 实验追踪 / GitLab CI 之于 DevOps · 业界还在演进的方向 · 本教程作者的本地实例化叫 Harness Lab 工作台 · 工作台内部流水线有自己的 reward aggregation 层 · 跟 §5.8 verifier 三层名字接近但抽象层不同）——但工作台是 bonus 进阶路径不是 self-evolution 唯一形态 · 在后面 Harness Lab 章节展开 · 不在 §5.8。这件 framing 澄清让读者不要把两件事混为一谈——harness verifier 是 harness 自身件 · 工作台是 harness 之上的可选 meta 层 · 两件是承载关系不是同一机制 · harness 自身可独立 self-evolve · 对接工作台是可选不是必需。
+**在 harness 之上，还可以对接一个元工作台（meta 层）**，做跨任务、跨配置的系统化优化（业界可类比 W&B 之于机器学习实验追踪、GitLab CI 之于 DevOps，这一方向还在演进）。本书作者的本地实现叫 Harness Lab（第七章详讲：用评测、消融、调参迭代改进 harness 的外层工作台）。工作台内部的流水线有自己的奖励汇总层，名字跟本节的三层 verifier 接近，但抽象层次不同。工作台是进阶路线，不是自我演化的唯一形态，放在后面 Harness Lab 那一章展开，不在本节。这里要分清两者：verifier 是 harness 自身的组件，工作台是 harness 之上可选的元层，两者是承载关系而不是同一个机制；harness 自己就能完成自我演化，对接工作台是可选的，不是必需的。
 
 ---
 
