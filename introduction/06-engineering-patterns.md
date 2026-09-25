@@ -274,7 +274,7 @@ OpenCode 在 fork-join 上更保守：它主打 Build 与 Plan 两个 agent 协�
 
 ![](../diagrams/t3-timeline-6-pattern-order.png)
 
-*图 6.3 · 六件工程模式的渐进引入顺序*
+*图 6.3 · 六种工程模式的渐进引入顺序*
 
 **怎么测试**：工程模式都要做对抗测试和性能基准两类测试，具体分四种：
 

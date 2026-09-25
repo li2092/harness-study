@@ -234,7 +234,7 @@ Tool Registry 这个机制最常见的反模式（anti-pattern），是 **tool d
 1. **工具是从已有 API 包装来的。** 业务原本有一套给前端用的 RESTful API，工程师把这些 API 包成工具时，直接复用了 OpenAPI spec 里的 description。这些 description 是写给前端工程师读的，默认读者有上下文（知道这个 API 属于哪个业务模块、跟其他 API 怎么协作），而 agent 没有这些上下文。
 2. **写工具的人没意识到 ACI 是个独立的问题。** 他觉得"description 写清楚就行"，按写 docstring 的习惯来写，结果 description 里用了一堆领域术语、缩写、指向其他工具的措辞，却没有给 agent 任何具体的使用情景。
 
-这个反模式的实际代价是：在 To B agent 落地的失败案例里，相当一部分工具调用错误可以追溯到 tool description 没按 ACI 设计。具体表现为 agent **漏调**（不知道有这个工具能干这件事）、**误用**（拿一个不合适的工具去做该用另一个工具做的事）、**参数错**（schema 描述不够清楚，agent 拼不对参数）。同一个 agent、同一个模型，仅仅重写 tool description 这一项（按 ACI 原则重写每个工具的名字、参数解释、使用场景、错误处理建议），就能让任务通过率明显提升。SWE-agent 的消融实验显示，把 ACI（工具命令加环境反馈的设计，description 是其中一环）做好，比直接用裸 Linux shell 多解决 10.7 个百分点的问题，是单点投入产出比很高的一环。
+这个反模式的实际代价是：在 To B agent 落地的失败案例里，相当一部分工具调用错误可以追溯到 tool description 没按 ACI 设计。具体表现为 agent **漏调**（不知道有这个工具能干这件事）、**误用**（拿一个不合适的工具去做该用另一个工具做的事）、**参数错**（schema 描述不够清楚，agent 拼不对参数）。同一个 agent、同一个模型，仅仅重写 tool description 这一项（按 ACI 原则重写每个工具的名字、参数解释、使用场景、错误处理建议），就能让任务通过率明显提升。SWE-agent 论文（Yang et al. 2024）在 SWE-bench Lite 上用 GPT-4 Turbo 测得，按 ACI 设计的工具（命令加环境反馈，description 是其中一环）比只用默认 Linux shell 多解决 10.7 个百分点的问题（对比的是不带示范的 shell 基线；与带示范的 shell 基线相比约多 7 个百分点），是单点投入产出比很高的一环。
 
 判断标准：**任何 agent 的任务通过率长期卡在某个上限（比如 80% 或更低）上不去，首先该检查的就是 tool description 是否按 ACI 写。** 如果不是，先重写 tool description，而不是去优化 prompt 或换模型，这样做的投入产出比远高于其他方向。这也是工程交接检查清单里的关键一项：接手一个 harness 时，检查每个工具的 description 是否包含"工具用途、参数详细解释、典型使用场景、常见失败模式、错误处理建议"五项，缺一不可。
 

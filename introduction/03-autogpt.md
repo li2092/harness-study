@@ -6,7 +6,7 @@
 > - **verifier**（验证器）：判定 agent 一次任务输出对不对的判定器，是 agent 工程里最难也最重要的机制之一。SWE-bench 这种能跑测试的环境里，verifier 就是单元测试；合同审核这种开放任务里，verifier 怎么设计本身就是难题。有了可靠的判定和奖励信号（reward），才能从"靠手感调 prompt"走向"用数据改进"。
 > - **policy**（策略）：控制 agent 行为的规则集，决定一个工具调用能不能执行、要不要人工审批、哪些路径可读、哪些不可写等。没有 policy 的 agent 就像一个失控的小型 root 用户。§5.9 Safety 控制面一整节在拆这一机制。
 
-2023 年 3 月 30 日，Toran Bruce Richards（GitHub 用户名 Significant Gravitas）把 **AutoGPT** 推上 GitHub。距离 GPT-4 公开发布只过去两周（GPT-4 是 2023-03-14 发布），整个业界对"自主 agent"的期待正在飙升：既然 GPT-4 这么强，能不能让它自己规划、自己执行、自己迭代，做到完全自主？AutoGPT 的承诺直击这个期待：你给一个目标（"帮我做市场调研"），它会自己拆任务、自己调工具、自己评估进度，直到完成。BabyAGI、AgentGPT 紧随其后用类似设计推出。一时间 AGI 仿佛触手可及，AutoGPT 短期内冲到 GitHub 最快增长项目第一，几周内拿到 10 万 stars，比同期任何 LLM 应用都快。
+2023 年 3 月 30 日，Toran Bruce Richards（GitHub 用户名 Significant Gravitas）把 **AutoGPT** 推上 GitHub。距离 GPT-4 公开发布只过去两周（GPT-4 是 2023-03-14 发布），整个业界对"自主 agent"的期待正在飙升：既然 GPT-4 这么强，能不能让它自己规划、自己执行、自己迭代，做到完全自主？AutoGPT 的承诺直击这个期待：你给一个目标（"帮我做市场调研"），它会自己拆任务、自己调工具、自己评估进度，直到完成。BabyAGI、AgentGPT 紧随其后用类似设计推出。一时间 AGI 仿佛触手可及，AutoGPT 短期内成为 GitHub 上增长最快的项目之一，发布两周多（2023-04 中旬）就有约 6.7 万 stars。
 
 ### AutoGPT 的内部架构（看清楚再看翻车）
 
@@ -82,7 +82,7 @@ AutoGPT 用的是 GPT-4，跟今天 Claude Code、Cursor、Codex CLI 背后的�
 
 ### 一点需要澄清的事：AutoGPT 并未"彻底失败"
 
-讲到这里需要澄清一件事，否则容易给人留下"AutoGPT 是失败项目"的错误印象。AutoGPT 这个项目本身并未彻底失败：Significant Gravitas 公司在 2023 年 10 月拿到 1200 万美元融资（Redpoint Ventures 和 GitHub 投资），项目至今仍在维护，仓库累计超过 18 万 stars，2024–2025 年也在持续迭代，加上了工具 schema、更结构化的任务管理和 trajectory 接口。也就是说 AutoGPT 项目也在按那一波的教训调整，慢慢往 harness 的方向收敛。再往后看一步更有意思：2024 年之后 AutoGPT 干脆转型成了 AutoGPT Platform，一个以功能块（block）搭建的低代码工作流平台，用户把控制流显式编排成流程块（块间可带分支循环）、模型在块里干活。第一个把"给个目标全自主跑"推到极致的项目，最后自己走回了显式编排这条路。这个方向在 §5.1.6 讲动态工作流（dynamic workflow）时还会再遇到。
+讲到这里需要澄清一件事，否则容易给人留下"AutoGPT 是失败项目"的错误印象。AutoGPT 这个项目本身并未彻底失败：Significant Gravitas 公司在 2023 年 10 月拿到 1200 万美元融资（据报道由 Redpoint Ventures 领投），项目至今仍在维护，仓库累计约 18.8 万 stars（2026-09），2024–2025 年也在持续迭代，加上了工具 schema、更结构化的任务管理和 trajectory 接口。也就是说 AutoGPT 项目也在按那一波的教训调整，慢慢往 harness 的方向收敛。再往后看一步更有意思：2024 年之后 AutoGPT 干脆转型成了 AutoGPT Platform，一个以功能块（block）搭建的低代码工作流平台，用户把控制流显式编排成流程块（块间可带分支循环）、模型在块里干活。第一个把"给个目标全自主跑"推到极致的项目，最后自己走回了显式编排这条路。这个方向在 §5.1.6 讲动态工作流（dynamic workflow）时还会再遇到。
 
 本节讲的是 **AutoGPT 在 2023 春夏的具体形态翻车**。它**暴露了**一类工程问题，让业界意识到"自主 agent 不是模型够强就行"。这是它对 harness engineering 这门工程实践最大的贡献：用一次大规模公开试错，把一类本来没被讨论的工程必要性暴露出来。如果没有 AutoGPT 那一波公开翻车，业界可能要再过一两年才会开始系统讨论 harness 这件事。
 
