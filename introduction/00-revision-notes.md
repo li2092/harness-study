@@ -54,6 +54,7 @@
 | §5.9 | 物理 sandbox；用正则检测提示词注入；OWASP 官方 LLM01 测试套件 | OS 级沙箱；注入检测主要靠分类器，只能降低风险；OWASP 没有官方测试套件，改用 AgentDojo、InjecAgent 等 |
 | §5.11 | 先 push main 再提 PR；死锁因 Handler 自带锁 | 先推功能分支再向 main 提 PR；死锁因同一把不可重入锁被重复获取（Handler 自带的锁本是 RLock） |
 | §7 | HPO 的 acquisition function（如 Hyperband） | 采集函数属于贝叶斯优化 / TPE，Hyperband 用 successive halving |
+| §7.4 Phase B、落地 Spec 第 7 条 | "工具参数自动补全"在端到端单点消融里关掉后通过率不降反升 | 这次消融没有运行记录。改用一条真实的工程记录：参数解析失败就换成空对象、照常调用工具，遮蔽了错误信号；注明它由专项审计发现，没有做过开关对比 |
 | §八 | MCP 传输有 stdio、SSE、WebSocket 三种；handoff 不共享状态、隔离最强 | 标准传输只有 stdio 与 Streamable HTTP（2026-07-28 版已去掉会话 ID）；handoff 默认把完整对话历史交给接收方 |
 | §九 | 两句英文标为 Wiener 1948 原话；可观测性出自 Wiener；钱学森"70 年前"提出开放复杂巨系统 | 《控制论》原书无此两句，已删；可观测性、可控性出自 Kalman 1960；开放复杂巨系统论文发表于 1990 年 |
 | §九 | 消融即钱学森的扰动理论；恒温器靠功率上限防振荡 | 消融对应系统辨识；恒温器靠回差避免频繁启停 |
