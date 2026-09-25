@@ -43,7 +43,7 @@
 
 ![](../diagrams/tb-90-3.png)
 
-**状态机**：`intended → attempting → result_recorded → outcome_verified`；异常有两个分支：`intended/attempting → unknown →（对账）→ 调和终局`（intent 无 result，8.6 节）；`result_recorded →（outcome 与 result 不符）→ 对账事件 → 调和终局`（8.10 节）。调和终局记入 reconciliation_status（retried/queried/compensated/manual 之一）。
+**状态机**：`intended → attempting → result_recorded → outcome_verified`；异常有两个分支：`intended/attempting → unknown →（对账）→ 调和终局`（intent 有、result 无，8.6 节）；`result_recorded →（outcome 与 result 不符）→ 对账事件 → 调和终局`（8.10 节）。调和终局记入 reconciliation_status（retried/queried/compensated/manual 之一）。
 
 **八条不变量**（1–5 为初版已有，6–8 随第八章新增）：
 
@@ -56,7 +56,7 @@
 7. 派生副作用归属原 action：登记 derived_from_effect_id，纳入同一 barrier 与同一执行权校验，禁止发出后不管（fire-and-forget）（第八章 8.3）。
 8. 执行权收回后到达的旧写入必须拒绝，并写一条 zombie trace 事件，拒绝本身就是证据（第八章 8.3；第十三章消费）。
 
-**四类处置表**（Reconciliation Table：intent 无 result 时的调和处置，即第八章 8.6 正文表的登记版）：
+**四类处置表**（Reconciliation Table：intent 有、result 无 时的调和处置，即第八章 8.6 正文表的登记版）：
 
 ![](../diagrams/tb-90-4.png)
 

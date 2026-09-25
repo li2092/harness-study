@@ -104,7 +104,7 @@
 
 1. **我的 agent 不稳定 · 是不是 prompt 写得不好？** 多半不是。prompt 只是 harness 的一种零件，调到极限收益会到顶。
 2. **ReAct 还在用吗？我该升级到 plan-execute 吗？** 看场景。ReAct 八条原始假设里四条已经失效，但失效不等于 ReAct 整体过时。
-3. **我跑 N 次取平均看通过率 · 统计可信吗？** 不一定。DeepSeek 之类的 prefix KV cache 会让 N 次之间不独立——表面 80% 通过率可能其实是同一份缓存复用 N 次。这叫 cache 共谋。
+3. **我跑 N 次取平均看通过率 · 统计可信吗？** 不一定。N 次复跑之间如果共用了响应缓存、固定的随机种子、同一份文件、记忆或工作区，就不是 N 次独立采样，表面 80% 的通过率可能是同一个结果被数了好几遍。这叫复跑不独立（AP01）。模型服务的前缀缓存（prefix caching）只复用输入前缀的计算，不改变输出，不是这个问题的来源。
 4. **我的 verifier 总放过看似对实际错的输出 · 怎么办？** 三种典型病：答案泄漏（verifier 见过 ground truth）、reward hacking（模型学会糊弄 verifier）、artifact-claim mismatch（agent 声称做了但产物里没有）。三种各有不同对策。
 5. **我应该怎么系统优化 harness 而不是凭感觉调？** Observe（观察轨迹）→ Score（打分）→ Ablate（消融）→ Tune（调参）→ Iterate（迭代）。这是一个独立于业务循环的外循环，本卷称之为 Harness Lab。
 6. **这教程哪段是给我读的？** 见下文"谁该读哪段"。
@@ -115,7 +115,7 @@
 
 **AI PM / AI 业务人员**——你要选型、评估外部 agent 厂商、给团队定 harness 方向。最需要"有哪些零件、什么场景该选什么、什么是常见误区"。推荐路径：
 
-§一 Why harness（5 分钟先建心智）→ §5.3 Tool Registry & ACI（工具是 To B agent 落地的关键）→ §5.5 Prompt Assets（指令层怎么管）→ §七 Harness Lab 三块常见误区（cache 共谋 / leakage / reward hacking）→ §八 可组合性矩阵（看清自己手里在拼哪一组合）。
+§一 Why harness（5 分钟先建心智）→ §5.3 Tool Registry & ACI（工具是 To B agent 落地的关键）→ §5.5 Prompt Assets（指令层怎么管）→ §七 Harness Lab 三类反模式（复跑不独立 / 对固定测试集过拟合 / reward hacking）→ §八 可组合性矩阵（看清自己手里在拼哪一组合）。
 
 **学习者**（在学 agent 工程、做研究、准备入行）——你要建一套能跟任何 agent 论文 / 教程对话的 mental model，知道 ReAct 到 Reflexion 到 plan-execute 这条线为什么会这么演化。推荐路径：
 
@@ -152,7 +152,7 @@
 | §十 | 学习路径 |
 | 配套 · Prompt | Harness Prompt · 给 agent 的可执行落地 Spec（[`11-harness-prompt.md`](introduction/11-harness-prompt.md)）|
 | 配套 · Prompt lite | 通用落地提示词（评测先行）精简版，三段指令直接交给编码 AI（[`12-harness-prompt-lite.md`](introduction/12-harness-prompt-lite.md)）|
-| 附录 | 一手 source / EG10 / OWASP / 命名映射 / SPIFFE-biscuit / AP01-AP19 / arxiv 全表 |
+| 附录 | 一手 source / EG10 / OWASP / 命名映射 / SPIFFE-biscuit / AP01–AP20 / arxiv 全表 |
 
 ### 跳读建议
 
@@ -208,7 +208,7 @@
 
 > 2026 年 9 月修订：改动摘要见[实战笔记卷修订记录](field-notes/00-revision-notes.md)，三卷共用的术语约定与事实核查见[术语对照表](术语对照表.md)。
 
-实战笔记卷是横切全书的实践卷，不占主线卷号。入门卷讲每件机制的定义与原理，第二卷讲机制怎么组装成语义正确的 runtime，本卷讲真实项目里的故障与验证。素材来自三个自研 runtime（Python / Rust / TypeScript）与四个应用项目的开发记录。
+实战笔记卷是横切全书的实践卷，不占主线卷号。入门卷讲每个机制的定义与原理，第二卷讲机制怎么组装成语义正确的 runtime，本卷讲真实项目里的故障与验证。素材来自三个自研 runtime（Python / Rust / TypeScript）与四个应用项目的开发记录。
 
 全卷主线：**agent = 模型 + harness。模型是核心，而模型的全部能力只能经由上下文被调用；harness 的工作是通过有效的上下文管理，最大限度释放这个能力，并让它在可控的环境下完成任务。**
 

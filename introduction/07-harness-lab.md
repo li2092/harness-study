@@ -161,7 +161,7 @@ Harness Lab 在工程上是一套**工作台**：它不是 agent runtime 的一�
 - **JSONL 只追加（append-only）加索引数据库**：Anthropic、OpenAI、Inspect AI 走这条，JSONL 是真相源，索引数据库负责加速查询；
 - **关系数据库直存**：OpenCode 用 SQLite，LangSmith 用 Postgres，trajectory 直接拆成结构化字段存进表里，查询方便，但失去了用 git diff 对比的便利。
 
-两条路径各有取舍，与 §6.3 JSONL Session 讲的存储取舍是同一个问题。本书作者的 Harness Lab 工作台 L1、L2 用 SQLite 的 analysis.db，共 5 张表（runs、steps、mechanism_events、verifications、artifacts）。这套 schema 已经跑起来，是 Observe 层最早的工程实现。
+两条路径各有取舍，与 §6.3"追加写的会话事件日志"讲的存储取舍是同一个问题。本书作者的 Harness Lab 工作台 L1、L2 用 SQLite 的 analysis.db，共 5 张表（runs、steps、mechanism_events、verifications、artifacts）。这套 schema 已经跑起来，是 Observe 层最早的工程实现。
 
 **Observe 层最关键的工程不变量是 schema 稳定**。schema 一旦定下，后续每次 run 都按它写 trajectory，不能临时加字段或改字段含义。这样跨 run、跨版本的 trajectory 都能送进同一套分析流水线，不需要每次改了 schema 就重跑历史评测。schema 改动遵循"跨层接口契约即不变量"的原则：后续 schema 只能扩展已有字段，不能破坏；用枚举新增变体，而不是封闭的穷举匹配（sealed match）；新字段用 Optional，不强制现有调用方传入；用协议版本字段标记 schema 的演进。
 
@@ -393,7 +393,7 @@ Harness Lab 工作台落地时最容易踩的反模式，除了 §7.4 详写的�
 
 **阶段虚标（stage inflation，AP18，见附录 F）**：工作台五层框架画得很整齐，Phase A/B/C 一轮一轮跑完，Iterate 闭环图也画得很完整，但**工作台本质上没解决任何工程问题**，只是把"凭感觉调 harness"变成了"用更多概念、更多看板、更多消融报告，但仍然凭感觉调"。判断方法：**工作台跑下来，agent harness 的通过率有没有真实提升**；半年后没有提升，就是阶段虚标。
 
-**循环盲区（loop blind spot，AP11，见附录 F）**：工作台的 Iterate 闭环跑起来后，容易陷入"工作台自己的指标越优化越好，agent 实际任务的通过率却没动"的循环盲区。根因是外层循环上的 reward hacking：工作台优化的 reward 函数本身可能不等于真实的任务质量，工作台越优化，离真实质量越远。这个反模式和 §5.6 Observation Surface 讲自我进化时提到的 loop_detector 是同一类问题：Iterate 层必须有自检，防止自己陷进闭环。
+**循环盲区（loop blind spot，AP11，见附录 F）**：工作台的 Iterate 闭环跑起来后，容易陷入"工作台自己的指标越优化越好，agent 实际任务的通过率却没动"的循环盲区。根因是外层循环上的 reward hacking：工作台优化的 reward 函数本身可能不等于真实的任务质量，工作台越优化，离真实质量越远。这个反模式和第三章 AutoGPT"无限循环"那次翻车讲的循环检测是同一类问题：Iterate 层必须有自检，防止自己陷进闭环。
 
 #### 7.9 起步建议 · 四维度
 

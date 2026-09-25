@@ -2,7 +2,7 @@
 
 要把 8 个 runtime 机制和 Safety 控制面在跨轮、跨 run 层面的协作讲清楚，单轮的微型流程不够，需要一个有真实复杂度的任务。下面的示例任务是"修一个 Python 项目的并发 logging bug 并提交 PR"，bug 描述是"logger.emit() 在多线程下偶尔丢消息"。agent 要依次定位问题、写测试复现、修复、跑测试、跑 lint、commit、推送到功能分支，再向 main 创建 PR。
 
-时间线上共有 17 个编号：16 轮 agent 调用，加上编号 11 处的一次上下文压缩。压缩发生在 Turn 10 结束之后、Turn 12 开始之前，是两轮之间由 harness 执行的事件，不是一轮 agent 调用；为了和图 5.28 的时间线对应，这里沿用 17 个编号。这个长度落在单 agent 任务常见的区间里：§5.1.5 讨论多智能体过度拆分时给过判断线，30 轮以内的任务用单 agent 单进程通常就够（经验值）；§5.9 讲子智能体深度失控（Sub-agent Depth Explosion，AP12，见附录 F）时，又从 Safety 一侧补了上限约束。
+时间线上共有 17 个编号：16 轮 agent 调用，加上编号 11 处的一次上下文压缩。压缩发生在 Turn 10 结束之后、Turn 12 开始之前，是两轮之间由 harness 执行的事件，不是一轮 agent 调用；为了和图 5.28 的时间线对应，这里沿用 17 个编号。这个长度落在单 agent 任务常见的区间里：§5.1.5 讨论多 agent 过度拆分时给过判断线，30 轮以内的任务用单 agent 单进程通常就够（经验值）；§5.9 讲子 agent 深度爆炸（Sub-agent Depth Explosion，AP12，见附录 F）时，又从 Safety 一侧补了上限约束。
 
 ![](../diagrams/t1-timeline-5.11-17turn.png)
 

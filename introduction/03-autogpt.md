@@ -98,7 +98,7 @@ AutoGPT 用的是 GPT-4，跟今天 Claude Code、Cursor、Codex CLI 背后的�
 
 **"做事节奏" = Agent Loop · Inner Loop**：每一步先思考、再动手、再看反馈、再决定下一步，整套循环到完成。实习生没有这个节奏会乱跳。这是 ReAct[^react-yao-2022] 提出的 Thought-Action-Observation 三元组的工程化形态，是 agent 区别于一次性 LLM 调用的本质。
 
-**"配电源和打卡机" = Model Adapter & Routing**：让实习生稳定接通他大脑（LLM）的渠道。每家 LLM provider 的 API 形态不一样（tool calling 字段名、token 计费方式、流式协议各异），adapter 把这些差异归一化；如果今天用 GPT-5.5、明天故障切换（failover）到 Claude，能无缝切换不污染其他流程。
+**"配电源和打卡机" = Model Adapter & Routing**：让实习生稳定接通他大脑（LLM）的渠道，打卡机则记下他用了多少（token 用量与计费）。每家 LLM provider 的 API 形态不一样（tool calling 字段名、token 计费方式、流式协议各异），adapter 把这些差异归一化；如果今天用 GPT-5.5、明天故障切换（failover）到 Claude，能无缝切换不污染其他流程。
 
 **"工具手册" = Tool Registry & ACI**：每个工具有结构化定义（JSON schema）、有使用边界（permission / allowed_paths / timeout）、有出错时的标准反馈格式。让实习生知道自己能调什么、怎么调、调错了怎么办。这一机制依赖 OpenAI 2023-06 function calling 把"工具是结构化契约"这件事在模型侧解决掉。
 
@@ -114,7 +114,7 @@ AutoGPT 用的是 GPT-4，跟今天 Claude Code、Cursor、Codex CLI 背后的�
 
 这八个机制属于 runtime 层，实习生干每一项具体活时都要用到它们。但 8 个之外还有一个**横切其上**的：
 
-**"权限制度加关键操作审批" = Safety 控制面**：这是一个横切（cross-cutting）的控制面，不是某个单 turn 内的机制，而是横切所有 turn、所有工具、所有决策的合法性边界。给实习生设权限制度，给关键操作（发邮件、删文件、push 代码、消费预算）配审批流程，让他在试错时不会真的把公司搞砸。它是 OWASP LLM Top 10（2025 版）中 LLM06 过度代理（Excessive Agency）和 LLM10 无界消耗（Unbounded Consumption）这两项风险的工程化对策。它不像前 8 个机制那样在某个具体 turn 里发生，而是在每一次工具调用前、每一次预算超阈值时、每一次跨子 agent 委托时都要被检查。把它算作第 9 个机制并不准确：它是横切在 8 个机制之上的一层控制面。
+**"权限制度加关键操作审批" = Safety 控制面**：这是一个横切（cross-cutting）的控制面，不是某个单 turn 内的机制，而是横切所有 turn、所有工具、所有决策的合法性边界。给实习生设权限制度，给关键操作（发邮件、删文件、push 代码、消费预算）配审批流程，让他在试错时不会真的把公司搞砸。它是 OWASP LLM Top 10（2025 版）中 LLM06 过度代理（Excessive Agency）和 LLM10 无限制消耗（Unbounded Consumption）这两项风险的工程化对策。它不像前 8 个机制那样在某个具体 turn 里发生，而是在每一次工具调用前、每一次预算超阈值时、每一次跨子 agent 委托时都要被检查。把它算作第 9 个机制并不准确：它是横切在 8 个机制之上的一层控制面。
 
 这套 **8 个 runtime 机制加 1 个 Safety 控制面**（合计 9 个工程对象），就是 harness engineering 这门工程实践要把工程师注意力聚焦的全部工程对象。AutoGPT 用 GPT-4 跑长任务，跟"把聪明实习生扔进没有这九样配套的环境"是同一个错误：再聪明也必然失控。harness engineering 要回答的正是这个问题：给定一个本身已经够聪明的实习生（模型），怎么给他配一套**让他能持续干活、能从失败里恢复、能被持续监督和改进、又不会真把公司搞砸的工程环境**。这九个对象不是一份清单，而是把"模型外面那层"切成可被独立讨论、独立优化、独立验证的工程对象，每一个都有自己的接口形态、自己的设计取舍、自己的失败模式。
 

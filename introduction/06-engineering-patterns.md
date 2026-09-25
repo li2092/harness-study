@@ -67,7 +67,7 @@
 
 这种模式要解决的问题是：提示词缓存是 Anthropic、OpenAI、DeepSeek 等厂商都提供的优化机制，同样的 prompt 前缀重复出现时，服务端缓存中间计算结果，后续请求直接复用，大幅降本（Anthropic 官方数字：命中后延迟最多可降约 85%；命中部分的价格是基础输入价的 0.1 倍，即省约 90%）。但命中条件极严：**prompt 前缀必须逐字节一致**（[Claude API Prompt Caching Docs](https://platform.claude.com/docs/en/build-with-claude/prompt-caching)），差一个字节就不命中。harness 装配 prompt 时如果不考虑缓存，每一轮都可能不命中，跑起来又慢又贵。
 
-前缀稳定设计的核心做法是 **把 prompt 拆成稳定段和变化段**：稳定段（system prompt、工具注册表、few-shot 示例）放前面，变化段（当前任务、最新的用户输入、最近几轮历史）放后面。这样各轮之间稳定段不变，缓存能命中，变化段接在后面。Claude Code 把这种模式进一步做成 **cache-safe forking**：触发上下文压缩时（第五章端到端 17 轮示例的 Turn 11 讲过），压缩不重写 prompt 前缀，只把摘要接在末尾，已缓存的前缀在压缩后仍能命中（[How Claude Code uses prompt caching](https://code.claude.com/docs/en/prompt-caching)）。
+前缀稳定设计的核心做法是 **把 prompt 拆成稳定段和变化段**：稳定段（system prompt、工具注册表、few-shot 示例）放前面，变化段（当前任务、最新的用户输入、最近几轮历史）放后面。这样各轮之间稳定段不变，缓存能命中，变化段接在后面。Claude Code 把这种模式进一步做成 **cache-safe forking**：触发上下文压缩时（§5.11 端到端示例中编号 11 的那次压缩讲过，它发生在两轮之间），压缩不重写 prompt 前缀，只把摘要接在末尾，已缓存的前缀在压缩后仍能命中（[How Claude Code uses prompt caching](https://code.claude.com/docs/en/prompt-caching)）。
 
 实现上有三条细节要讲清楚：
 
@@ -204,7 +204,7 @@ OpenCode 在这点上用客户端/服务端架构，服务端可以按部署模�
 
 **第六种工程模式**：主 agent 把任务拆给多个 sub-agent 并行执行，再把结果汇总回主 agent。前面 Safety 那章已经讲过这种模式在安全上的两条约束（审批模式沿父子链传递；sub-agent 的深度与 token 预算必须设硬上限），这一节展开工程实现细节。
 
-这种模式要解决的问题是：单个 agent 跑长任务（按作者经验，30 轮以上）容易出几类问题：上下文累积超出预算；推理路径线性串行，速度慢；一次失败整个 session 都要回滚。fork-join 把一个大任务拆成多个可并行的子任务，sub-agent 各跑各的，结果汇总回主 agent 决策；能提升多少吞吐量取决于任务的可并行程度。**但 fork-join 不是免费的**：多智能体系统消耗的 token 约为普通对话的 15 倍（Anthropic 多智能体研究系统文章，2025-06），多出来的部分来自编排。第五章 §5.1 讲多智能体过度分解（AP09，见附录 F）时拆过 token 花在哪里，以及为什么编码任务往往不划算（多数编码任务可真正并行的部分较少）。这一节不重复算账，只讲 fork-join 真要落地时的工程实现。
+这种模式要解决的问题是：单个 agent 跑长任务（按作者经验，30 轮以上）容易出几类问题：上下文累积超出预算；推理路径线性串行，速度慢；一次失败整个 session 都要回滚。fork-join 把一个大任务拆成多个可并行的子任务，sub-agent 各跑各的，结果汇总回主 agent 决策；能提升多少吞吐量取决于任务的可并行程度。**但 fork-join 不是免费的**：多智能体系统消耗的 token 约为普通对话的 15 倍（Anthropic 多智能体研究系统文章，2025-06），大头来自各子 agent 在各自独立的上下文里并行消耗，编排本身还有一层额外开销。第五章 §5.1 讲多 agent 过度拆分（AP09，见附录 F）时拆过 token 花在哪里，以及为什么编码任务往往不划算（多数编码任务可真正并行的部分较少）。这一节不重复算账，只讲 fork-join 真要落地时的工程实现。
 
 fork-join 的工程实现有几个关键环节：
 

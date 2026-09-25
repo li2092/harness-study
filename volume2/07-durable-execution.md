@@ -155,4 +155,4 @@ assessor 版本：不用动手，问一个问题："上一次生产环境进程�
 - 【规范/官方文档】Agent SDK session fork（7.8，回指第六章）；OpenAI Responses TTL（Response 默认 30 天、挂 Conversation 无 TTL）（7.8；终稿前回核）。指针 research/volume2/03、04。
 - 【经验】桌面案例项目：\[已中断\] 恢复裁决实测（回指第三章）；内部审计的 durable intent/result 增量铺开路线（破坏实验实证分层；指针 research/volume2/11 条 10/30）。
 - 【经验/推导】"agent 专属运行时持久化几乎无评审研究"边界声明——检索范围 arXiv 及 OSDI/SOSP/NSDI/EuroSys 2026，记录指针 research/volume2/02（7.12）。
-- 回指素材：第一章 1.1 节（三默认值）、1.4 节（model adapter 推导、Temporal 先例）；第二章（四档确定性）；第四章 4.5/4.7 节；第五章 5.4/5.8/5.9 节、工作制品 H 第 16/17 行；第六章 6.1/6.6/6.10 节、工作制品 A timer 行、Lifetime Matrix。
+- 回指素材：第一章 1.1 节（三默认值）、1.4 节（model adapter 推导、Temporal 先例）；第二章（四级确定性）；第四章 4.5/4.7 节；第五章 5.4/5.8/5.9 节、工作制品 H 第 16/17 行；第六章 6.1/6.6/6.10 节、工作制品 A timer 行、Lifetime Matrix。

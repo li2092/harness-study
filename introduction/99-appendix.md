@@ -142,23 +142,23 @@
 |---|---|---|---|
 | AP01 | 复跑不独立 | §7.4 | N 次复跑不独立：响应缓存、固定 seed、共享状态；前缀缓存命中不改变输出 |
 | AP02 | 四类泄漏（Leakage） | §5.8 | 形状泄漏、答案明示、暗示性问句、偏好泄漏（preference leakage） |
-| AP03 | 奖励投机的 7 种模式（Reward Hacking） | §7.4 | "声称与实际的差距"（declared_vs_executed gap）是预警信号 |
+| AP03 | 奖励投机（Reward Hacking） | §7.4 | 六种常见形态见 §7.4；"声称与实际的差距"（declared_vs_executed gap）是预警信号 |
 | AP04 | 产物声明不符（Artifact Claim Mismatch） | §5.8 | agent 的声称与 verifier 的观测不一致 |
 | AP05 | 测试夹具与路径分类器缺陷（Fixture / Path Classifier Bug） | §7.8 | 数据基础设施的 bug 让通过率结论反转 |
 | AP06 | 假落地机制 | §5.9 | 机制在仓库里，生产路径上什么都不做 |
 | AP07 | 工具过度设计（Tool Over-Design） | §5.3 | 工具粒度过细，模型选不准 |
 | AP08 | 上下文膨胀（Context Bloat） | §5.4 | 中段遗失（lost in the middle），上下文无上限地累积 |
-| AP09 | 多智能体过度分解（Multi-Agent Over-Decomposition） | §5.1 | 多智能体约耗普通对话 15 倍 token（Anthropic，2025-06）；编码任务可并行部分少，慎用 |
-| AP10 | 静默吞异常（Silent Try/Catch） | §5.7 / §6 | 异常被吞掉，错误没有产生事件 |
-| AP11 | 循环盲区（Loop Blind Spot） | §5.6 | agent 不知道自己在绕圈 |
-| AP12 | 子智能体深度爆炸（Sub-agent Depth Explosion） | §5.9 | fork-join 不限深度、不限 token |
+| AP09 | 多 agent 过度拆分（Multi-Agent Over-Decomposition） | §5.1 | 多 agent 系统约耗普通对话 15 倍 token（Anthropic，2025-06）；编码任务可并行部分少，慎用 |
+| AP10 | 静默吞异常（Silent Try/Catch） | §6.7 | 异常被吞掉，错误没有产生事件 |
+| AP11 | 循环盲区（Loop Blind Spot） | §3 / §7.8 | agent 不知道自己在绕圈 |
+| AP12 | 子 agent 深度爆炸（Sub-agent Depth Explosion） | §5.9 | fork-join 不限深度、不限 token |
 | AP13 | Hook 与白名单绕过（Hook / Allowlist Bypass） | §5.9 | 放行规则按字符串前缀匹配，`cargo checkpoint` 被 `cargo check` 放过（作者配套项目实例，见第二卷 2.7 节）；修复：按完整词匹配 |
 | AP14 | 记忆污染（Memory Pollution） | §5.4c | 长期记忆不断累积错误内容 |
-| AP15 | 过度代理与无界消耗（Excessive Agency / Unbounded Consumption） | §5.9 | OWASP LLM06 + LLM10（2025 版） |
-| AP16 | Schema 耦合（Schema Coupling） | §5.5 | prompt 里的 schema 与实际数据强耦合 |
-| AP17 | 过早优化（Premature Optimization） | §7.8 / §7.4 / §10 | 没有基础数据就开始调优 |
+| AP15 | 过度代理与无限制消耗（Excessive Agency / Unbounded Consumption） | §5.9 | OWASP LLM06 + LLM10（2025 版） |
+| AP16 | Schema 耦合（Schema Coupling） | §5.5 | prompt 里的 schema、测试用例与 verifier 三者硬连在一起，改一处，另两处无声出错 |
+| AP17 | 过早优化（Premature Optimization） | §7.8 / §7.4 / §10 | 数据还没收够就下结论调优；以置信区间不跨 0 为准 |
 | AP18 | 阶段虚标（Stage Inflation） | §7.8 | 每个机制都标"可上生产"，实际工程没做完 |
-| AP19 | OTel 命名漂移（OTel Naming Drift） | §5.7 | 内部事件名与 OTel GenAI 语义约定逐渐偏离 |
+| AP19 | OTel 命名漂移（OTel Naming Drift） | §5.7.4 | 内部事件名与 OTel GenAI 语义约定逐渐偏离 |
 | AP20 | 对固定测试集过拟合 | §7.4 | 开发集调参、留出集只在上线前跑；线上失败回流为判例 |
 
 ---
@@ -213,13 +213,17 @@
 | 英文 | 推荐中文 |
 |---|---|
 | harness | 保留英文，不译。首次出现写"harness（包在模型外面、负责上下文、工具、执行、权限与留痕的那一层程序）"；不译作"智能体框架"，以免与 LangChain、LangGraph 这类 agent 开发框架混淆 |
-| reasoning | 推理（思考过程），指模型内部的思维链（chain-of-thought）；与 inference（模型调用）区分，§5.1 开头有说明 |
+| reasoning | 推理（思考过程），指模型内部的思维链（chain-of-thought）；与 inference（模型调用）区分 |
 | turn | 轮：一次模型调用，加上它触发的工具执行 |
 | （无对应英文） | 回合：从一条用户消息开始、到模型给出最终回复为止，一个回合包含多轮 |
 | run | 运行：一次任务从开始到终态（完成、失败、取消）的全过程 |
 | session | 会话：同一用户与同一 agent 的一段连续交互，可包含多次 run |
 | observation surface | 观测面（本书术语，首次出现时括注 observation surface） |
 | behavioral probing | 行为探测（本书也称"把脉"） |
+| position bias | 位置偏置：模型对上下文不同位置的信息利用程度不同，lost-in-the-middle 是最有名的表现（§5.4） |
+| prefill / time to first token | 预填充 / 首 token 延迟：生成前先处理整段输入的一步 / 从发出请求到收到第一个输出 token 的时间；输入越长两者越大（§5.4） |
+| observation pack | 观测包：harness 每轮为模型组装的结构化观测，列出工具结果的摘要、状态、完整内容的引用和估算 token 数（§5.4） |
+| valid time / transaction time | 有效时间 / 事务时间：事实在现实中何时为真 / 系统何时知道、何时改动这条记录；两条时间轴合称双时态（bitemporal，§5.4.3） |
 
 ### H.C · 首次括注、后续保留英文
 

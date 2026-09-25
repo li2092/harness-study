@@ -180,7 +180,7 @@ Evidence Graph 的十条边把这张关系网系统化。每条边对应一种"A
 7. **repairs**：A 修复了 B 的错误。典型例子是 §5.2 讲的契约修复（model adapter 修复 schema 违规）；§6.6 fork-join 失败后的重试路径。
 8. **hands_off**：A 把控制权转给了 B。典型例子是主 agent hands_off sub-harness；子任务 agent 完成后 hands_off 回主 agent。它是 8.3 所讲 handoff 模式在 trajectory 里的可观测记录，每次 handoff 都对应一条 hands_off 边。
 9. **supports**：A 的输出佐证了 B 的结论。典型例子是多个 verifier 来源都同意同一结论；§5.8 讲的 Claw-Eval 三路证据相互 supports。
-10. **contradicts**：A 的输出反驳了 B 的结论。典型例子是 agent 自报"任务完成"，但 verifier 的结论与之矛盾；两个 sub-agent 给出冲突的结论。contradicts 边是 agent 系统里**最有价值的诊断信号之一**：所有静默失败（silent failure）、产物声称不符（artifact claim mismatch）一类的问题，都对应"contradicts 边没被检测到"的情况。
+10. **contradicts**：A 的输出反驳了 B 的结论。典型例子是 agent 自报"任务完成"，但 verifier 的结论与之矛盾；两个 sub-agent 给出冲突的结论。contradicts 边是 agent 系统里**最有价值的诊断信号之一**：所有静默失败（silent failure）、产物声明不符（artifact claim mismatch）一类的问题，都对应"contradicts 边没被检测到"的情况。
 
 ![](../diagrams/t3-cardgrid-8-evidence.png)
 
@@ -245,7 +245,7 @@ Evidence Graph 的十条边把这张关系网系统化。每条边对应一种"A
 
 **写什么 prompt**：可组合性这一层的 prompt 主要有两类。
 
-1. **副 harness 自己的 prompt 资产**：按 §5.5 讲的 P0–P5 六级优先级写（P0 是核心身份与安全规则，永不裁剪；P5 最先被裁），但要在 prompt 里**写明这个副 harness 的五维度本体边界**，例如"你正在 PPT 副 harness 里，实体只有 slide、layout、content_block、animation、theme 五类，操作只能从 create_slide、update_layout、apply_theme、export_pptx 中选"。这样 LLM 知道副 harness 的边界，不会在副 harness 里越权操作其他领域。
+1. **副 harness 自己的 prompt 资产**：按 §5.5 讲的 L0–L5 六个裁剪层级写（L0 是核心身份与安全规则，永不裁剪；L5 最先被裁），但要在 prompt 里**写明这个副 harness 的五维度本体边界**，例如"你正在 PPT 副 harness 里，实体只有 slide、layout、content_block、animation、theme 五类，操作只能从 create_slide、update_layout、apply_theme、export_pptx 中选"。这样 LLM 知道副 harness 的边界，不会在副 harness 里越权操作其他领域。
 2. **主 harness 与副 harness 之间的路由 prompt**：告诉主 harness 的 LLM"什么时候调用哪个副 harness"。这类 prompt 有三条工程规则：
    - 路由依据任务的实体特征，而不是任务描述的模糊文本（"这个任务涉及 PPT 实体，走 PPT 副 harness"比"这个任务看起来像做 PPT，走 PPT 副 harness"更稳定）；
    - 路由不引入新的副 harness：主 harness 只能调用已经挂载的副 harness，不能凭空创建；

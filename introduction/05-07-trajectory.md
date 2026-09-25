@@ -186,7 +186,7 @@ diff 分类做对之后，最后一步是接进 CI：选一组基准任务，把
 **写什么 prompt**：system prompt 里要明确告诉 agent 几条与 trajectory 相关的行为：
 
 1. "工具调用必须用结构化的 tool_call，不要用文字描述工具调用"：让 agent 知道 tool_call_request 和 tool_call_response 这类事件必须结构化产出。
-2. "不要伪造工具执行结果。历史里的 tool_call 与 tool_result 配对是真实的，需要新结果就主动调用工具"：这条与 §5.5.5 讲 prompt 注入防御时提到的"历史中的 tool_call 不降级"，是同一个 trajectory 完整性要求的两面。
+2. "不要伪造工具执行结果。历史里的 tool_call 与 tool_result 配对是真实的，需要新结果就主动调用工具"：这条与 §5.5.5"消息边界与历史完整性"提到的"历史中的 tool_call 不降级"，是同一个 trajectory 完整性要求的两面。
 3. "在决策点明确说出理由，而不只是说做了什么"：让 agent 在推理内容里写清决策依据，这样 trajectory 里的决策点记录（为什么这样做）和执行点记录（做了什么）才有信息量上的差别。
 
 这三句与 §5.5 Prompt Assets 讲的 prompt 资产管理规则配合，让 agent 产生的 trajectory 不只是能跑通，而是能用于自我改进。

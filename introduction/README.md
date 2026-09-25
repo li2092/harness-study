@@ -25,7 +25,7 @@
 | §5.3 | [05-03-tool-registry.md](./05-03-tool-registry.md) | Tool Registry & ACI · **P0** |
 | §5.4 | [05-04-context-memory-artifact.md](./05-04-context-memory-artifact.md) | Context / Memory / Artifact |
 | §5.5 | [05-05-prompt-assets.md](./05-05-prompt-assets.md) | Prompt Assets · Instruction Layer · **P0** |
-| §5.6 | [05-06-observation-surface.md](./05-06-observation-surface.md) | Observation Surface · 三层定位 |
+| §5.6 | [05-06-observation-surface.md](./05-06-observation-surface.md) | Observation Surface（观测面）· 两个作用加一个案例 |
 | §5.7 | [05-07-trajectory.md](./05-07-trajectory.md) | Trajectory · Event Stream · **P0** |
 | §5.8 | [05-08-verifier.md](./05-08-verifier.md) | Verifier 三层 · **P0** |
 | §5.9 | [05-09-safety.md](./05-09-safety.md) | Safety 控制面 · cross-cutting |
@@ -59,7 +59,7 @@
 | §5.2 | 模型路由 `t1-cardgrid-5.2-routing` |
 | §5.3 | tool call 流程 `t1-flow-5.3-toolcall` · 工具批处理四模式 `t3-cardgrid-5.3-toolbatch` |
 | §5.4 | 三层状态对比 `t1-comparison-5.4-state` · Memory 五问 `t2-tree-5.4-memory` · OS 内存层次 `t2-analogy-5.4-osmem` · 压缩三力度 `t3-comparison-5.4-compress` |
-| §5.5 | prompt 资产矩阵 `t1-matrix-5.5-promptasset` · P0-P5 金字塔 `t3-layered-5.5-p0p5` |
+| §5.5 | prompt 资产矩阵 `t1-matrix-5.5-promptasset` · L0–L5 裁剪层级 `t3-layered-5.5-p0p5` |
 | §5.6 | observation 分层 `t1-layered-5.6-observation` · observation vs logging `t2-comparison-5.6-obslog` · 自进化五路径 `t3-cardgrid-5.6-selfevo` |
 | §5.7 | trajectory 事件类型 `t1-cardgrid-5.7-events` |
 | §5.8 | verifier 矩阵 `t1-matrix-5.8-verifier` · leakage 四类防御 `t2-cardgrid-5.8-leakage` |
@@ -89,9 +89,9 @@
 3. **我跑 N 次取平均看通过率，统计可信吗？测评分数很高，为什么上线后问题还多？** 这是两个不同的问题（都在 §7.4 Ablate 一节展开）：
    - **复跑不独立（AP01，见附录 F）**：N 次复跑之间如果共用了响应缓存、固定的随机种子（seed）、同一份文件、记忆或工作区，或者在 temperature 为 0 时因缓存命中而逐字复现同一输出，它们就不是 N 次独立采样，表面上 80% 的通过率可能是同一个结果被数了好几遍。模型服务的前缀缓存（prefix caching）只复用输入前缀的计算，命中与否不改变输出，不是这个问题的来源。
    - **对固定测试集过拟合（AP20，见附录 F）**：反复对着同一套测试集调 prompt 和规则，测评分数越来越高，线上输入一变就出问题。要把开发用的测试集和留出集分开，并把线上失败回流为新用例。
-4. **我的 verifier 总放过看似对、实际错的输出，怎么办？** 三种典型缺陷：答案泄漏（leakage）、奖励投机（reward hacking）、产物与声明不符（artifact-claim mismatch），各有不同对策。§5.8 回答，§5.9 末段补充。
+4. **我的 verifier 总放过看似对、实际错的输出，怎么办？** 三种典型缺陷：答案泄漏（leakage）、奖励投机（reward hacking）、产物声明不符（artifact-claim mismatch），各有不同对策。§5.8 回答，§5.9 末段补充。
 5. **怎么系统地优化 harness，而不是凭感觉调？** 按 Observe → Score → Ablate → Tune → Iterate 五步走。这是独立于业务循环的外层循环，本卷称为 Harness Lab（本书对"用评测、消融、调参迭代改进 harness 的外层工作台"的命名），见 §七。
-6. **这本书是给我看的吗？从哪一章开始读？** 见下文"谁该读哪段"、§十 学习路径和 §一 的阅读路标。
+6. **这本书是给我看的吗？从哪一章开始读？** 见下文"谁该读哪段"和 §十 学习路径。
 
 **下一步的目标**（后续逐章、逐模块展开版）：读者能独立设计并调优一个 agent harness，而不只是回答这六问。
 
@@ -109,4 +109,4 @@
 
 - **讲较成熟机制的章节**（§5.2 Model Adapter、§5.7 Trajectory）方法论内容较少，可跳读。
 - **重点章不要跳**：§5.1 Agent Loop、§5.4 Context-Memory-Artifact、§5.5 Prompt Assets、§5.6 Observation Surface、§5.8 Verifier、§七 Harness Lab、§八 可组合性矩阵、§九 控制论。这八章是本卷论点的主体支撑。
-- **§5.6 把观测面扩成了三层定位**：observation surface 不只是运行时给模型的反馈，还是跨 run 自我改进（self-evolution）的输入侧基础设施。
+- **§5.6 讲观测面的两个作用**：observation surface 不只是运行时给模型的反馈，还是跨 run 自我改进（self-evolution）的输入侧基础设施。

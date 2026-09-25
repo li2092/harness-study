@@ -33,7 +33,7 @@
 
 - **lost in the middle（中段遗失）**：关键信息位于长上下文中段时，模型的准确率明显低于放在头尾（U 形曲线）。Stanford 的 Nelson Liu 等人 2023 年在多个模型上观察到这一现象，降幅可超过 20 个百分点，新模型的效应有所减弱。它是"1M 上下文装得下、用不好"的原因之一。
 - **reward hacking（奖励投机，AP03，见附录 F）**：agent 学会钻 verifier 判定规则的空子，表面上得高分，任务却没真做对。RL 训练阶段尤其常见，跟人在 KPI 考核下学会刷数据是同一类现象。
-- **artifact-claim mismatch（声明与产物不符，AP04，见附录 F）**：agent 在 trajectory 里声明"已完成 X"，实际产物里却没有 X。这是 verifier 设计要专门防的失效模式，在长循环里特别容易出现。
+- **artifact-claim mismatch（产物声明不符，AP04，见附录 F）**：agent 在 trajectory 里声明"已完成 X"，实际产物里却没有 X。这是 verifier 设计要专门防的失效模式，在长循环里特别容易出现。
 - **multi-agent over-decomposition（多 agent 过度拆分，AP09，见附录 F）**：默认"agent 不够强就拆成多 agent"的反模式。按 Anthropic 公布的数据，以普通对话为基准，agent 的 token 用量约为 4 倍，多 agent 系统约为 15 倍。5.1.5 详讲。
 - **orchestration（编排）**：lead agent 把任务分给多个 sub-agent 并聚合结果时的全部协调工作，包括任务分解、上下文打包、结果聚合、不一致裁决、状态同步。5.1.5 逐项拆开看它们的 token 开销。
 
@@ -188,13 +188,13 @@ ReAct 2022 年提出之后的三年里，学术界和工业界至少出现了十
 
 - **答案泄漏**：verifier 见过 ground truth，等于评一场它已经知道答案的考试；
 - **奖励投机**：agent 学会钻判定规则的空子，任务却没真做对；
-- **声明与产物不符**：agent 声明"已完成"，产物里实际没有声明的东西。
+- **产物声明不符**：agent 声明"已完成"，产物里实际没有声明的东西。
 
 三种缺陷各有对策，是 §5.8 Verifier 一节的中心议题；设计 verifier 本身就是一门工程。
 
 **第三条 · Plan-and-Execute / Plan-and-Act**。Plan-and-Act[^plan-and-act-2025] 这项工作把规划阶段和执行阶段显式拆开：规划阶段产出 5 到 15 步的骨架，执行阶段对每一步做 thought-action-observation。机制上，这等于承认用同一个模型既"想"又"做"可能既不经济也不擅长：规划需要全局视野和顺序推理能力（适合更强的模型，比如 o1-pro），执行需要熟练调用工具、完成单步操作（适合更便宜的模型，比如 GPT-4o-mini）。拆开之后两层可以各自优化：规划用大而精的模型，只在任务开始时跑一次；执行用便宜的模型，跑很多次，但每次都简单。在长程任务上，plan-and-execute 的成功率明显高于 vanilla ReAct，因为规划阶段先把全局骨架建立起来，执行阶段每一步都受骨架约束，不会大幅偏离。
 
-**第四条 · Skill-Based Hierarchical**。Anthropic 2025-10 开放了 Skills 规范[^anthropic-skills-spec]：agent 不再直接对着原始工具列表挑选，而是把常用动作打包成 Skill（带名字、输入参数和子工具调用流程），让 Agent Loop 在更高的抽象层调度。机制上的类比是"函数与内联代码"：直接调子工具相当于内联代码，每次从零拼装；定义成 Skill 相当于函数，封装一次、到处复用。一个常做 RFP 响应的团队，可能有 extract_requirements、search_past_proposals、draft_response 三个 Skill，每个 Skill 内部封装 5 到 10 个子工具调用，agent 在 Skill 层而不是工具层调度。这条方向 2025 年末开始有工程动能，但规范还在演化：从 2025-10 的初版到 2025-12 成为开放标准只有几个月，目前主要由 Anthropic 一家推动。如果在 2026 年把整套 harness 重写到 Skill 上，下一次规范改动时就要全部跟着改。所以工程上的状态是"值得跟踪，暂缓投入"。
+**第四条 · Skill-Based Hierarchical**。Anthropic 2025-10 开放了 Skills 规范[^anthropic-skills-spec]：agent 不再直接对着原始工具列表挑选，而是把常用动作打包成 Skill（一个目录：SKILL.md 写明名称、用途和操作步骤，可附带脚本和资源文件，步骤里编排好要调哪些子工具），让 Agent Loop 在更高的抽象层调度。机制上的类比是"函数与内联代码"：直接调子工具相当于内联代码，每次从零拼装；定义成 Skill 相当于函数，封装一次、到处复用。一个常做 RFP 响应的团队，可能有 extract_requirements、search_past_proposals、draft_response 三个 Skill，每个 Skill 内部封装 5 到 10 个子工具调用，agent 在 Skill 层而不是工具层调度。这条方向 2025 年末开始有工程动能，但规范还在演化：从 2025-10 的初版到 2025-12 成为开放标准只有几个月，目前主要由 Anthropic 一家推动。如果在 2026 年把整套 harness 重写到 Skill 上，下一次规范改动时就要全部跟着改。所以工程上的状态是"值得跟踪，暂缓投入"。
 
 **第五条 · Context Engineering / Compaction**。这是 Manus、Factory.ai、Morph 等一批工程团队在做的事：1M 上下文装得下、用不好，所以要在 Agent Loop 里加一个压缩（compaction）子步骤，每隔 N 步把已有 trajectory 压缩成摘要加关键 artifact，让下一步推理面对的上下文信息密度更高。这条方向不是新算法，而是**新的工程做法**：不是哪篇论文提出了新算法，而是工程师在生产环境里反复踩坑后总结出的"必须做、但论文里没人写"的做法。它的收益稳定，尤其在合同审核、长流程审批、月度报告生成这类几十步的 To B 场景：比如 20 步之后压缩一次，把 trajectory 压成约 1K token 的摘要加 5 个关键 artifact（经验值，按场景调整），agent 在后续步骤里的推理质量会明显回升。这条方向与 §5.4 Context / Memory / Artifact 紧密配合：上下文工程（Context Engineering）是 Agent Loop 层的工程做法，§5.4 讲的是与之配套的存储层组件。
 

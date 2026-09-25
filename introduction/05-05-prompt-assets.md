@@ -148,7 +148,7 @@ agent 上生产之后会碰到两个工程问题：多语种支持和多场景�
 
 三个维度中任何一个触线，都说明继续往 system prompt 加规则已经进入负收益区间。正确的做法不是改写已有规则的措辞或拼出更长的 prompt，而是把新增规则迁移到 hook 注入或工具 description 这类调用前精准注入的载体上。这三个维度都与模型能力和上下文窗口大小有关，没有跨模型通用的固定字符阈值。具体到自己的 harness，可以把"system prompt 的 token 数 / 当前模型的上下文窗口"这个占比作为定期审查项。
 
-还有一个跟 prompt asset 配套的反模式：**规则、测试用例与 verifier 强耦合（Schema Coupling，AP16，见附录 F）**。
+还有一个跟 prompt asset 配套的反模式：**Schema 耦合（schema coupling，AP16，见附录 F）**：prompt 里的 schema、测试用例与 verifier 强耦合。
 
 - **现象**：prompt 里的输出 schema、数据字段名、工具调用 schema，跟下游的测试用例（fixture）和 verifier 分类器三者硬连在一起。任何一处改动，另外两处跟着出错，而且出错是无声的：通过率突然反转，verifier 判为通过但实际是错的，分类器把代码当成文档。本教程的配套实现项目在 2026-05 就遇到过一次：一组留出测试场景和分类器同时改动后，通过率从 60% 直接跳到 75%–87%，之前一周的消融数据全部要重跑。
 - **原因**：schema 是一份隐式契约，改动会跨越多个组件，但 prompt schema 的改动没有配套的回归测试，verifier 自己也发现不了。AHE[^ahe-2026] 论文讨论过 schema 稳定性，把它当作 harness 长期演化必须守住的约束：改 schema 必须同时改测试用例、分类器和 verifier，不能只改一处。这个反模式跟"调几百版提示词"那种把 prompt 当万能调节器的做法同源：每遇到问题都指望 prompt 兜底，实际上是把 schema 的隐式契约推到了 prompt 层，让 prompt 越改越长、治理越来越难。
