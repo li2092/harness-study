@@ -8,7 +8,7 @@ Safety 控制面不是"agent 跑完一个 turn 调用一下"的组件，而是**
 
 #### 5.9.0 本节首次出现的术语
 
-§一到 §八已经解释过的术语（agent、harness、runtime、Tool Registry、ToolPolicy、Hook、Trajectory、Verifier、沙箱的一般概念等）下面不再重复，这里只列本节首次出现的术语。
+§一到§四及 §5.1 到 §5.8 已经解释过的术语（agent、harness、runtime、Tool Registry、ToolPolicy、Hook、Trajectory、Verifier、沙箱的一般概念等）下面不再重复，这里只列本节首次出现的术语。
 
 **控制面核心术语**
 
@@ -239,7 +239,7 @@ Safety 控制面最核心的反模式有四类：**假落地机制**（AP06，�
 
 工程对策是：**每个安全机制在启动时写一条"已加载"（I'm alive）日志，agent 关闭时统计本次 run 里这个机制被触发了多少次**。触发 0 次的机制，要么是死代码，要么是配置失效，都要报警。
 
-**AP12 子 agent 深度爆炸**：主 agent 启动子 agent，子 agent 又启动孙 agent，没有深度上限，也没有 token 预算上限，最后一次 run 跑出几十万 token 的成本。它本质上是 §5.1.5 讲多 agent 过度拆分（AP09）时说的 token 开销在 Safety 维度上的体现：多智能体系统的 token 消耗约为普通对话的 15 倍，派生深度再失控，成本就成倍放大，成为 LLM10 Unbounded Consumption。该不该上多智能体的判断标准（按任务轮数和子任务的可并行度判断）在那一节已经给出，这里只讲 Safety 侧的硬约束：**子 agent 深度上限（经验值：2 到 3 层）、每次 run 的总 token 预算上限、超预算时提前中止，三者必须齐全**。前面的判断标准回答"值不值得上多智能体"，这三条保证"上了也不会失控"。
+**AP12 子 agent 深度爆炸**：主 agent 启动子 agent，子 agent 又启动孙 agent，没有深度上限，也没有 token 预算上限，最后一次 run 跑出几十万 token 的成本。它本质上是 §5.1.5 讲多 agent 过度拆分（AP09）时说的 token 开销在 Safety 维度上的体现：多智能体系统的 token 消耗约为普通对话的 15 倍，派生深度再失控，成本就成倍放大，成为 LLM10 Unbounded Consumption。该不该上多智能体的判断标准已经给出：三个前提条件见 §5.1.5，按任务轮数的阈值见 §6.6，这里只讲 Safety 侧的硬约束：**子 agent 深度上限（经验值：2 到 3 层）、每次 run 的总 token 预算上限、超预算时提前中止，三者必须齐全**。前面的判断标准回答"值不值得上多智能体"，这三条保证"上了也不会失控"。
 
 **AP13 Hook 与白名单绕过**：hook 或白名单配了规则，agent 仍然找到办法绕过去。机制上，根因通常有两类：一是**匹配方式有漏洞**，规则按字符串前缀或字面比较，而不是按完整的命令词判断；二是**规则覆盖不全**，比如拒绝了 `git push origin main`，却允许了 `git push --force origin main`；拒绝了 `rm -rf`，却允许了 `find . -delete`。5.9.2 提到的 `cargo checkpoint` 属于前一类，是作者配套项目中真实出现过的缺陷（第二卷 2.7 节"权限契约"也记录了这个案例）：shell 白名单（allowlist）放行 `cargo check`，实现时直接用字符串前缀判断（裸 `starts_with`），于是 `cargo checkpoint` 也被放过。后果不只是多放过一个命令：cargo 遇到不认识的子命令，会到 PATH 上找名为 `cargo-checkpoint` 的外部程序并执行，所以这条放行规则实际上可以用来运行任意程序，白名单形同虚设。修复方法是按完整词匹配（token boundary），不认前缀：放行 `cargo check` 只放行子命令恰好是 `check` 的调用。按工程经验，hook 被绕过是成熟 agent 项目里 hook 相关 bug 的常见一类。判断时看三点：
 

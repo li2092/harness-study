@@ -1,4 +1,4 @@
-# Harness Prompt · Agent Harness 落地 Spec（给 agent 的可执行版）
+# Harness Prompt · Agent Harness 实施 Spec（给 agent 的可执行版）
 
 这份文件是正文《Harness Study》的**可执行配套材料**。正文讲"有哪些机制、为什么这样设计"，这份讲"按什么顺序动手、每一步怎么验证做对了"。
 
@@ -106,10 +106,10 @@
 模型该调工具，却只输出一段文本，有三种成因，分别在三个层面，对策完全不同。按响应解析 → 请求参数 → prompt 装配的顺序依次排除，比反复改 prompt 或换模型快得多：
 
 1. **响应解析层（假阴性）**：模型可能把调用写成了正文里的文本标签（如 `<tool_call>…</tool_call>`），没有进入结构化的工具调用字段（OpenAI 的 `tool_calls`、Anthropic 的 `tool_use` 块）；Adapter 只认结构化字段，就把它当普通文本丢掉了。对策：解析层在结构化字段之外，再用正则兜底提取文本标签。
-2. **请求参数层**：默认的 `tool_choice: auto` 表示可调可不调。某个回合必须用工具（必须查库、必须写盘）时，把 `tool_choice` 设为必须调用工具（OpenAI 写 `required`，Anthropic 写 `any`），或者指定具体工具。**按回合、按场景开启，不要全局常开**（长期强制调用会逼模型在不该调时硬调，制造噪声）。
+2. **请求参数层**：默认的 `tool_choice: auto` 表示可调可不调。某一轮必须用工具（必须查库、必须写盘）时，把 `tool_choice` 设为必须调用工具（OpenAI 写 `required`，Anthropic 写 `any`），或者指定具体工具。**按轮、按场景开启，不要全局常开**（长期强制调用会逼模型在不该调时硬调，制造噪声）。
 3. **prompt 装配层**：过长的中文 prompt 会让某些模型跳过工具调用、直接用文本作答。把"要调用工具"的指令写短、放在靠前的位置，长说明拆开。
 
-`↪ 正文：Tool Registry & ACI（§5.3，P0）/ ObservationPack · Observation Surface（§5.6）/ Model Adapter 三成因（§5.2 末小节）/ Artifact（§5.4，P2）`
+`↪ 正文：Tool Registry & ACI（§5.3，P0）/ ObservationPack · Observation Surface（§5.6）/ Model Adapter 三成因（§5.2.6）/ Artifact（§5.4，P2）`
 
 ### 1.4 上下文压缩：三种力度
 
@@ -254,7 +254,7 @@ Phase 1 只上了 Hard Gate。这里按需补上另外两层：
 - [ ] 每个进入默认配置的机制都通过了准入四条（尤其要有开关消融数据）。
 - [ ] 负贡献和接近零贡献的机制已经砍掉，或降为实验开关。
 
-`↪ 正文：起步建议四维度（各章末）/ 机制准入规则（§七 Harness Lab）`
+`↪ 正文：起步建议四维度（各章末）/ 机制准入检查（本章 §3.3）`
 
 ---
 

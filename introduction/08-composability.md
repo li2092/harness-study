@@ -28,7 +28,7 @@
 
 *图 8.2 · 可组合性三轴：封装 × 拓扑 × 交互边界*
 
-#### 8.0 本节首次出现的术语
+#### 8.0 本章首次出现的术语
 
 第一到七章已经解释过的术语（harness 的各个机制、Tool Registry、Skill、fork-join 等）下面不再重复，这里只列本章首次出现的术语。
 
@@ -176,10 +176,10 @@ Evidence Graph 的十条边把这张关系网系统化。每条边对应一种"A
 
 后五条补上关系本体的另一半：
 
-6. **blocks**：A 阻止了 B 的动作。典型例子是 Safety 控制面 blocks Agent Loop（§5.9 讲 ToolBlocked 的部分）；hook 拒绝某次工具调用。blocks 边在 trajectory 里是很重要的信号，没有 blocks 也是信号（前面讲过"缺失的事件本身就是 bug 信号"）：该拦没拦是一类 bug，不该拦却拦了是另一类。
-7. **repairs**：A 修复了 B 的错误。典型例子是 §5.2 讲的契约修复（model adapter 修复 schema 违规）；§6.6 fork-join 失败后的重试路径。
+6. **blocks**：A 阻止了 B 的动作。典型例子是 Safety 控制面 blocks Agent Loop（§5.9 的权限拒绝，§5.6 记为 MechanismEvent 的 Blocked 状态）；hook 拒绝某次工具调用。blocks 边在 trajectory 里是很重要的信号，没有 blocks 也是信号（前面讲过"缺失的事件本身就是 bug 信号"）：该拦没拦是一类 bug，不该拦却拦了是另一类。
+7. **repairs**：A 修复了 B 的错误。典型例子是 §5.2 的故障切换（主 provider 出错时，model adapter 切到备用）；§6.6 fork-join 失败后的重试路径。
 8. **hands_off**：A 把控制权转给了 B。典型例子是主 agent hands_off sub-harness；子任务 agent 完成后 hands_off 回主 agent。它是 8.3 所讲 handoff 模式在 trajectory 里的可观测记录，每次 handoff 都对应一条 hands_off 边。
-9. **supports**：A 的输出佐证了 B 的结论。典型例子是多个 verifier 来源都同意同一结论；§5.8 讲的 Claw-Eval 三路证据相互 supports。
+9. **supports**：A 的输出佐证了 B 的结论。典型例子是多个 verifier 来源都同意同一结论。
 10. **contradicts**：A 的输出反驳了 B 的结论。典型例子是 agent 自报"任务完成"，但 verifier 的结论与之矛盾；两个 sub-agent 给出冲突的结论。contradicts 边是 agent 系统里**最有价值的诊断信号之一**：所有静默失败（silent failure）、产物声明不符（artifact claim mismatch）一类的问题，都对应"contradicts 边没被检测到"的情况。
 
 ![](../diagrams/t3-cardgrid-8-evidence.png)

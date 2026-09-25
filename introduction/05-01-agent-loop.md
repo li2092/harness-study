@@ -317,7 +317,7 @@ Skill-Based 的起步成本不低：定义 Skill 的 schema、维护 Skill 库�
 
 顺着做中学往工程上推，Tree of Thoughts、LATS 这类**树状探索**就该重新提上日程。本节前面刚说过这类方法"To B 业务流程几乎都不合算"，这个判断没变，但它的语境是强 reward 加成本敏感：有硬性 verifier 收口时，用 5 到 20 倍算力换 10% 到 15% 的准确率，多数时候不值。在弱 reward 加智能上限的语境下，价值结构变了，原因有两个。
 
-- **探索本身就是数据生产。** 树上每个分支的展开（rollout）都是真实经验，沉淀进技能库、记忆层之后，就成了跨任务复用的资产（Voyager 用自动课程加不断生长的技能库证明过这条路[^voyager]）。成本要按"本次命中 + 经验沉淀"的双重收益来算。
+- **探索本身就是数据生产。** 树上每个分支的展开（rollout）都是真实经验，沉淀进技能库、记忆层之后，就成了跨任务复用的资产（Voyager 用自动课程加不断生长的技能库证明过这条路[^voyager-2305]）。成本要按"本次命中 + 经验沉淀"的双重收益来算。
 - **在弱 reward 领域，多样性是资产而不是浪费。** 已有实证显示，可验证奖励强化学习（RLVR，一种训练范式）有收窄输出分布的倾向（pass@k 反转：训练后的模型在采样次数少时胜出，采样次数多时反被基座模型反超[^pass-at-k]），而开放任务需要的恰恰是多路径发散：先发散，后共识。
 
 但树状探索成立有一个不能跳过的前提：**MCTS 的核心从来不是树，而是回传的价值信号**。选择、扩展、模拟走完，最后的回传需要每个节点都有评估值，而弱 reward 领域缺的恰恰是它。树只是搜索结构，节点评估信号才是它能跑起来的前提：节点评估用生成式 verifier 加异源评审团作为软价值[^genrm-poll]，分支优先级用学习进度、不确定性作为探索先验，叶子节点的最终判定落回前面讲的结构性共识。造不出评估信号，树就只是更贵的盲目探索。
@@ -358,7 +358,7 @@ Agent Loop 不是孤立的组件，而是整个 harness 的执行内核。
 [^weak-reward-rl]: RL 训练领域有平行的证据：RLVR 在数学、代码这类可自动判定的领域有效，创意写作、主观问答这类开放性产出没有明确的 ground truth，2025–2026 年的一类解法正是把主观评估结构化成可验证的信号。Writing-Zero 用自我原则化的评判（self-principled critique）构造成对的可验证奖励（arxiv 2506.00103 · 预印本）；VMR-RLVR 把开放式数据重构成可验证的多选题（arxiv 2511.02463 · 预印本）
 [^harness-routing-2026]: 2026 年 4–5 月有业界文章提出相近的方向。What Is Harness Engineering? · MindStudio · 2026-05-28 · mindstudio.ai/blog/what-is-harness-engineering-agent-wrapper：通用 agent 通常不如多个各管窄任务的专门化 agent，外层 harness 就是路由（routing）所在的地方；专门化 agent 的 harness 更小、更聚焦，上下文更干净、工具集更紧、验证逻辑更专。Agent Harness Engineering: The Rise of the AI Control Plane · Adnan Masood · 2026-04-23 · medium.com/@adnanmasood/938ead884b1d：harness 的价值是"把概率推理翻译成确定性、可审计的企业动作"，路由决策与 sub-agent 派生被列为 harness 控制面的职责
 [^era-of-experience]: Welcome to the Era of Experience · David Silver, Richard S. Sutton · Google DeepMind · 2025 · MIT Press《Designing an Intelligence》书章预印本。经验时代的四个支柱：经验流（而非短交互片段）；行动与观察接地于环境（而非仅限人类对话）；奖励接地于环境经验（而非人类预判，原文认为依赖人类预判"通常会给 agent 的性能造成无法突破的天花板"）；基于经验做规划和推理（而非只用人类的语汇推理）
-[^voyager]: Voyager: An Open-Ended Embodied Agent with Large Language Models · Wang et al.（NVIDIA）· NeurIPS 2023 · arxiv 2305.16291。自动课程（automatic curriculum，按当前能力提出"难一点"的下一个目标）加不断生长的可执行技能库，是探索产物沉淀为跨任务复用技能的最早完整样板；它的自我验证依赖 Minecraft 中可判定的世界状态，搬到没有 ground truth 的开放产出领域时，这层保障会变弱
+[^voyager-2305]: Voyager: An Open-Ended Embodied Agent with Large Language Models · Wang et al.（NVIDIA）· NeurIPS 2023 · arxiv 2305.16291。自动课程（automatic curriculum，按当前能力提出"难一点"的下一个目标）加不断生长的可执行技能库，是探索产物沉淀为跨任务复用技能的最早完整样板；它的自我验证依赖 Minecraft 中可判定的世界状态，搬到没有 ground truth 的开放产出领域时，这层保障会变弱
 [^pass-at-k]: Does Reinforcement Learning Really Incentivize Reasoning Capacity in LLMs Beyond the Base Model? · OpenReview 4OsgYD7em5 · 2025 在审。发现 RLVR 训练后的模型在 k 小时胜过基座模型、k 大时反被反超，提示这类训练把概率质量集中到已有的正确路径上，以输出多样性为代价。有反驳认为结论受 k 的取值与算法选择影响，并非定论；此处只取其方向性提示：开放任务的发散阶段，不要用收窄分布的策略
 [^genrm-poll]: 节点软价值的两个已验证部件。Generative Verifiers: Reward Modeling as Next-Token Prediction · Google DeepMind · arxiv 2408.15240（把 verifier 做成先生成验证推理链、再下判定的生成式模型，可多链投票）；Replacing Judges with Juries · Cohere · arxiv 2404.18796（由多个不相交模型家族的小模型组成评审团，判定比单个大模型评审更准，成本低 7 倍以上）
 [^magellan-alp]: MAGELLAN: Metacognitive predictions of learning progress guide autotelic LLM agents in large goal spaces · Gaven et al.（Inria Flowers 团队）· ICML 2025 · arxiv 2502.07709。agent 在线预测自身在各目标上的胜任度，以绝对学习进度 ALP = |C_t(g) − C_{t−N}(g)| 作为目标采样的优先级；在合成文本环境中验证，尚未在生产级开放任务中应用

@@ -32,8 +32,8 @@
 | produces | A 产生 B 类 artifact | Agent Loop → TrajectoryRecord |
 | verifies | A 验证 B 的输出 | Verifier → Agent Loop artifact |
 | scores | A 给 B 的输出打分 | Outcome Judge → run |
-| blocks | A 阻止 B 的动作 | Safety → Agent Loop（ToolBlocked）|
-| repairs | A 修复 B 的错误 | Contract Repair → schema violation |
+| blocks | A 阻止 B 的动作 | Safety → Agent Loop（权限拒绝，记为 Blocked）|
+| repairs | A 修复 B 的错误 | 故障切换 → 主 provider 出错 |
 | hands_off | A 把控制权交给 B | 主 agent → 副 harness |
 | supports | A 的输出佐证 B 的结论 | 多个来源的 verifier 结论一致 |
 | contradicts | A 反驳 B 的结论 | agent 的声称与 verifier 的观测不一致（最有价值的诊断信号）|
@@ -153,7 +153,7 @@
 | AP11 | 循环盲区（Loop Blind Spot） | §3 / §7.8 | agent 不知道自己在绕圈 |
 | AP12 | 子 agent 深度爆炸（Sub-agent Depth Explosion） | §5.9 | fork-join 不限深度、不限 token |
 | AP13 | Hook 与白名单绕过（Hook / Allowlist Bypass） | §5.9 | 放行规则按字符串前缀匹配，`cargo checkpoint` 被 `cargo check` 放过（作者配套项目实例，见第二卷 2.7 节）；修复：按完整词匹配 |
-| AP14 | 记忆污染（Memory Pollution） | §5.4c | 长期记忆不断累积错误内容 |
+| AP14 | 记忆污染（Memory Pollution） | §5.4.2 | 长期记忆不断累积错误内容 |
 | AP15 | 过度代理与无限制消耗（Excessive Agency / Unbounded Consumption） | §5.9 | OWASP LLM06 + LLM10（2025 版） |
 | AP16 | Schema 耦合（Schema Coupling） | §5.5 | prompt 里的 schema、测试用例与 verifier 三者硬连在一起，改一处，另两处无声出错 |
 | AP17 | 过早优化（Premature Optimization） | §7.8 / §7.4 / §10 | 数据还没收够就下结论调优；以置信区间不跨 0 为准 |
@@ -165,19 +165,19 @@
 
 ## G · 引用文献索引 · 按 arXiv 编号前缀分组
 
-正文引用的文献按 arXiv 编号前缀分组速查，完整条目见各章脚注。
+正文脚注引用的文献按 arXiv 编号前缀分组速查，标签与各章脚注一致，完整条目见脚注。编号前缀表示提交年月，与发表年份可能不同（例如 hal-2026 的编号是 2510.11977）。
 
-**2210.\*（2022）**：react-yao-2022
+**22xx.\*（2022）**：react-yao-2022（2210.03629）
 
-**2302-2310.\*（2023）**：toolformer-2023 / reflexion-shinn-2023 / tot-yao-2023 / plan-solve-wang-2023 / memgpt-2023 / voyager-2305
+**23xx.\*（2023）**：reflexion-shinn-2023（2303.11366） / voyager-2305（2305.16291） / lost-in-middle-2024（2307.03172）
 
-**2405-2410.\*（2024）**：swe-agent-2024 / pav-2024
+**24xx.\*（2024）**：routellm-2024（2406.18665） / genrm-poll（2408.15240、2404.18796） / pav-2024（2410.08146）
 
-**2502-2511.\*（2025）**：plan-and-act-2025 / reflact-2025（EMNLP 2025）/ gigpo-2025 / preference-leakage-2025（2502.01534，ICLR 2026）/ mnimi-2025 / agent-prm-2025（2511.08325）/ stop-overvaluing-mad-2025（2502.08788）
+**25xx.\*（2025）**：zep-2025（2501.13956） / preference-leakage（2502.01534） / magellan-alp（2502.07709） / plan-and-act-2025（2503.09572） / mem0-2025（2504.19413） / self-correction-survey-2025（2504.21625） / gigpo-2025（2505.10978） / socratic-prm-bench-2026（2505.23474） / weak-reward-rl（2506.00103、2511.02463） / one-token-fool-2025（2507.08794） / self-evolving-survey-2026（2507.21046） / behavioral-fingerprinting-2025（2509.04504） / composite-rewards-2026（2509.15557） / memgen-2026（2509.24704） / hal-2026（2510.11977） / agent-prm-2025（2511.08325） / agent-evolver-2026（2511.10395） / mnimi-2025（2511.22118） / cdct-2025（2512.17920） / ssr-2026（2512.18552）
 
-**2510-2511.\* / 2601.\* / 2603-2605.\*（2026）**：hal-2026（2510.11977）/ reward-hacking-equilibrium-2026（2603.28063）/ meta-harness-2026（2603.28052）/ nl-agent-harness-2026（2603.25723）/ claw-eval-2026（2604.06132）/ pcs-2026（2604.11003）/ reward-hacking-era-2026（2604.13602）/ llm-gaming-verifiers-2026（2604.15149）/ skill-ra-2026（2604.24594）/ ahe-2026（2604.25850）/ rhb-2026（2605.02964）/ continual-harness-2026（2605.09998）/ ahe-runtime-substrate-2026（2605.13357）/ tool-prm-bench-2026（2601.12294）/ code-as-agent-harness-survey-2026（2605.18747）/ faulty-memory-2026（2605.12978）/ fate-2026（2605.11882）/ skillopt-2026（2605.23904）
+**26xx.\*（2026）**：tool-prm-bench（2601.12294） / trajectory-informed-memory-2026（2603.10600） / agent-her-2026（2603.21357） / erl-2026（2603.24639） / meta-harness-2026（2603.28052） / reward-hacking-equilibrium-2026（2603.28063） / claw-eval-2026（2604.06132） / artifacts-as-memory-2026（2604.08756） / dive-cc-2026（2604.14228） / swe-trace-2026（2604.14820） / llm-gaming-verifiers-2026（2604.15149） / taco-2026（2604.19572） / ahe-2026（2604.25850） / rhb-2026（2605.02964） / continual-harness-2026（2605.09998） / fate-2026（2605.11882） / faulty-memory-2026（2605.12978） / code-as-agent-harness-survey-2026（2605.18747） / skillopt-2026（2605.23904）
 
-**非 arXiv 的一手来源**：deepseek-v4-tr、owasp-llm-top10-2025、openai-harness-engineering-2026、langgraph-docs
+**脚注未给 arXiv 编号的来源**：gpt3-few-shot-2020 / cot-wei-2022 / self-consistency-wang-2022 / llmcompiler-2024 / swe-bench-verified / anthropic-skills-spec / anthropic-multi-agent-research / dynamic-workflows / anthropic-effective-agents / harness-routing-2026 / era-of-experience / pass-at-k / claude-code-auto-dream / karpathy-autoresearch-2026 / philschmid-pass-k
 
 ---
 
@@ -215,7 +215,7 @@
 | harness | 保留英文，不译。首次出现写"harness（包在模型外面、负责上下文、工具、执行、权限与留痕的那一层程序）"；不译作"智能体框架"，以免与 LangChain、LangGraph 这类 agent 开发框架混淆 |
 | reasoning | 推理（思考过程），指模型内部的思维链（chain-of-thought）；与 inference（模型调用）区分 |
 | turn | 轮：一次模型调用，加上它触发的工具执行 |
-| （无对应英文） | 回合：从一条用户消息开始、到模型给出最终回复为止，一个回合包含多轮 |
+| exchange（本书英文版用语） | 回合：从一条用户消息开始、到模型给出最终回复为止，一个回合包含多轮 |
 | run | 运行：一次任务从开始到终态（完成、失败、取消）的全过程 |
 | session | 会话：同一用户与同一 agent 的一段连续交互，可包含多次 run |
 | observation surface | 观测面（本书术语，首次出现时括注 observation surface） |

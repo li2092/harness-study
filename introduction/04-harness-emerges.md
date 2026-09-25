@@ -160,7 +160,7 @@ Trivedy 给出了今天被引用最广的公式和定义：
 - **Orchestration Logic**（子 agent 派生、交接、模型路由）；
 - **Hooks-Middleware**（上下文压缩、续跑、lint 检查）。
 
-它和本书第五章的 8 个 runtime 机制加 1 个 Safety 控制面（每次工具调用都必须经过、不可绕过的检查层，见 5.9）不是一一对应的。Trivedy 的切法更粗：本书的模型适配、观察包装、trajectory 隐含在 Bundled Infrastructure 和 Orchestration Logic 里，verifier 和 Safety 隐含在 Hooks-Middleware 里。但他**第一次把 harness 当成可以按组件拆解的工程对象**，而不再是模糊的"模型外面那层"。
+它和本书第五章的 8 个 runtime 机制加 1 个 Safety 控制面（每次工具调用都必须经过、不可绕过的检查层，见 5.9）不是一一对应的。Trivedy 的切法更粗：本书的模型适配、观测面、trajectory 隐含在 Bundled Infrastructure 和 Orchestration Logic 里，verifier 和 Safety 隐含在 Hooks-Middleware 里。但他**第一次把 harness 当成可以按组件拆解的工程对象**，而不再是模糊的"模型外面那层"。
 
 从 2022-10 LangChain 发布到这篇文章，三年半里框架阵营从"agent 就是 chain"走到"agent = model + harness，framework 只是 harness 的一种实现材料"。这种来自框架阵营自身的概念升级，比外部学者写论文批评 framework 不够更有分量。
 
@@ -218,7 +218,7 @@ Trivedy 给出了今天被引用最广的公式和定义：
 
 *图 4.2 · 五代算法的不可控来源与对应的约束层*
 
-大模型这一代的不可控来源，前面三章已经讲过：单步预测的概率性输出、多步执行的状态漂移、工具调用的失败级联、上下文窗口的爆炸、目标漂移、不可复现。这六项就是 harness engineering 要回应的工程命题。可以预见，当下一代算法（比如完全多模态的推理 agent，或能自我改进的研究循环）进入生产，新的不可控来源会出现，业界会再造一个"X engineering"来命名那一代的约束层。
+大模型这一代的不可控来源，前面三章已经讲过：单步预测的概率性输出、多步执行的状态漂移、工具调用的失败级联、上下文窗口的爆炸、目标漂移、不可复现。这六项就是 harness engineering 要回应的工程命题。可以预见，当下一代算法（比如完全多模态的推理 agent，或能自我演化的研究循环）进入生产，新的不可控来源会出现，业界会再造一个"X engineering"来命名那一代的约束层。
 
 **洞察二：术语的命名总是滞后于实践几年到十几年，这个滞后是必要的。**
 

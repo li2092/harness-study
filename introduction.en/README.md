@@ -4,7 +4,7 @@ This volume was revised in September 2026. If you read the earlier edition, star
 
 > **What this volume is**: the **entry-level introduction** to the Harness Study project, answering "what an agent harness is and which parts make it up." Its main axis is a **platform-independent engineering-practice methodology**, with the companion implementation projects serving as engineering cases that back it up.
 >
-> **Where it sits in the whole of Harness Study**: this is the opening introductory volume, and it **walks through the full skeleton once**: the 8 runtime mechanisms, the Safety control plane, engineering patterns, the Harness Lab, the composability matrix, and the four control-theory principles. Each part gets a complete mental model at three levels: What, Why, and How to start. **Chapter-by-chapter and module-by-module expansion volumes will follow.** Each runtime mechanism, each engineering pattern, the five layers of the Harness Lab, and more will get a deep volume of its own, covering finer engineering practices, industry cases, and the pitfalls met in practice.
+> **Where it sits in the whole of Harness Study**: this is the opening introductory volume, and it **walks through the full skeleton once**: the 8 runtime mechanisms, the Safety control plane, engineering patterns, the Harness Lab, the composability matrix, and the four cybernetic principles. Each part gets a complete mental model at three levels: What, Why, and How to start. **Chapter-by-chapter and module-by-module expansion volumes will follow.** Each runtime mechanism, each engineering pattern, the five layers of the Harness Lab, and more will get a deep volume of its own, covering finer engineering practices, industry cases, and the pitfalls met in practice.
 
 ## Contents
 
@@ -17,7 +17,7 @@ This volume is split by chapter, one file per chapter; §V (the essential mechan
 | §II | [02-prehistory.md](./02-prehistory.md) | Prehistory: when models were used as functions (2020–2022) |
 | §III | [03-autogpt.md](./03-autogpt.md) | The first large-scale trial and error: the AutoGPT wave and its failure (2023) |
 | §IV | [04-harness-emerges.md](./04-harness-emerges.md) | The emergence of the harness concept (mid-2023 – 2026) |
-| §V · overview | [05-00-mechanisms-overview.md](./05-00-mechanisms-overview.md) | 8 runtime mechanisms + 1 Safety control plane · the cut, and abstract function vs. implementation |
+| §5.0 | [05-00-mechanisms-overview.md](./05-00-mechanisms-overview.md) | 8 runtime mechanisms + 1 Safety control plane · the cut, and abstract function vs. implementation |
 | §5.1 | [05-01-agent-loop.md](./05-01-agent-loop.md) | Agent Loop · Inner Loop · the agent's thinking structure · **P0** |
 | §5.2 | [05-02-model-adapter.md](./05-02-model-adapter.md) | Model Adapter & Routing |
 | §5.3 | [05-03-tool-registry.md](./05-03-tool-registry.md) | Tool Registry & ACI · **P0** |
@@ -28,15 +28,15 @@ This volume is split by chapter, one file per chapter; §V (the essential mechan
 | §5.8 | [05-08-verifier.md](./05-08-verifier.md) | Verifier · three layers · **P0** |
 | §5.9 | [05-09-safety.md](./05-09-safety.md) | Safety control plane · cross-cutting |
 | §5.10 | [05-10-turn-walkthrough.md](./05-10-turn-walkthrough.md) | The micro-flow of a single turn |
-| §5.11 | [05-11-end-to-end.md](./05-11-end-to-end.md) | A mid-size end-to-end example · 17 turns fixing a logging bug |
+| §5.11 | [05-11-end-to-end.md](./05-11-end-to-end.md) | A mid-size end-to-end example · 17 steps fixing a logging bug |
 | §VI | [06-engineering-patterns.md](./06-engineering-patterns.md) | Engineering patterns · cross-mechanism reusable engineering combinations |
 | §VII | [07-harness-lab.md](./07-harness-lab.md) | Harness Lab · Outer Loop · systematically optimizing the harness itself |
 | §VIII | [08-composability.md](./08-composability.md) | Composability matrix · encapsulation × topology × interaction boundary |
-| §IX | [09-cybernetics.md](./09-cybernetics.md) | Four principles of control theory · the meta-rules that bind the whole tutorial |
+| §IX | [09-cybernetics.md](./09-cybernetics.md) | Four cybernetic principles · the meta-rules that bind the whole tutorial |
 | §X | [10-learning-path.md](./10-learning-path.md) | Learning paths · how three kinds of reader should use this tutorial |
 | Companion · Prompt | [11-harness-prompt.md](./11-harness-prompt.md) | Harness Prompt · the executable implementation spec for an agent (Phase 0–3 + a gate per step) |
 | Companion · Prompt lite | [12-harness-prompt-lite.md](./12-harness-prompt-lite.md) | The generic implementation prompt (eval-first), lite version: three instructions handed straight to a coding AI |
-| Appendix | [99-appendix.md](./99-appendix.md) | The 8-mechanism quick-reference table + a roundup of primary sources |
+| Appendix | [99-appendix.md](./99-appendix.md) | A primary source index · B the Evidence Graph ten edges · C OWASP LLM Top 10 · D mechanisms mapped to industry products · E identity and authorization · F anti-pattern quick reference · G citation index |
 
 > Mechanisms marked **P0** in the contents have the highest priority: skip one and the harness either won't run or can't be relied on when it does (for what the three levels P0, P1, and P2 mean, see the [§V overview](./05-00-mechanisms-overview.md)).
 >
@@ -52,7 +52,7 @@ The volume has 49 figures in all, in one unified jimi-ink visual style, with sou
 | §II | the three techniques of prompt engineering `t1-comparison-2-prompt-en` |
 | §III | AutoGPT's five typical failures `t1-matrix-3-autogpt-en` · the intern analogy `t2-analogy-3-intern-en` |
 | §IV | the 2026 naming convergence `t1-timeline-4-naming-en` · five generations of algorithms, their sources of uncontrollability, and the matching constraint layer `t2-matrix-4-generations-en` |
-| §V · overview | the mechanism overview `sample-05-mechanisms-overview-en` · abstract function vs. implementation `t1-layered-5.0-abstraction-en` |
+| §5.0 | the mechanism overview `sample-05-mechanisms-overview-en` · abstract function vs. implementation `t1-layered-5.0-abstraction-en` |
 | §5.1 | ReAct's eight implicit assumptions and their decay `t1-matrix-5.1-react8-en` · the four-question decision flow for choosing an Agent Loop `t1-tree-5.1-choose-en` · sixteen evolution directions converge on five mainstream Agent Loops `t2-cardgrid-5.1-five-en` · five sources of multi-agent orchestration overhead `t3-cardgrid-5.1-multiagent-en` |
 | §5.2 | the four kinds of decision the Routing layer makes `t1-cardgrid-5.2-routing-en` |
 | §5.3 | the three things done in order on every tool_call `t1-flow-5.3-toolcall-en` · the four scheduling modes of Tool Batch `t3-cardgrid-5.3-toolbatch-en` |
@@ -63,11 +63,11 @@ The volume has 49 figures in all, in one unified jimi-ink visual style, with sou
 | §5.8 | what each of the three verifier layers can and cannot do `t1-matrix-5.8-verifier-en` · the four forms of verifier leakage and their defenses `t2-cardgrid-5.8-leakage-en` |
 | §5.9 | Safety cuts across the eight runtime mechanisms `t2-layered-5.9-controlplane-en` · the four-layer permission decision model `t1-layered-5.9-permission-en` · the two engineering roads of HITL `t3-comparison-5.9-hitl-en` · OWASP LLM Top 10 v2025: the four that cut the control plane `t2-cardgrid-5.9-owasp-en` · the four anti-pattern classes of the Safety control plane `t3-cardgrid-5.9-pitfalls-en` |
 | §5.10 | the Step 0→7 five-phase flow of one agent turn `t1-flow-5.10-turn-en` |
-| §5.11 | 17 turns end to end `t1-timeline-5.11-17turn-en` · git push: Safety's four layers, crossed one by one `t1-sequence-5.11-turn16-en` |
+| §5.11 | 17 steps end to end `t1-timeline-5.11-17turn-en` · git push: Safety's four layers, crossed one by one `t1-sequence-5.11-turn16-en` |
 | §VI | the six cross-mechanism reusable engineering patterns `t1-cardgrid-6-patterns-en` · the three isolation modes for sub-agent execution `t2-comparison-6-isolation-en` · the progressive adoption order of the six engineering patterns `t3-timeline-6-pattern-order-en` |
 | §VII | the Harness Lab five-layer framework `t1-layered-7-harnesslab-en` · five classes of industry workbench compared `t2-matrix-7-workbench-en` · three-phase ablation `t3-flow-7-ablation-en` |
 | §VIII | the three composability axes `t1-cardgrid-8-axes-en` · the five-dimension ontology of a sub-harness cell `t2-cardgrid-8-subharness-en` · Lego and the shipping container `t3-comparison-8-lego-en` · the ten relational edges of the Evidence Graph `t3-cardgrid-8-evidence-en` |
-| §IX | the thermostat analogy `t1-analogy-9-thermostat-en` · the four control-theory principles `t2-cardgrid-9-principles-en` |
+| §IX | the thermostat analogy `t1-analogy-9-thermostat-en` · the four cybernetic principles `t2-cardgrid-9-principles-en` |
 | §X | three kinds of reader, three learning paths `t1-comparison-10-readers-en` |
 
 ## What the tutorial is for
@@ -99,12 +99,12 @@ The Introductory Volume doesn't require reading cover to cover. Three kinds of r
 
 **AI PMs and AI business roles**: you make technology choices, evaluate outside agent vendors, or set the harness direction for a team. Recommended path: §I → §5.3 Tool Registry → §5.5 Prompt Assets → the anti-patterns subsection of §VII Harness Lab (7.8) → §VIII composability matrix.
 
-**Learners** (studying agent engineering, doing research, preparing to enter the field): you want a mental model that can converse with any agent paper or tutorial. Recommended path: §I, §II → §5.1 Agent Loop → §5.8 Verifier → §IX Four principles of control theory.
+**Learners** (studying agent engineering, doing research, preparing to enter the field): you want a mental model that can converse with any agent paper or tutorial. Recommended path: §I, §II → §5.1 Agent Loop → §5.8 Verifier → §IX Four cybernetic principles.
 
 **For an AI to read**: an AI agent reads this volume itself to make downstream decisions. Recommended path: in the order of the contents (file names 01 → 99). Don't skip the passages that describe the mechanisms. They are the main body of the text; skip them and only the names are left.
 
 ## What may be skipped
 
 - **Chapters on the more mature mechanisms** (§5.2 Model Adapter, §5.7 Trajectory) carry less methodology and may be skimmed.
-- **Don't skip the key chapters**: §5.1 Agent Loop, §5.4 Context-Memory-Artifact, §5.5 Prompt Assets, §5.6 Observation Surface, §5.8 Verifier, §VII Harness Lab, §VIII composability matrix, and §IX Four principles of control theory. These eight chapters are the main support for the volume's argument.
+- **Don't skip the key chapters**: §5.1 Agent Loop, §5.4 Context-Memory-Artifact, §5.5 Prompt Assets, §5.6 Observation Surface, §5.8 Verifier, §VII Harness Lab, §VIII composability matrix, and §IX Four cybernetic principles. These eight chapters are the main support for the volume's argument.
 - **§5.6 covers the two roles of the observation surface**: it is not only runtime feedback to the model; it is also the input-side infrastructure for cross-run self-evolution.

@@ -89,7 +89,7 @@ The project is written on the assumption that some of its readers are AI themsel
 
 > Revised September 2026: the [Introductory Volume revision notes](../introduction/00-revision-notes.md) (Chinese) summarize the changes, and the [terminology table](../术语对照表.md) (Chinese) records the terminology conventions and fact-checks shared by all three volumes. The English edition has been synced with this revision.
 
-The Introductory Volume is the opening — the overture — of this project. It decomposes an agent harness into **eight runtime mechanisms + one cross-cutting control plane + engineering patterns + a workbench + a composability matrix + four control-theory principles**, and walks through this skeleton in full. Each part gets a complete mental model at three levels: What, Why, and How to start.
+The Introductory Volume is the opening — the overture — of this project. It decomposes an agent harness into **eight runtime mechanisms + one cross-cutting control plane + engineering patterns + a workbench + a composability matrix + four cybernetic principles**, and walks through this skeleton in full. Each part gets a complete mental model at three levels: What, Why, and How to start.
 
 <p align="center">
   <img src="../diagrams/sample-05-mechanisms-overview-en.png" alt="Eight runtime mechanisms + one Safety control plane — overview" width="840">
@@ -118,7 +118,7 @@ The Introductory Volume doesn't require reading cover to cover. Three kinds of r
 
 **Learners** (studying agent engineering, doing research, preparing to enter the field) — you want a mental model that can converse with any agent paper or tutorial — to understand why the line from ReAct to Reflexion to Plan-Execute has evolved the way it has. Path:
 
-§I-§II (origins and prehistory) → §5.1 Agent Loop (evolution of reasoning paradigms) → §5.8 Verifier (the hardest mechanism in agent engineering) → §IX Four principles of control theory (where the volume's thesis comes together).
+§I-§II (origins and prehistory) → §5.1 Agent Loop (evolution of reasoning paradigms) → §5.8 Verifier (the hardest mechanism in agent engineering) → §IX Four cybernetic principles (where the volume's thesis comes together).
 
 **For an AI to read** — an AI agent reads this volume itself to make downstream decisions (for example, an agent tuning its own harness configuration after reading). Path:
 
@@ -143,13 +143,13 @@ Read in the order of the contents above (file names 01 → 99). The entry hook a
 | §5.8 | Verifier |
 | §5.9 | Safety |
 | §5.10 | The micro-flow of a single turn (a single-turn walkthrough) |
-| §5.11 | End-to-end 17 turns |
+| §5.11 | End-to-end 17 steps |
 | §VI | Engineering patterns |
 | §VII | Harness Lab — the outer optimization loop |
 | §VIII | Composability matrix |
-| §IX | Four principles of control theory |
+| §IX | Four cybernetic principles |
 | §X | Learning paths |
-| Companion · Prompt | Harness Prompt — the executable build spec for an agent ([`11-harness-prompt.md`](../introduction.en/11-harness-prompt.md)) |
+| Companion · Prompt | Harness Prompt — the executable implementation spec for an agent ([`11-harness-prompt.md`](../introduction.en/11-harness-prompt.md)) |
 | Companion · Prompt lite | The generic implementation prompt (eval-first), lite version: three instructions handed straight to a coding AI ([`12-harness-prompt-lite.md`](../introduction.en/12-harness-prompt-lite.md)) |
 | Appendix | primary sources / Evidence Graph 10 edges / OWASP Top 10 / naming map / SPIFFE-biscuit / AP01–AP20 / arxiv index |
 
@@ -157,7 +157,7 @@ Read in the order of the contents above (file names 01 → 99). The entry hook a
 
 - **The appendix is reference material, not required reading** — consult on demand.
 - **Continuity sections** (§5.2 Model Adapter / §5.7 Trajectory) cover comparatively mature components and have lower methodological density than the key chapters; may be skimmed.
-- **Don't skip the key chapters**: §5.1 Agent Loop / §5.4 Context-Memory-Artifact / §5.5 Prompt Assets / §5.6 Observation Surface / §5.8 Verifier / §VII Harness Lab / §VIII Composability Matrix / §IX Four principles of control theory. These eight chapters carry the volume's thesis.
+- **Don't skip the key chapters**: §5.1 Agent Loop / §5.4 Context-Memory-Artifact / §5.5 Prompt Assets / §5.6 Observation Surface / §5.8 Verifier / §VII Harness Lab / §VIII Composability Matrix / §IX Four cybernetic principles. These eight chapters carry the volume's thesis.
 
 ### Introductory Volume — Acceptance Criterion
 

@@ -32,8 +32,8 @@ The name "harness engineering" gradually caught on in 2026. The primary sources 
 | produces | A produces a B-class artifact | Agent Loop → TrajectoryRecord |
 | verifies | A verifies B's output | Verifier → Agent Loop artifact |
 | scores | A scores B's output | Outcome Judge → run |
-| blocks | A stops B's action | Safety → Agent Loop (ToolBlocked) |
-| repairs | A fixes B's error | Contract Repair → schema violation |
+| blocks | A stops B's action | Safety → Agent Loop (permission denial, recorded as Blocked) |
+| repairs | A fixes B's error | Failover → primary provider error |
 | hands_off | A transfers control to B | Main agent → sub-harness |
 | supports | A's output corroborates B's conclusion | multi-source verifier agreement |
 | contradicts | A refutes B's conclusion | what the agent claims disagrees with what the verifier observes (the most valuable diagnostic signal) |
@@ -153,7 +153,7 @@ The book names 20 anti-patterns in all, gathered here for quick lookup. For each
 | AP11 | Loop Blind Spot | §III / §7.8 | the agent does not know it is going in circles |
 | AP12 | Sub-agent Depth Explosion | §5.9 | fork-join with no depth cap and no token cap |
 | AP13 | Hook / Allowlist Bypass | §5.9 | the allow rule matches by string prefix, so a `cargo check` rule lets `cargo checkpoint` through (a real case from the author's companion project; see Volume 2 (*Architecture & Engineering*), §2.7); fix: match whole words |
-| AP14 | Memory Pollution | §5.4c | long-term memory keeps accumulating wrong content |
+| AP14 | Memory Pollution | §5.4.2 | long-term memory keeps accumulating wrong content |
 | AP15 | Excessive Agency / Unbounded Consumption | §5.9 | OWASP LLM06 + LLM10 (2025 edition) |
 | AP16 | Schema Coupling | §5.5 | the schema in the prompt, the test cases, and the verifier are hard-wired together; change one and the other two break silently |
 | AP17 | Premature Optimization | §7.8 / §7.4 / §X | tuning on conclusions drawn before enough data is in; the bar is a confidence interval that does not cross 0 |
@@ -165,16 +165,16 @@ The book names 20 anti-patterns in all, gathered here for quick lookup. For each
 
 ## G · Citation index · grouped by arXiv ID prefix
 
-This section groups the works cited in the main text by arXiv ID prefix for quick lookup; the full entries are in each chapter's footnotes.
+This section groups the works cited in the footnotes by arXiv ID prefix for quick lookup. The labels match each chapter's footnote labels, and the full entries are in the footnotes. The prefix gives the year and month of submission, which can differ from the publication year (hal-2026, for example, has the ID 2510.11977).
 
-**2210.\* (2022)**: react-yao-2022
+**22xx.\* (2022)**: react-yao-2022 (2210.03629)
 
-**2302–2310.\* (2023)**: toolformer-2023 / reflexion-shinn-2023 / tot-yao-2023 / plan-solve-wang-2023 / memgpt-2023 / voyager-2305
+**23xx.\* (2023)**: reflexion-shinn-2023 (2303.11366) / voyager-2305 (2305.16291) / lost-in-middle-2024 (2307.03172)
 
-**2405–2410.\* (2024)**: swe-agent-2024 / pav-2024
+**24xx.\* (2024)**: routellm-2024 (2406.18665) / genrm-poll (2408.15240, 2404.18796) / pav-2024 (2410.08146)
 
-**2502–2511.\* (2025)**: plan-and-act-2025 / reflact-2025 (EMNLP 2025) / gigpo-2025 / preference-leakage-2025 (2502.01534, ICLR 2026) / mnimi-2025 / agent-prm-2025 (2511.08325) / stop-overvaluing-mad-2025 (2502.08788)
+**25xx.\* (2025)**: zep-2025 (2501.13956) / preference-leakage (2502.01534) / magellan-alp (2502.07709) / plan-and-act-2025 (2503.09572) / mem0-2025 (2504.19413) / self-correction-survey-2025 (2504.21625) / gigpo-2025 (2505.10978) / socratic-prm-bench-2026 (2505.23474) / weak-reward-rl (2506.00103, 2511.02463) / one-token-fool-2025 (2507.08794) / self-evolving-survey-2026 (2507.21046) / behavioral-fingerprinting-2025 (2509.04504) / composite-rewards-2026 (2509.15557) / memgen-2026 (2509.24704) / hal-2026 (2510.11977) / agent-prm-2025 (2511.08325) / agent-evolver-2026 (2511.10395) / mnimi-2025 (2511.22118) / cdct-2025 (2512.17920) / ssr-2026 (2512.18552)
 
-**2510–2511.\* / 2601.\* / 2603–2605.\* (2026)**: hal-2026 (2510.11977) / reward-hacking-equilibrium-2026 (2603.28063) / meta-harness-2026 (2603.28052) / nl-agent-harness-2026 (2603.25723) / claw-eval-2026 (2604.06132) / pcs-2026 (2604.11003) / reward-hacking-era-2026 (2604.13602) / llm-gaming-verifiers-2026 (2604.15149) / skill-ra-2026 (2604.24594) / ahe-2026 (2604.25850) / rhb-2026 (2605.02964) / continual-harness-2026 (2605.09998) / ahe-runtime-substrate-2026 (2605.13357) / tool-prm-bench-2026 (2601.12294) / code-as-agent-harness-survey-2026 (2605.18747) / faulty-memory-2026 (2605.12978) / fate-2026 (2605.11882) / skillopt-2026 (2605.23904)
+**26xx.\* (2026)**: tool-prm-bench (2601.12294) / trajectory-informed-memory-2026 (2603.10600) / agent-her-2026 (2603.21357) / erl-2026 (2603.24639) / meta-harness-2026 (2603.28052) / reward-hacking-equilibrium-2026 (2603.28063) / claw-eval-2026 (2604.06132) / artifacts-as-memory-2026 (2604.08756) / dive-cc-2026 (2604.14228) / swe-trace-2026 (2604.14820) / llm-gaming-verifiers-2026 (2604.15149) / taco-2026 (2604.19572) / ahe-2026 (2604.25850) / rhb-2026 (2605.02964) / continual-harness-2026 (2605.09998) / fate-2026 (2605.11882) / faulty-memory-2026 (2605.12978) / code-as-agent-harness-survey-2026 (2605.18747) / skillopt-2026 (2605.23904)
 
-**Non-arXiv primary sources**: deepseek-v4-tr, owasp-llm-top10-2025, openai-harness-engineering-2026, langgraph-docs
+**Sources whose footnotes give no arXiv ID**: gpt3-few-shot-2020 / cot-wei-2022 / self-consistency-wang-2022 / llmcompiler-2024 / swe-bench-verified / anthropic-skills-spec / anthropic-multi-agent-research / dynamic-workflows / anthropic-effective-agents / harness-routing-2026 / era-of-experience / pass-at-k / claude-code-auto-dream / karpathy-autoresearch-2026 / philschmid-pass-k

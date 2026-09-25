@@ -28,7 +28,7 @@ This is the core framework for agent harness engineering as it moves from a sing
 
 *Figure 8.2 · The three composability axes: encapsulation × topology × interaction boundary*
 
-#### 8.0 Terms first used in this section
+#### 8.0 Terms first used in this chapter
 
 Terms already explained in §I–§VII (the harness mechanisms, Tool Registry, Skill, fork-join, and so on) are not repeated. Listed here are only the terms that appear for the first time in this chapter.
 
@@ -176,10 +176,10 @@ The Evidence Graph's ten edges make this web systematic. Each edge is one observ
 
 The last five complete the other half of the relation ontology:
 
-6. **blocks**: A stopped B's action. Typical examples: the Safety control plane blocks the Agent Loop (the ToolBlocked part of §5.9); a hook denies a tool call. A blocks edge is an important signal in the trajectory, and its absence is a signal too (as covered earlier, "a missing event is itself a bug signal"): a block that should have fired but did not is one class of bug, and a block that fired when it should not have is another.
-7. **repairs**: A fixed B's error. Typical examples: the contract repair in §5.2 (the model adapter repairing a schema violation); the retry path after a fork-join failure in §6.6.
+6. **blocks**: A stopped B's action. Typical examples: the Safety control plane blocks the Agent Loop (a permission denial in §5.9, recorded in §5.6 as the Blocked state of a MechanismEvent); a hook denies a tool call. A blocks edge is an important signal in the trajectory, and its absence is a signal too (as covered earlier, "a missing event is itself a bug signal"): a block that should have fired but did not is one class of bug, and a block that fired when it should not have is another.
+7. **repairs**: A fixed B's error. Typical examples: the failover in §5.2 (when the primary provider fails, the model adapter switches to a backup); the retry path after a fork-join failure in §6.6.
 8. **hands_off**: A transferred control to B. Typical examples: the main agent hands_off a sub-harness; a subtask agent hands_off back to the main agent when it finishes. It is the observable record, in the trajectory, of the handoff pattern described in §8.3: every handoff corresponds to one hands_off edge.
-9. **supports**: A's output corroborated B's conclusion. Typical examples: several verifier sources agree on one conclusion; the three evidence sources of Claw-Eval in §5.8 support one another.
+9. **supports**: A's output corroborated B's conclusion. Typical examples: several verifier sources agree on one conclusion.
 10. **contradicts**: A's output refuted B's conclusion. Typical examples: the agent reports "task complete," but the verifier's conclusion contradicts it; two sub-agents reach conflicting conclusions. The contradicts edge is **one of the most valuable diagnostic signals** in an agent system: every problem in the class of silent failure or Artifact Claim Mismatch corresponds to a contradicts edge that went undetected.
 
 ![](../diagrams/t3-cardgrid-8-evidence-en.png)
@@ -210,7 +210,7 @@ The five-dimension ontology relates to the three axes this way: the three axes c
 
 In real use of the composability matrix in 2026, three anti-patterns come up most often.
 
-**The first: a catch-all prompt in place of the five-dimension ontology.** Facing a new scenario, the common move is to write a 5,000-word system prompt describing the domain and let the LLM improvise, with no sub-harness cell and no five-dimension ontology. §8.5 already explained, with the IntentRouter counter-example, why the five-dimension ontology is more consistent than a catch-all prompt: with a prompt, the domain rules get reinterpreted on every call, while the ontology fixes the rules in a schema and runs the same copy every time. This section gives only the criterion: does the sub-harness design document contain a five-dimension ontology schema? If not, it is still at the prompt stage and does not count as a sub-harness.
+**The first: a catch-all prompt in place of the five-dimension ontology.** Facing a new scenario, the common move is to write a system prompt of 5,000 Chinese characters describing the domain and let the LLM improvise, with no sub-harness cell and no five-dimension ontology. §8.5 already explained, with the IntentRouter counter-example, why the five-dimension ontology is more consistent than a catch-all prompt: with a prompt, the domain rules get reinterpreted on every call, while the ontology fixes the rules in a schema and runs the same copy every time. This section gives only the criterion: does the sub-harness design document contain a five-dimension ontology schema? If not, it is still at the prompt stage and does not count as a sub-harness.
 
 **The second: over-choosing topology.** Teams reach for a multi-agent or sub-harness architecture from the start without first checking whether a single agent is enough. This happens because the tech crowd treats multi-agent as a mark of sophistication and a single agent as a "naive" starting point, and that bias makes the selection phase skip the single-agent assessment. But the single agent is the best starting point for agent engineering. In most scenarios a single agent is already enough (a judgment from experience), while multi-agent systems use about 15 times the tokens of an ordinary chat. §5.1.5 and §6.6 give the cost breakdown, along with Anthropic's point that most coding tasks have less truly parallelizable work than research tasks. The criterion: before adding a sub-agent or sub-harness, answer what the single agent's pass rate is over 10 runs of this task. If you have not run it, run the single agent first. If you have, and the pass rate is 80% or higher (rule of thumb; adjust to your scenario), do not add multi-agent. Optimizing the single agent is worth more.
 

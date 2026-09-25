@@ -22,7 +22,7 @@ prompt 被单独抽出来作为一类工程资产管理，根因是两层互相�
 prompt asset 跟其他 harness 机制不是平行关系，而是渗透关系：
 
 - tool description 本质上是嵌在 Tool Registry 里的一类 prompt asset；
-- Skill 在本书中归入 Prompt Assets，是 prompt 资产的一种组织方式（本节是它的主定义，见 §5.5.7 末尾）；它同时牵涉 Tool Registry（可以内嵌工具定义、按需检索）和 Artifact（存储与版本化方式与 Artifact 相同，见 §5.4）；
+- Skill 在本书中归入 Prompt Assets，是 prompt 资产的一种组织方式（本节是它的主定义，见本节末的业界归位卡片）；它同时牵涉 Tool Registry（可以内嵌工具定义、按需检索）和 Artifact（存储与版本化方式与 Artifact 相同，见 §5.4）；
 - hook 是 prompt asset 与 Safety 控制面共用的工程载体；
 - Model Adapter 决定 prompt asset 在传输层（wire format）的具体编码，OpenAI 格式跟 Anthropic 格式的细节不同。
 

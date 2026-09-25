@@ -23,7 +23,7 @@ The boundary between a pattern and a runtime mechanism is worth keeping sharp. *
 
 A pattern is not a component. It is engineering experience about how components fit together. By the end of this chapter you should recognize the common combinations, well enough to spot and reuse them when you build a production agent.
 
-#### 6.0 Terms first used in this section
+#### 6.0 Terms first used in this chapter
 
 Terms already explained in §I–§V (runtime mechanism, cache, Tool Registry, Trajectory, sandbox, fork-join, and so on) are not repeated. Listed here are only the terms that appear for the first time in §VI.
 
@@ -215,7 +215,7 @@ The engineering implementation of fork-join has a few key parts:
 
 **Provider-adaptive concurrency slots** are something fork-join must account for in production. Model providers grant different API rate limits: each sets caps on requests per minute (RPM) and tokens per minute (TPM) by usage tier, and concurrency follows indirectly from those caps, with no uniform fixed number. If the number of sub-agents is not scheduled dynamically against the provider's current limits, the system is easily throttled. The common countermeasure is a **dynamic slot pool**. The harness keeps a pool of "provider × concurrency slots"; a sub-agent takes a slot when spawned and returns it when finished, and when all slots are taken, new spawn requests queue. That keeps sub-agents within the provider's current rate limit, so the multi-agent system degrades smoothly under throttling instead of failing with a raw 429.
 
-Whether fork-join applies follows the same criteria as the anti-pattern part of §5.9. The turn-count thresholds below are the author's rules of thumb; adjust them to your scenario:
+Whether fork-join applies depends on task length; the three preconditions for going multi-agent at all are in §5.1.5. The turn-count thresholds below are the author's rules of thumb; adjust them to your scenario:
 
 - **Tasks within 30 turns**: a single agent in a single process is enough;
 - **30 to 60 turns**: be cautious with multi-agent, and first pin down the bottleneck a single agent cannot get past;

@@ -19,7 +19,7 @@
 | §二 | [02-prehistory.md](./02-prehistory.md) | 前世：模型当函数用的时代（2020–2022） |
 | §三 | [03-autogpt.md](./03-autogpt.md) | 第一次大规模试错：AutoGPT 浪潮和它的翻车（2023） |
 | §四 | [04-harness-emerges.md](./04-harness-emerges.md) | Harness 概念的浮现（2023 中–2026） |
-| §五 · 总述 | [05-00-mechanisms-overview.md](./05-00-mechanisms-overview.md) | 8 个 runtime 机制 + 1 个 Safety 控制面 · 切法与机制 vs 实现 |
+| §5.0 | [05-00-mechanisms-overview.md](./05-00-mechanisms-overview.md) | 8 个 runtime 机制 + 1 个 Safety 控制面 · 切法与机制 vs 实现 |
 | §5.1 | [05-01-agent-loop.md](./05-01-agent-loop.md) | Agent Loop · Inner Loop · agent 的思考结构 · **P0** |
 | §5.2 | [05-02-model-adapter.md](./05-02-model-adapter.md) | Model Adapter & Routing |
 | §5.3 | [05-03-tool-registry.md](./05-03-tool-registry.md) | Tool Registry & ACI · **P0** |
@@ -30,7 +30,7 @@
 | §5.8 | [05-08-verifier.md](./05-08-verifier.md) | Verifier 三层 · **P0** |
 | §5.9 | [05-09-safety.md](./05-09-safety.md) | Safety 控制面 · cross-cutting |
 | §5.10 | [05-10-turn-walkthrough.md](./05-10-turn-walkthrough.md) | 一次 turn 的微型流程 |
-| §5.11 | [05-11-end-to-end.md](./05-11-end-to-end.md) | 中型端到端流程示例 · 17 turn 修 logging bug |
+| §5.11 | [05-11-end-to-end.md](./05-11-end-to-end.md) | 中型端到端流程示例 · 17 步修 logging bug |
 | §六 | [06-engineering-patterns.md](./06-engineering-patterns.md) | 工程模式 · 跨机制复用的工程组合 pattern |
 | §七 | [07-harness-lab.md](./07-harness-lab.md) | Harness Lab · Outer Loop · 系统化优化 harness 自身 |
 | §八 | [08-composability.md](./08-composability.md) | 可组合性矩阵 · 封装 × 拓扑 × 交互边界 |
@@ -38,7 +38,7 @@
 | §十 | [10-learning-path.md](./10-learning-path.md) | 学习路径 · 三类读者怎么用这本教程 |
 | 配套 · Prompt | [11-harness-prompt.md](./11-harness-prompt.md) | Harness Prompt · 给 agent 的可执行实施 Spec（Phase 0–3 + 每步 gate）|
 | 配套 · Prompt lite | [12-harness-prompt-lite.md](./12-harness-prompt-lite.md) | 通用落地提示词（评测先行）精简版，三段指令直接交给编码 AI|
-| 附录 | [99-appendix.md](./99-appendix.md) | 8 个机制速查表 + 一手引源汇总 |
+| 附录 | [99-appendix.md](./99-appendix.md) | A 一手资料索引 · B Evidence Graph 10 边 · C OWASP LLM Top 10 · D 机制与业界产品对应 · E 身份与授权 · F 反模式速查 · G 引用文献索引 · H 中英术语对照表 |
 
 > 目录中标 **P0** 的是优先级最高的机制：不做它，harness 跑不起来或跑起来也不可靠（P0/P1/P2 三级的含义见[第五章总述](./05-00-mechanisms-overview.md)）。
 >
@@ -54,7 +54,7 @@
 | §二 | prompt-only 局限 `t1-comparison-2-prompt` |
 | §三 | AutoGPT 机制矩阵 `t1-matrix-3-autogpt` · 实习生类比 8+1 `t2-analogy-3-intern` |
 | §四 | harness 命名时间线 `t1-timeline-4-naming` · 每代算法对应约束层 `t2-matrix-4-generations` |
-| §五·总述 | 八大机制总览 `sample-05-mechanisms-overview` · 抽象层次 `t1-layered-5.0-abstraction` |
+| §5.0 | 八大机制总览 `sample-05-mechanisms-overview` · 抽象层次 `t1-layered-5.0-abstraction` |
 | §5.1 | ReAct 演化矩阵 `t1-matrix-5.1-react8` · 设计四问决策树 `t1-tree-5.1-choose` · 十六条收敛五条 `t2-cardgrid-5.1-five` · 多 agent 成本 15x `t3-cardgrid-5.1-multiagent` |
 | §5.2 | 模型路由 `t1-cardgrid-5.2-routing` |
 | §5.3 | tool call 流程 `t1-flow-5.3-toolcall` · 工具批处理四模式 `t3-cardgrid-5.3-toolbatch` |
@@ -65,7 +65,7 @@
 | §5.8 | verifier 矩阵 `t1-matrix-5.8-verifier` · leakage 四类防御 `t2-cardgrid-5.8-leakage` |
 | §5.9 | Safety 横切 `t2-layered-5.9-controlplane` · permission 分层 `t1-layered-5.9-permission` · HITL 两路径 `t3-comparison-5.9-hitl` · OWASP 四项 `t2-cardgrid-5.9-owasp` · 四类误区 `t3-cardgrid-5.9-pitfalls` |
 | §5.10 | 一次 turn 流程 `t1-flow-5.10-turn` |
-| §5.11 | 17 turn 时间线 `t1-timeline-5.11-17turn` · Turn 16 时序 `t1-sequence-5.11-turn16` |
+| §5.11 | 17 步时间线 `t1-timeline-5.11-17turn` · Turn 16 时序 `t1-sequence-5.11-turn16` |
 | §六 | 工程模式卡片 `t1-cardgrid-6-patterns` · Isolation 三档 `t2-comparison-6-isolation` · 六 pattern 渐进 `t3-timeline-6-pattern-order` |
 | §七 | Harness Lab 分层 `t1-layered-7-harnesslab` · 工作台五层覆盖 `t2-matrix-7-workbench` · 三 Phase 消融 `t3-flow-7-ablation` |
 | §八 | 可组合性维度 `t1-cardgrid-8-axes` · 副 harness 五维度 `t2-cardgrid-8-subharness` · 乐高加集装箱 `t3-comparison-8-lego` · Evidence Graph 十边 `t3-cardgrid-8-evidence` |
@@ -109,4 +109,4 @@
 
 - **讲较成熟机制的章节**（§5.2 Model Adapter、§5.7 Trajectory）方法论内容较少，可跳读。
 - **重点章不要跳**：§5.1 Agent Loop、§5.4 Context-Memory-Artifact、§5.5 Prompt Assets、§5.6 Observation Surface、§5.8 Verifier、§七 Harness Lab、§八 可组合性矩阵、§九 控制论。这八章是本卷论点的主体支撑。
-- **§5.6 讲观测面的两个作用**：observation surface 不只是运行时给模型的反馈，还是跨 run 自我改进（self-evolution）的输入侧基础设施。
+- **§5.6 讲观测面的两个作用**：observation surface 不只是运行时给模型的反馈，还是跨 run 自我演化（self-evolution）的输入侧基础设施。

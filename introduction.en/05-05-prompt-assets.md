@@ -22,7 +22,7 @@ All five forms rest on one shared design philosophy: **written for agents, not f
 Prompt assets do not sit parallel to the other harness mechanisms; they permeate them:
 
 - A tool description is in essence a kind of prompt asset embedded in the Tool Registry.
-- In this book a Skill belongs to Prompt Assets: it is one way of organizing prompt assets (this section gives its primary definition; see the end of §5.5.7). It also touches the Tool Registry (it can embed tool definitions and be retrieved on demand) and Artifact (it is stored and versioned the same way as an Artifact; see §5.4).
+- In this book a Skill belongs to Prompt Assets: it is one way of organizing prompt assets (this section gives its primary definition; see the industry placement card at the end of this section). It also touches the Tool Registry (it can embed tool definitions and be retrieved on demand) and Artifact (it is stored and versioned the same way as an Artifact; see §5.4).
 - A hook is an engineering carrier shared by prompt assets and the Safety control plane.
 - The Model Adapter decides how a prompt asset is encoded at the transport layer (the wire format); OpenAI's format and Anthropic's differ in the details.
 
