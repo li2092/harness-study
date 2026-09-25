@@ -1,12 +1,14 @@
 # 5.11 中型端到端流程示例 · 17 turn 修 logging bug
 
-要把 8 件 runtime + Safety 控制面在跨 turn / 跨 run 层面的协作讲清楚 · 单 turn 微型流程不够——需要一个有真实复杂度的任务展开。下面示例任务是 "修一个 Python 项目的并发 logging bug 并提交 PR" —— bug 描述 "logger.emit() 在多线程下偶尔丢消息" · agent 要定位 → 写测试复现 → 修 → 跑测试 → 跑 lint → commit → push → 创建 PR。任务长度约 17 turn —— 这是 single-agent 任务长度的典型生产区间（前面 Safety 常见误区 AP12 段讲过 30 turn 内单 agent 单进程足够 · 这个示例落在该区间）。
+要把 8 个 runtime 机制和 Safety 控制面在跨轮、跨 run 层面的协作讲清楚，单轮的微型流程不够，需要一个有真实复杂度的任务。下面的示例任务是"修一个 Python 项目的并发 logging bug 并提交 PR"，bug 描述是"logger.emit() 在多线程下偶尔丢消息"。agent 要依次定位问题、写测试复现、修复、跑测试、跑 lint、commit、推送到功能分支，再向 main 创建 PR。
+
+时间线上共有 17 个编号：16 轮 agent 调用，加上编号 11 处的一次上下文压缩。压缩发生在 Turn 10 结束之后、Turn 12 开始之前，是两轮之间由 harness 执行的事件，不是一轮 agent 调用；为了和图 5.28 的时间线对应，这里沿用 17 个编号。这个长度落在单 agent 任务常见的区间里：§5.1.5 讨论多智能体过度拆分时给过判断线，30 轮以内的任务用单 agent 单进程通常就够（经验值）；§5.9 讲子智能体深度失控（Sub-agent Depth Explosion，AP12，见附录 F）时，又从 Safety 一侧补了上限约束。
 
 ![](../diagrams/t1-timeline-5.11-17turn.png)
 
 *图 5.28 · 17 个 turn 端到端修 logging bug 并提 PR*
 
-示例是作者构造的教学示例 · 不是某次真实运行 trajectory · 数值用于展示机制协作关系。
+示例是作者构造的教学示例，不是某次真实运行的 trajectory，数值只用于展示机制之间的协作关系。
 
 ```
 ═══════════════════════════════════════════════════════════
@@ -193,45 +195,55 @@ End of run.
 ═══════════════════════════════════════════════════════════
 ```
 
-**单 run 总结**：17 turn · 约 50 行 trajectory 事件 · 1 次 context auto-compact（Turn 11）· 1 次 verifier Hard Gate 失败后 retry（Turn 10）· 1 次 Safety 4 层完整介入 + HITL approval（Turn 16）· Outcome Judge 在 final turn 启动 · PRM 累加全程 step score。
+**单 run 总结**：16 轮 agent 调用，加 1 次两轮之间的上下文压缩（编号 11），共约 50 行 trajectory 事件。其中：
 
-这个示例把 8 件 runtime + Safety 控制面在跨 turn 协作的几个关键观察点显式画出。
+- 1 次 verifier Hard Gate 失败后按重试策略继续（Turn 10）；
+- 2 次人工确认（HITL）：Turn 16 的 push 触发 Safety 4 层完整介入，Turn 17 建 PR 再单独确认一次；
+- Outcome Judge 在最后一轮启动；
+- PRM 全程累加每步得分。
 
-**Prompt Assets 的稳定前缀（P0 system + P1 task）跨 turn 复用 · 动态部分（P2 memory / P3 tools 子集 / context summary）每 turn 按需更新** —— prompt 装配不是每 turn 从头重做 · 但也不是"一份 hash 跨 turn 不变"：能命中 prompt cache 的是 system + task 这段稳定前缀；memory / tools / summary 一变 · system_prompt_hash 就跟着变（前面 Context 那章讲过 · compaction 改写中段会让 cache 失效）。所以那个 hash 的角色是"这一 turn prompt 的完整指纹"进 trajectory 供 replay 与审计 · 不是跨 turn 不变的 cache key。
+这个示例把 8 个 runtime 机制和 Safety 控制面跨轮协作的几个关键观察点显式画了出来。
 
-**Agent Loop 决策框架（ReAct mode）显式在每个 model call 之前展开** —— thought 段是 agent 推理的外化 · 不是隐藏在 model call 里。这件外化让 trajectory 可读 · 也是前面 Observation Surface / Trajectory 两章讲的 evolver loop 能消费 trajectory 做 self-evolution 的前提（trajectory 含 thought 就含决策依据）。
+**Prompt Assets：稳定前缀（system + task）跨轮复用，动态部分（memory、工具子集、上下文摘要）每轮按需更新。** prompt 装配不是每轮从头重做，但也不是"一个哈希跨轮不变"。能命中提示词缓存的只有 system 加 task 这段稳定前缀；memory、工具子集、摘要一变，prompt_hash 就跟着变（§5.4 讲过，compaction 改写中段会让其后的缓存失效）。所以 prompt_hash 的角色是"这一轮完整 prompt 的指纹"，记进 trajectory 供回放与审计，而不是跨轮不变的缓存键。这与 §5.10 对 prompt_hash 的说明一致。
 
-**Context-Memory-Artifact 三件协作隐身在 stub + body 拆分里** —— 每次 tool 调用产物自动拆 stub（进 context）+ body（进 ArtifactStore）。agent 看到 stub 知道做了什么 · 用 artifact_id 引用 body 不挤 context。Turn 11 auto-compact 把 7 轮历史压成 250 字摘要 + 保留 artifact_id 引用——agent 仍能查 body · 只是不在 context 里。这件 stub + body + compact + retrieval 协作是 Context-Memory-Artifact 三件运作的核心 pattern。
+**Agent Loop 的决策框架（ReAct 模式）在每次模型调用之前显式展开。** thought 段是 agent 推理过程的外化，而不是藏在模型调用里。这种外化让 trajectory 可读，也是 §5.6、§5.7 讲的演化循环（evolver loop）能用 trajectory 做自我演化的前提：trajectory 里有 thought，就有决策依据。
 
-**Observation Surface + Trajectory 跨 turn 累积 evidence** —— 每个 stub 进 context + 每个 event 进 trajectory · 17 turn 累计约 50 个事件。这些事件支持 trajectory replay（用同样 prompt assets 跑 agent 看是否同结果 · 验证 determinism）· 也支持 self-evolution（evolver loop 读 trajectory 找出 "哪些 turn 是浪费 / 哪些决策是错的 / 哪些工具调用本可以合并"）。
+**Context-Memory-Artifact 三个机制的协作藏在 stub 与 body 的拆分里。** 每次工具调用的产物自动拆成 stub（进上下文）和 body（进 ArtifactStore）。agent 看 stub 就知道做了什么，用 artifact_id 引用 body，不占上下文。编号 11 的自动压缩把 7 轮历史压成 250 字摘要，同时保留 artifact_id 引用：agent 仍能查到 body，只是 body 不在上下文里。stub、body、压缩、检索四者的配合，是 Context-Memory-Artifact 运作的核心模式。
 
-**Verifier 三层按 turn 类型选择性启动** —— Hard Gate 每个工具调用 turn 都跑（文件存在 / 命令 exit code 等）· Outcome Judge 只在 task 结束 turn 启动一次（Turn 17）· PRM 全程累加 step score（每个 model call 都打分）。三层按场景配 · 不是每 turn 三层都跑。
+**Observation Surface 与 Trajectory 跨轮累积证据。** 每个 stub 进上下文，每个事件进 trajectory，整个 run 累计约 50 个事件。这些事件支持两件事：
 
-**Safety 控制面 4 层每 turn 都穿过但通常隐身** —— Turn 2/3/4/5/7/9/13/15 等常规工具调用（workspace-write 模式下）都过 4 层但都 pass · 读者看不到 Safety 显式存在；Turn 16 git push 触发 network egress + ask rule + Hook 同时 require user approval 三件叠加 · Safety 4 层完整介入显式可见。这种"通常隐身 · 关键 case 显式" 的 pattern 是 Safety 控制面工程化的核心——Safety 不应该让 user 每个工具调用都被打断 · 但关键 high-impact 操作必须可见。
+- **回放（replay）**：按 trajectory 里已记录的 observation 重放这次 run，不重新执行工具，用来逐步复盘模型当时看到了什么、做了什么决策，或者在固定输入下调试 verifier；
+- **自我演化**：演化循环读 trajectory，找出哪些轮次是浪费、哪些决策是错的、哪些工具调用本可以合并。
+
+**Verifier 三层按轮次类型选择性启动。** Hard Gate 在每个调用工具的轮次都跑（文件是否存在、命令退出码等）；Outcome Judge 只在任务结束的那一轮启动一次（Turn 17）；PRM 全程累加每步得分（每次模型调用都打分）。三层按场景配置，不是每轮都全跑。需要说明的是，PRM（过程奖励模型）主要用于训练和推理期搜索，线上逐步打分的做法较少见，这里只为展示三层的分工（见 §5.8）。
+
+**Safety 控制面的 4 层每轮都经过，但通常不显形。** Turn 2、3、4、5、7、9、13、15 等常规工具调用（workspace-write 模式下）都经过 4 层且全部放行，读者看不到 Safety 的存在。Turn 16 的 git push 同时触发了网络出口检查、ask 规则和 hook 要求人工确认三项，Safety 4 层的完整介入才显式可见。Turn 17 建 PR 是另一个动作，按 §5.3 说的"批准 X 不等于批准 Y"，再确认一次。这种"平时不显形、关键操作显式"的模式是 Safety 控制面工程化的核心：不应该让用户在每次工具调用时都被打断，但高影响的关键操作必须让人看见。
 
 ![](../diagrams/t1-sequence-5.11-turn16.png)
 
 *图 5.29 · git push 时 Safety 四层逐层穿过*
 
-跨 run 的 ablation 视角（前面 Observation Surface / Trajectory 两章讲的 self-evolution 基础设施 · 在后面 Harness Lab 章节系统展开）展示同一任务在不同 harness 配置下的成功率差异（hypothetical ablation matrix · 作者构造的教学示例 · 不是实证数据 · 仅用于说明机制贡献逻辑）：
+再看跨 run 的消融（ablation）视角（§5.6、§5.7 讲的自我演化基础设施，第七章 Harness Lab 会系统展开）：同一个任务在不同 harness 配置下，成功率差多少。下面这张表是作者构造的假设性消融矩阵，不是实测数据，只用来说明怎么读机制的贡献：
 
 | Run | 配置 | 成功率 | 备注 |
 |---|---|---|---|
-| A | 全机制开（8 件 runtime + Safety 4 层 + HITL approval） | 5/5 | 基线 |
-| B | 关 Verifier post-run test | 3/5 | 2 次 silent failure（编译过但功能错） |
-| C | 关 Context auto-compact | 2/5 | 3 次 context overflow · 模型被截断遗忘任务 |
-| D | 关 Safety approval（自动允许 git push） | 5/5 | 速度更快 · 但有 1 次 push 了未通过 review 的代码——风险更高 |
-| E | 关 Trajectory recorder | 5/5 | 跑得通 · 但**事后 ablation 也跑不了**——这一条 ablation 本身需要 trajectory 才能做 |
-| F | 关 Prompt Assets P4 examples | 4/5 | 1 次走错 debug 方向（少了 prior debug case 借鉴） |
-| G | 关 Agent Loop ReAct mode（改 plain mode · 不外化 thought）| 3/5 | 2 次决策不可审 · 后期不知道为什么走错 |
+| A | 全机制开（8 个 runtime 机制 + Safety 4 层 + HITL 确认） | 5/5 | 基线 |
+| B | 关 Verifier 的运行后测试 | 3/5 | 2 次无声失败（编译通过但功能错） |
+| C | 关 Context 自动压缩 | 2/5 | 3 次上下文溢出，模型被截断后遗忘任务 |
+| D | 关 Safety 确认（自动允许 git push） | 5/5 | 速度更快，但有 1 次 push 了未经 review 的代码，风险更高 |
+| E | 关 Trajectory 记录器 | 5/5 | 示意值；关掉后无法做事后消融与复盘 |
+| F | 关 Prompt Assets 中的示例（examples） | 4/5 | 1 次走错调试方向（示意） |
+| G | 关 Agent Loop 的 ReAct 模式（改为不外化 thought 的普通模式）| 3/5 | 示意值；决策过程不可审 |
 
-从这张表能看到几件 framing。**第一件** —— Verifier 跟 Context 管理是该任务的正贡献机制——关掉成功率明显下降。**第二件** —— Safety approval 对速度是负贡献（HITL 等人审）· 但对**风险**是正贡献——这种取舍 ablation 数据本身不能下结论 · 要看业务对 "快 vs 稳" 的权重。**第三件** —— Trajectory recorder 是**前提性机制**——它不影响成功率 · 但关掉就没办法做后续任何 ablation。这种"基础设施"机制不能用 ablation 直接评 · 要作为前提保留。**第四件** —— Agent Loop 跟 Prompt Assets 是本卷新加的两件——ablation 显示它们都有可观察贡献（Agent Loop ReAct mode 让决策可审 · Prompt Assets examples 让 prior pattern 可借）。
+这张表示意的是作者预期的贡献方向，不是测得的结果，不能据此下结论。按这个预期，读表时注意几点：
 
-跨 run 的 ablation 是 Harness Lab 章节的主题——本节只点到为止 · 让读者看到"单 run 内的 17 turn 协作"跟"跨 run 的 ablation 矩阵"是两个互补视角。前者是 runtime 协作 · 后者是 outer loop 优化。两者合起来构成完整的 harness 工程实践。
+- Verifier 和上下文压缩预期是这个任务的正贡献机制，关掉后成功率预期明显下降；
+- Safety 确认对速度是负贡献（要等人审），对风险是正贡献，这种取舍消融数据本身给不出结论，要看业务对"快"与"稳"的权重；
+- Trajectory 记录器是前提性机制：没有它，后续的消融和复盘都没有数据可用，所以它不适合用消融来评，应作为前提保留；
+- Prompt Assets 的示例（F 行）和 Agent Loop 的 ReAct 模式（G 行）有没有贡献、贡献多大，要靠真实的多次复跑消融来测。
+
+跨 run 的消融是第七章 Harness Lab 的主题，本节只点到为止，让读者看到"单个 run 内 17 步的协作"和"跨 run 的消融矩阵"是两个互补的视角：前者是运行时的协作，后者是外层循环（outer loop）的优化。两者合起来构成完整的 harness 工程实践。
 
 ---
 
-> **第一大章结束 · 第二大章接续 part5**
->
-> §一-§五 全本（导论 + 8 件 runtime + 1 件 Safety 控制面 + 微型 + 端到端 17 turn）共 part1-4 累计约 ~115K 字 · 第一大章导论部分到此完整闭环。
->
+> **§一至 §五 到此结束**：导论、8 个 runtime 机制、1 个 Safety 控制面、单轮微型流程和端到端示例。下一章（§六）讲工程模式。
