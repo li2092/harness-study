@@ -55,7 +55,7 @@ Put an agent to work on B2B tasks such as office work, contract review, or busin
 
 In most of these cases, the cause is not in the prompt. Past a certain point, further investment in prompt iteration yields rapidly diminishing returns. What actually determines whether an agent is stable is the layer around the model — in English, the **harness**. A harness is not LangChain or any particular SDK — those are frameworks. The harness is the whole structure you build on top of a framework for a particular task: how the model is connected, how tools are managed, how context accumulates, where artifacts land, what verification rests on, what safety rests on, and how failures are backstopped.
 
-This project — Harness Study — exists to take that layer around the model as an engineering object in its own right and explain it systematically. **The project is organized into volumes.** Two are finished: the **Introductory Volume**, which walks the full skeleton once, and the **Architecture & Engineering volume** (vol. 2, Chinese), which assembles the runtime mechanisms into a semantically correct, interruptible, recoverable, verifiable runtime. Vol. 3 (production engineering & governance) is at the outline stage. Alongside them sits a **practice volume**, *Harness Field Notes* (Chinese), which cuts across the whole book and takes no number in the main sequence.
+This project — Harness Study — exists to take that layer around the model as an engineering object in its own right and explain it systematically. **The project is organized into volumes.** Two are finished: the **Introductory Volume**, which walks the full skeleton once, and the **Architecture & Engineering volume** (vol. 2, Chinese), which assembles the runtime mechanisms into a semantically correct, interruptible, recoverable, verifiable runtime. **Vol. 3** (production engineering: once a single run is correct, how to keep a service reliable over the long term) is being written. Alongside them sits a **practice volume**, *Harness Field Notes* (Chinese), which cuts across the whole book and takes no number in the main sequence.
 
 <p align="center">
   <img src="../diagrams/t1-comparison-1-gap-en.png" alt="What the model does is single-step, side-effect-free prediction; what the task needs is multi-step, stateful, side-effecting execution — the harness is the engineering layer in between" width="800">
@@ -80,7 +80,7 @@ The project is written on the assumption that some of its readers are AI themsel
 
 - ✓ **Introductory Volume**: the manuscript is complete; chapters + 49 diagrams are now in [`introduction.en/`](../introduction.en/); final review in progress.
 - ✓ **Architecture & Engineering volume (vol. 2)**: all 15 chapters, the working-artifact compendium, and the appendix are complete; the text, 34 diagrams, and 80 typeset replacement images are in [`volume2/`](../volume2/) (Chinese).
-- ⏳ **Vol. 3 (production engineering & governance)**: at the outline stage.
+- ⏳ **Vol. 3 · Production engineering**: the volume-level spec is set (four variables → five contract types → a twenty-chapter chain of questions); the chapters are being written.
 - ✓ **Harness Field Notes (practice volume)**: cuts across the whole book and takes no number in the main sequence. 14 chapters, 104 entries, and 41 diagrams are complete, in [`field-notes/`](../field-notes/) (Chinese).
 
 ---
@@ -169,7 +169,7 @@ The Introductory Volume is complete when readers can answer the six questions ab
 
 > Revised September 2026: the [Architecture & Engineering volume revision notes](../volume2/00-revision-notes.md) (Chinese) summarize the changes, and the [terminology table](../术语对照表.md) (Chinese) records the terminology conventions and fact-checks shared by all three volumes.
 
-The Architecture & Engineering volume (vol. 2) covers the step after the individual mechanisms: it assembles the eight runtime mechanisms into a runtime that is **semantically correct, interruptible, recoverable, and verifiable**. Production engineering (database operations, security governance, release, SRE, cost) is left to vol. 3.
+The Architecture & Engineering volume (vol. 2) covers the step after the individual mechanisms: it assembles the eight runtime mechanisms into a runtime that is **semantically correct, interruptible, recoverable, and verifiable**. Production engineering (database operations, security governance, release, SRE, cost) is left to vol. 3, in twenty chapters.
 
 It is written differently from the Introductory Volume, with the criteria stated first. §I sets out the six contracts and the verification coordinate system. §II defines a "correct runtime" as a set of testable criteria. §III checks those criteria in reverse against a "data loss" incident. §IV presents the reference architecture blueprint. §V through §XIII then take the mechanisms one at a time: the Run lifecycle state machine, state and persistence, Durable Execution and replay, tool side effects, streaming and interrupt-and-suspend, context continuity, permissions and isolation, multi-agent coordination, and the Evidence Plane. §XIV builds a minimal but complete runtime from scratch, and §XV closes the volume with a full architecture review against all of its criteria.
 
