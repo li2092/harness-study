@@ -63,9 +63,9 @@ in order before editing the prompt or swapping the model. First, response
 parsing: the model may have written the call as a text tag instead of into the
 structured tool-call field (tool_calls in OpenAI, the tool_use block in
 Anthropic), so have the parsing layer also catch it with a regex. Second,
-request parameters: on an exchange that must use a tool, set tool_choice to
+request parameters: on a turn that must use a tool, set tool_choice to
 require a tool call (required in OpenAI, any in Anthropic). Turn it on per
-exchange, never globally. Third, prompt assembly: an overlong Chinese prompt
+turn, never globally. Third, prompt assembly: an overlong Chinese prompt
 makes the model too lazy to call a tool, so keep the trigger instruction short
 and near the front.
 

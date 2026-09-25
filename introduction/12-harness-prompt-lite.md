@@ -47,8 +47,8 @@ trace),接外部数据源的工具错误先 sanitize 防注入。
 模型该调工具却只吐一段文本,按三处依次排除,别先改 prompt 或换模型:
 一是响应解析,模型可能把调用写成文本标签,没进结构化的工具调用字段
 (OpenAI 的 tool_calls、Anthropic 的 tool_use 块),解析层再兜一道
-正则提取;二是请求参数,该回合必须走工具就把 tool_choice 设为必须调
-用工具(OpenAI 写 required,Anthropic 写 any),按回合开,别全局常
+正则提取;二是请求参数,该轮必须走工具就把 tool_choice 设为必须调
+用工具(OpenAI 写 required,Anthropic 写 any),按轮开,别全局常
 开;三是 prompt 装配,过长的中文 prompt 会让模型懒得调工具,把触发
 指令写短、写靠前。
 

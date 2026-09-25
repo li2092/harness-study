@@ -1,12 +1,12 @@
-# 5.11 A mid-size end-to-end example · 17 turns fixing a logging bug
+# 5.11 A mid-size end-to-end example · 17 steps fixing a logging bug
 
 A single turn in miniature cannot show how the eight runtime mechanisms and the Safety control plane cooperate across turns and across runs; for that you need a task with real complexity. The example below is "fix a concurrency logging bug in a Python project and submit a PR." The bug report reads "logger.emit() occasionally drops messages under multithreading." The agent has to work through it in order: locate the problem, write a test that reproduces it, fix the code, run the tests, run the linter, commit, push to a feature branch, and then open a PR against main.
 
-The timeline has 17 numbered entries: 16 agent turns, plus one context compaction at number 11. The compaction happens after Turn 10 ends and before Turn 12 begins. It is an event the harness runs between two turns, not an agent turn of its own; the numbering stays at 17 so that it lines up with the timeline in Figure 5.28. A task of this length falls in the usual range for a single agent. §5.1.5 gave the criterion when it discussed splitting work across too many agents: a task of up to 30 turns is usually handled well enough by a single agent in a single process (a rule of thumb). §5.9, on Sub-agent Depth Explosion (AP12, see Appendix F), then added upper-bound constraints from the Safety side.
+The timeline has 17 numbered entries: 16 agent turns, plus one context compaction at number 11. The compaction happens after Turn 10 ends and before Turn 12 begins. It is an event the harness runs between two turns, not an agent turn of its own; the numbering stays at 17 so that it lines up with the timeline in Figure 5.28. A task of this length falls in the usual range for a single agent. §6.6 gave the criterion when it discussed fork-join: a task of up to 30 turns is usually handled well enough by a single agent in a single process (a rule of thumb). §5.9, on Sub-agent Depth Explosion (AP12, see Appendix F), then added upper-bound constraints from the Safety side.
 
 ![](../diagrams/t1-timeline-5.11-17turn-en.png)
 
-*Figure 5.28 · 17 turns end to end: fix the logging bug and open the PR*
+*Figure 5.28 · 17 steps end to end: fix the logging bug and open the PR*
 
 The example is a teaching construction by the author, not the trajectory of any real run; its numbers serve only to show how the mechanisms cooperate.
 
@@ -240,7 +240,7 @@ Now take the cross-run view: ablation. It belongs to the self-evolution infrastr
 |---|---|---|---|
 | A | everything on (8 runtime mechanisms + 4 Safety layers + HITL confirmation) | 5/5 | the baseline |
 | B | Verifier post-run tests off | 3/5 | 2 silent failures (compiles, behaves wrong) |
-| C | Context auto-compact off | 2/5 | 3 context overflows; the truncated model forgets the task |
+| C | Context auto-compact off | 2/5 | 3 context overflows; after the context is truncated, the model forgets the task |
 | D | Safety confirmation off (git push auto-allowed) | 5/5 | faster, but 1 push of unreviewed code, so higher risk |
 | E | Trajectory recorder off | 5/5 | illustrative value; with it off, neither ablation nor review can be done after the fact |
 | F | Prompt Assets examples off | 4/5 | 1 wrong debugging direction (illustrative) |

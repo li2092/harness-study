@@ -108,7 +108,7 @@ Map this analogy cleanly onto the **8 runtime mechanisms plus 1 Safety control p
 
 **"Taking notes" = the Trajectory · the event stream.** Every action, decision, compaction, and verifier judgment is written to file, so you can review afterward, compare two configurations item by item, and replay. This is the precondition for Harness Lab (the Observe → Score → Ablate → Tune → Iterate cycle named above) to exist at all: without a trajectory, a cross-run ablation can show you that the score changed, but not why.
 
-**"Getting caught when you err" = the three-layer Verifier.** Every step gets an independent judgment; it isn't done just because the intern says "I'm done." The three layers are a Hard Gate (a deterministic check that code can decide, such as whether `pytest` passed), an outcome judge (a model acting as reviewer, giving a semantic verdict on open-ended output), and a process soft signal (whether the process matched the expected pattern). When something is wrong, it can fall back, retry, or escalate to human review.
+**"Getting caught when you err" = the three-layer Verifier.** Every step gets an independent judgment; it isn't done just because the intern says "I'm done." The three layers are a Hard Gate (a deterministic check that code can decide, such as whether `pytest` passed), an Outcome Judge (a model acting as reviewer, giving a semantic verdict on open-ended output), and a PRM (process reward model, which judges the reasoning process step by step). When something is wrong, it can fall back, retry, or escalate to human review.
 
 These eight mechanisms belong to the runtime layer, and the intern uses all of them on every concrete piece of work. But beyond the eight there is one more, **cutting across** them all:
 
@@ -118,7 +118,7 @@ This set of **8 runtime mechanisms plus 1 Safety control plane** (nine engineeri
 
 One boundary of the analogy is worth marking. An intern can learn on their own (work out a mistake, build experience across tasks), and an LLM can't: the model's weights were frozen at training time, so the mistake it makes today it will make again tomorrow. So a harness is more than an "engineering environment"; it also has to include fixing the model's mistakes permanently, at the level of the environment. That is exactly Hashimoto's February 2026 definition of harness engineering: "anytime you find an agent makes a mistake, you take the time to engineer a solution such that the agent never makes that mistake again." In other words, a mechanism fixed in place at the harness layer makes up for the model's inability to teach itself.
 
-It took the field about three years to walk out of that AutoGPT wave. How the name, the definition, the components, and the control-theory frame of this engineering environment got pinned down, step by step, over those three years is the real history of how the word *harness* converged.
+It took the field about three years to walk out of that AutoGPT wave. How the name, the definition, the components, and the cybernetic frame of this engineering environment got pinned down, step by step, over those three years is the real history of how the word *harness* converged.
 
 ---
 

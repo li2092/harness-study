@@ -171,7 +171,7 @@ auto-compact 的关键难点不在"压"，而在于**摘要要保留什么**。a
 
 摘要质量评测是 auto-compact 必须做的一道工序：把摘要加上后续的执行记录交给一个参照 agent（oracle agent），看它能不能接着把任务做完。做不完，说明摘要丢了关键信息，就回去调摘要 prompt，直到它能做完。这种离线评测可以在每次 harness 升级时跑一遍，避免摘要 prompt 慢慢退化。
 
-压缩用什么模型，也是一个直接的取舍。用便宜模型（GPT-5.4 nano、Claude Haiku 4.5、Qwen Flash、DeepSeek V4 Flash）按公开价目粗算，能比主模型便宜 5 到 20 倍（随模型组合变化）；用主模型质量最高，但每次压缩都是一次额外的主模型调用，成本明显更高。工业级 harness 大多走"便宜模型加严格的摘要 prompt"这条路，理由是摘要这项工作（拿一段对话历史写摘要）相对单纯，便宜模型也能做得不错，关键在 prompt 设计。高风险任务（合同、医疗、财务）可以把压缩模型升级到**比主模型低一档、但明显强于最便宜一档的模型**（比如 Claude Opus 跑主线、Claude Sonnet 跑压缩），这是合理的工程加固：压缩失败的代价比省下的成本高得多。
+压缩用什么模型，也是一个直接的取舍。用便宜模型（GPT-5.4 nano、Claude Haiku 4.5、Qwen Flash、DeepSeek V4 Flash）按公开价目粗算，能比主模型便宜 5 到 20 倍（随模型组合变化）；用主模型质量最高，但每次压缩都是一次额外的主模型调用，成本明显更高。工业级 harness 大多走"便宜模型加严格的摘要 prompt"这条路，理由是摘要这项工作（拿一段对话历史写摘要）相对单纯，便宜模型也能做得不错，关键在 prompt 设计。高风险任务（合同、医疗、财务）可以把压缩模型升级到**比主模型低一级、但明显强于最便宜那一级的模型**（比如 Claude Opus 跑主线、Claude Sonnet 跑压缩），这是合理的工程加固：压缩失败的代价比省下的成本高得多。
 
 **rolling window · 最粗暴的兜底**
 
@@ -285,7 +285,7 @@ Memory 不是 Context 的延伸，而是 agent 工程里独立的一层存储。
 
 2026 年，Mem0、Letta、Zep 等记忆系统的厂商都把 Memory 推为"一等架构组件"（first-class architectural component）。这个口号容易让读者以为任何 agent 都要做 Memory。实际的工程图景要复杂得多：大量垂直 agent 采用无状态架构完全合理，不做 Memory 反而更经济。
 
-把 Memory 当作一等组件来设计，跟把它当作每个 agent 的默认配置，是两回事。Mem0 的论文[^mem0-2025]在长对话记忆评测 LOCOMO 上报告了较好的成绩，但**有 Memory 能力，不等于每个 agent 都该默认启用它**。是否启用，要按下面的判定来定。
+把 Memory 当作一等组件来设计，跟把它当作每个 agent 的默认配置，是两回事。Mem0 的论文[^mem0-2025]在长对话记忆评测 LoCoMo 上报告了较好的成绩，但**有 Memory 能力，不等于每个 agent 都该默认启用它**。是否启用，要按下面的判定来定。
 
 **无状态 agent 的典型场景**：这些场景里，Memory 这一部分可以整个跳过。
 
@@ -431,7 +431,7 @@ TTL 和失效处理的是"过期"和"被推翻"两种情形，但 Memory 还有�
 
 - **第一**，它给"memory rot"一个工程化的应对。下文"memory rot 防御"一段会讲到，记忆腐坏没有彻底的解法，只能把发生频率从"每次都出"降到"很久才出一次"；定期巩固不能彻底防止腐坏，但能显著降低发生频率。
 - **第二**，它把 Memory 的生命周期管理扩展到了 TTL 和失效之外：TTL 处理"过期"，失效处理"被推翻"，巩固处理"碎片化"，三种机制覆盖 Memory 生命周期的三种失效模式。
-- **第三**，它提示了"巩固用什么模型"的取舍：用**比主模型低一档、但明显强于最便宜一档的模型**。太便宜的模型容易在合并时乱合、丢事实，而用主模型又没必要多花钱。
+- **第三**，它提示了"巩固用什么模型"的取舍：用**比主模型低一级、但明显强于最便宜那一级的模型**。太便宜的模型容易在合并时乱合、丢事实，而用主模型又没必要多花钱。
 
 边界也要说明：即便按博客的描述，这也是 Claude Code 为自己内置的功能，不是通用的 agent 记忆框架。它面向 Markdown 文件形式的记忆，不适合 SQL、图这类结构化 Memory。其他 agent 系统要复制这个机制，得自己实现巩固流程，prompt 和能力边界都要重新设计。但它说明了一点：对长期运行、有状态的 agent，记忆巩固值得作为一项独立机制认真设计，而不是可有可无的附加功能。
 
@@ -489,7 +489,7 @@ agent 工程里有时不只一个 agent：一个主 agent 把任务拆给多个�
 
 **面向企业的生产化 · 六项必备与六项未解**
 
-Memory 从 PoC 到生产之间有一道明显的工程鸿沟。PoC 阶段写一个简单的键值存储，手动 store、get 就能跑；但面向企业（toB）规模化部署之后，会暴露一系列只在大数据量、多租户、跨 session、跨设备场景才出现的问题。Mem0 团队 2026 年初公开过他们在 18 个月生产运维中积累的 **6 项生产化必备清单**（Mem0《State of AI Agent Memory 2026》，2026-04 发布：mem0.ai/blog/state-of-ai-agent-memory-2026）。这 6 项都是从"已经出过问题"反推出来的工程约束，不是设计时凭直觉能想到的。
+Memory 从 PoC 到生产之间有一道明显的工程鸿沟。PoC 阶段写一个简单的键值存储，手动 store、get 就能跑；但面向企业（toB）规模化部署之后，会暴露一系列只在大数据量、多租户、跨 session、跨设备场景才出现的问题。Mem0 团队 2026 年 4 月公开过他们在 18 个月生产运维中积累的 **6 项生产化必备清单**（Mem0《State of AI Agent Memory 2026》，2026-04 发布：mem0.ai/blog/state-of-ai-agent-memory-2026）。这 6 项都是从"已经出过问题"反推出来的工程约束，不是设计时凭直觉能想到的。
 
 **第一，默认异步写入。** 同步写入会阻塞 agent 循环。据该清单，生产环境 Memory 写入的平均延迟在 50 至 200 毫秒，在 agent 循环里同步等待，会让每一轮都明显变慢。所有 Memory 写入默认都应走异步：写进队列，agent 循环不等待，由后台 worker 处理。
 
@@ -561,7 +561,7 @@ Memory 最常见的反模式是**把 Memory 当堆放区**，即记忆污染（M
 - 检索接口至少给 agent 两种（按键精确读取和模糊搜索），让模型按场景选；
 - scratchpad 和系统捕获的 Memory 分命名空间存放，不混存；
 - memory rot 防御做三项：元数据、刷新触发、新鲜度检查；
-- 巩固用比主模型低一档、但明显强于最便宜一档的模型；
+- 巩固用比主模型低一级、但明显强于最便宜那一级的模型；
 - 底层包装他人的引擎（Mem0、Zep、Graphiti、Letta 选一家），上层自定接口，保留差异化空间。
 
 **怎么测试。**
@@ -607,7 +607,7 @@ Artifact 之所以是 P2（数据闭环），是因为没有 Artifact，agent �
 
 Artifact 的具体形态因业务场景而异。按数据结构把场景分成四类，选型会清楚得多：结构化、非结构化、关系型、时序型。
 
-**结构化 Artifact**：有明确字段、可以按列查询的数据。典型例子有合同审核 agent 的**已审条款库**（每条条款的来源合同、风险等级、审核结论、人工修订、审核时间都是明确字段）；**供应商档案**（每个供应商的名称、业务类型、合作历史、价格趋势、投诉记录按字段存）；**客户档案**（客户公司、行业、项目历史、决策风格、关键关注点）。结构化 Artifact 的特点是写入时 schema 已经定好，按字段查询效率高，适合存关系库（SQLite、Postgres、MongoDB）。
+**结构化 Artifact**：有明确字段、可以按列查询的数据。典型例子有合同审核 agent 的**已审条款库**（每条条款的来源合同、风险等级、审核结论、人工修订、审核时间都是明确字段）；**供应商档案**（每个供应商的名称、业务类型、合作历史、价格趋势、投诉记录按字段存）；**客户档案**（客户公司、行业、项目历史、决策风格、关键关注点）。结构化 Artifact 的特点是写入时 schema 已经定好，按字段查询效率高，适合存数据库（SQLite、Postgres、MongoDB）。
 
 **非结构化 Artifact**：任意长度的文本、原始文档、报告全文。典型例子有**合同原文归档**（每次审核完保留 PDF 原件）、**审核报告全文**（每次任务最终生成的 Markdown 或 docx 报告）、**对话记录全文**（每次任务的完整执行记录加用户对话）。非结构化 Artifact 的特点是写入时没有明确字段，查询主要靠全文搜索或语义检索，适合存对象存储（S3、文件系统）加索引层（Elasticsearch、Solr、向量库）。
 
@@ -818,7 +818,7 @@ Artifact 是 §5.4 三层里**优先级为 P2、但工程量最大**的一层。
 
 [^artifacts-as-memory-2026]: Artifacts as Memory Beyond the Agent Boundary · arxiv 2604.08756 · 预印本
 [^lost-in-middle-2024]: Lost in the Middle: How Language Models Use Long Contexts · arxiv 2307.03172 · Liu 等（Stanford）· TACL 2024
-[^mem0-2025]: Mem0 · Building Production-Ready AI Agents with Scalable Long-Term Memory · arxiv 2504.19413 · 预印本（评测基准为 LOCOMO）
+[^mem0-2025]: Mem0 · Building Production-Ready AI Agents with Scalable Long-Term Memory · arxiv 2504.19413 · 预印本（评测基准为 LoCoMo）
 [^claude-code-auto-dream]: Claude Code Auto Dream（`/dream`）· 仅见第三方博客描述，Anthropic 官方文档与更新日志均无记载。官方可核实的是 auto memory（会话开始时加载 MEMORY.md 前 200 行或 25KB）：code.claude.com/docs/en/memory
 [^faulty-memory-2026]: Useful Memories Become Faulty · arxiv 2605.12978 · UIUC + 清华 IIIS（Work done at UIUC）· Dylan Zhang 等 · 预印本 · 2026-05
 [^zep-2025]: Zep · arxiv 2501.13956 · 预印本

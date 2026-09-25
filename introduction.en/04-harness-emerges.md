@@ -5,7 +5,7 @@ When the AutoGPT wave failed, it left the field a clear engineering problem: "a 
 - a misconception to clear up first: harness is not a new word (4.1);
 - the six different names the field used in 2023–2025 (4.2);
 - two engineering milestones that can't be skipped: function calling and tool use (4.3);
-- how, over two months in early 2026, four people filled in the name, the formula, the components, and the control-theory frame step by step (4.4);
+- how, over two months in early 2026, four people filled in the name, the formula, the components, and the cybernetic frame step by step (4.4);
 - the harness seen in a cross-generational view of AI history (4.5);
 - the rise of engineered agent tools, the distinction between framework and harness, and why the word harness won (4.6–4.8).
 
@@ -24,7 +24,7 @@ Put the three side by side and the word's original meaning in software engineeri
 So what was new in 2026 was not the word but two things:
 
 1. **The agent harness**: applying harness to a new core object, **an LLM running multi-step tasks**. This new core isn't deterministic like code under test, isn't static like a model under evaluation, and doesn't run once like a model being trained. It runs in a mode that is **multi-step, side-effecting, and probabilistic**, and that calls for an entirely new kind of support. When this book says harness, it means the layer of software wrapped around the model that handles context, tools, execution, permissions, and the audit trail. That layer together with the model inside it is what we call an agent (agent = model + harness, taken apart in §I).
-2. **Harness engineering**: giving the work on this layer one name as an engineering practice, and spreading it. Test, evaluation, and training harnesses are each tools; nobody says "test harness engineering is a discipline." The agent harness, though, is complex enough to be studied as an engineering practice in its own right, with a control-theory frame, a breakdown into components, engineering patterns, and evaluation methods. When Hashimoto named this "harness engineering" in February 2026, he took the key step of lifting a tool into an engineering practice.
+2. **Harness engineering**: giving the work on this layer one name as an engineering practice, and spreading it. Test, evaluation, and training harnesses are each tools; nobody says "test harness engineering is a discipline." The agent harness, though, is complex enough to be studied as an engineering practice in its own right, with a cybernetic frame, a breakdown into components, engineering patterns, and evaluation methods. When Hashimoto named this "harness engineering" in February 2026, he took the key step of lifting a tool into an engineering practice.
 
 In other words, 2026 brought **an old word with a new focus**: the word stayed the same, but it was applied to an object more complex than any harness before it. The horse-gear sense of the word is a metaphor it picked up after entering the agent context; 4.8 returns to it.
 
@@ -88,7 +88,7 @@ The official announcement is at https://openai.com/index/function-calling-and-ot
 
 One way to read the two landing on the same day: every tool result has to go back into context, and enough calls will blow the window. **Tool use only becomes truly usable once context is greatly expanded.** Tool use and context management are twin problems, and §V splits them into two neighboring mechanisms. 5.3 Tool Registry decides "which tools can be called, and with what arguments"; 5.4 context management decides "how a tool's large output enters context without blowing the window." The two have to be designed together, or progress on one side is canceled out by the limits of the other.
 
-Once the two were connected, by mid-2024 the industry had broadly accepted a simplified formula: **agent = LLM + tool schema + some code wrapped around it.** It admitted that tools are a core component and that the model API needs a structured tool interface, a step beyond "using the model as a function." But nobody could yet say what "some code wrapped around it" was. LangChain? A hand-written Python script? SWE-agent's trajectory framework? Some runtime inside Cursor? Every vendor had its own implementation, with no common name, no common component list, and no common control-theory frame, so none could be compared precisely with another. That state lasted until February 2026.
+Once the two were connected, by mid-2024 the industry had broadly accepted a simplified formula: **agent = LLM + tool schema + some code wrapped around it.** It admitted that tools are a core component and that the model API needs a structured tool interface, a step beyond "using the model as a function." But nobody could yet say what "some code wrapped around it" was. LangChain? A hand-written Python script? SWE-agent's trajectory framework? Some runtime inside Cursor? Every vendor had its own implementation, with no common name, no common component list, and no common cybernetic frame, so none could be compared precisely with another. That state lasted until February 2026.
 
 ### 4.4 · The 2026 naming convergence · four independent endorsements in two months
 
@@ -97,7 +97,7 @@ The key events in naming harness engineering fall between early February and ear
 - Hashimoto named it, with the standing of a senior engineer;
 - Lopopolo backed it with an internal OpenAI experiment;
 - Trivedy, from inside the LangChain framework camp, supplied a formula and a breakdown into components;
-- Böckeler, from the Thoughtworks consulting perspective, built a control-theory framing.
+- Böckeler, from the Thoughtworks consulting perspective, built a cybernetic framing.
 
 The four came from completely different camps, yet within two months they wrote highly complementary pieces. That isn't plagiarism, and it's hard to call it coincidence either. It looks more like a sign that the field had accumulated enough shared practice and was missing only a common name. The pattern of "two or three years of practice, then two or three months of naming convergence" recurs in IT history; MLOps is one example (4.5). The four are taken below in time order.
 
@@ -111,12 +111,12 @@ His core definition runs to just 28 English words:
 
 > "the idea that anytime you find an agent makes a mistake, you take the time to engineer a solution such that the agent never makes that mistake again"
 
-The definition can be read in the control-theory language of feedforward and feedback (this book borrows several control-theory concepts as analogies; §IX develops them):
+The definition can be read in the cybernetic language of feedforward and feedback (this book borrows several concepts from cybernetics as analogies; §IX develops them):
 
 - **find a mistake** is like a sensor detecting deviation. It requires a verifier, a trajectory, and observation mechanisms in the harness, so that errors become "visible."
 - **take the time** is the engineering investment: the fix has to be designed, and that takes dedicated time.
 - **engineer a solution** is like adjusting the controller. Instead of editing the prompt and asking the model "not to do it next time," you build a mechanism into the harness layer so this kind of error becomes structurally hard to repeat.
-- **the agent never makes that mistake again** is an engineering goal. It does not correspond to a closed-loop convergence guarantee in the control-theory sense: each fix covers only the class of error already found, new errors will keep appearing, and so the process has to continue.
+- **the agent never makes that mistake again** is an engineering goal. It does not correspond to a closed-loop convergence guarantee in the cybernetic sense: each fix covers only the class of error already found, new errors will keep appearing, and so the process has to continue.
 
 Note: **Hashimoto's article does not give the most widely circulated formula, "Agent = Model + Harness."** That comes later, from Trivedy.
 
@@ -164,11 +164,11 @@ These five don't map one-to-one onto the 8 runtime mechanisms plus 1 Safety cont
 
 In the three and a half years from LangChain's release in October 2022 to this article, the framework camp moved from "an agent is a chain" to "agent = model + harness, and a framework is just one material for implementing a harness." A conceptual upgrade from inside the framework camp carries more weight than outside academics writing papers about frameworks falling short.
 
-#### Böckeler 2026-04-02 · the consulting world's control-theory framing
+#### Böckeler 2026-04-02 · the consulting world's cybernetic framing
 
 About three weeks later, **Birgitta Böckeler** (a Thoughtworks Distinguished Engineer) published *Harness Engineering for Coding Agent Users* as a guest article on Martin Fowler's website. A consultant sees dozens of companies' engineering practices a year and cares about "how this method gets put into practice in different organizations." Böckeler organized harness engineering into a form that can be explained clearly to clients, completing the move from "what it is" to "how to evaluate and improve it."
 
-She recast Hashimoto's and Trivedy's concepts in control-theory form:
+She recast Hashimoto's and Trivedy's concepts in cybernetic form:
 
 > harness = **guides (feedforward controls) + sensors (feedback controls)** + humans steering iteratively based on observed failures
 
@@ -178,7 +178,7 @@ The point: **a harness is not a passive code shell but a control system.**
 - **Feedback is the after-the-fact check**: tests, lint, AI review, the verifier, and trajectory analysis, which judge after the agent acts whether it got things right, where it went wrong, and whether to retry.
 - **Humans** in the loop adjust iteratively based on observed failures, which is the consulting version of Hashimoto's "engineer a solution."
 
-Feedforward and feedback here are analogies borrowed from control theory (Böckeler's framing). Their advantage is that engineers who have never read the control-theory literature can grasp them at once.
+Feedforward and feedback here are analogies borrowed from cybernetics (Böckeler's framing). Their advantage is that engineers who have never read the cybernetics literature can grasp them at once.
 
 She also gave the harness three evaluation dimensions: **maintainability**, whether the harness itself can be maintained over time; **architecture fitness**, whether it fits the existing system; and **behavior**, whether the agent's actual behavior under the constraints matches expectations. With these three dimensions the harness became an engineering object that can be reviewed from outside. Consultants can use them to assess client projects, and engineers to assess their own. Being evaluable is a key marker of an engineering object moving from craft to discipline: without evaluation criteria you can't compare better and worse, and without that you can't form best practices or teach them.
 
@@ -216,7 +216,7 @@ Seen this way, **each generation's engineers were pushed along by the uncontroll
 
 *Figure 4.2 · Five generations of algorithms, their sources of uncontrollability, and the matching constraint layer*
 
-The LLM generation's sources of uncontrollability were covered in the previous three chapters: probabilistic output from single-step prediction, state drift in multi-step execution, cascading tool-call failures, context-window blowup, goal drift, and irreproducibility. These six are the engineering problems harness engineering has to answer. It's foreseeable that when the next generation of algorithms (say, fully multimodal reasoning agents, or self-improving research loops) reaches production, new sources of uncontrollability will appear, and the field will coin another "X engineering" to name that generation's constraint layer.
+The LLM generation's sources of uncontrollability were covered in the previous three chapters: probabilistic output from single-step prediction, state drift in multi-step execution, cascading tool-call failures, context-window blowup, goal drift, and irreproducibility. These six are the engineering problems harness engineering has to answer. It's foreseeable that when the next generation of algorithms (say, fully multimodal reasoning agents, or self-evolving research loops) reaches production, new sources of uncontrollability will appear, and the field will coin another "X engineering" to name that generation's constraint layer.
 
 **Insight two: naming always lags practice by several years to more than a decade, and the lag is necessary.**
 

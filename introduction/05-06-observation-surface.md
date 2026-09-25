@@ -13,11 +13,11 @@
 
 *图 5.16 · Observation 与 logging 的本质区别*
 
-这两层论点只讲了单次 run 内的差别。**观测面的作用远不止单次 run**，它同时是跨 run 自我改进（self-evolution）的数据来源。一批研究沿这个方向推进。AHE（Agentic Harness Engineering）[^ahe-2026]的标题就叫 "Observability-Driven Automatic Evolution of Coding-Agent Harnesses"（可观测性驱动的编码 agent harness 自动演化）。要说明的是，AHE 所说的 observability 范围比本节的 observation 大，覆盖整个运行过程留下的记录；本节只借它"用运行数据驱动 harness 改进"这一点。AHE 用运行数据驱动一个演化循环（evolver loop），同时优化 system prompt、工具描述、工具实现、中间件、skill、子 agent 配置、长期记忆七类组件；10 次迭代把 GPT-5.4 在 Terminal-Bench 2 上的通过率从初始 harness 的 69.7% 提到 77.0%（+7.3 个百分点）。模型不变，自动演化出的 harness 超过了人工设计的 Codex CLI harness（71.9%）。
+这两层论点只讲了单次 run 内的差别。**观测面的作用远不止单次 run**，它同时是跨 run 自我演化（self-evolution）的数据来源。一批研究沿这个方向推进。AHE（Agentic Harness Engineering）[^ahe-2026]的标题就叫 "Observability-Driven Automatic Evolution of Coding-Agent Harnesses"（可观测性驱动的编码 agent harness 自动演化）。要说明的是，AHE 所说的 observability 范围比本节的 observation 大，覆盖整个运行过程留下的记录；本节只借它"用运行数据驱动 harness 改进"这一点。AHE 用运行数据驱动一个演化循环（evolver loop），同时优化 system prompt、工具描述、工具实现、中间件、skill、子 agent 配置、长期记忆七类组件；10 次迭代把 GPT-5.4 在 Terminal-Bench 2 上的通过率从初始 harness 的 69.7% 提到 77.0%（+7.3 个百分点）。模型不变，自动演化出的 harness 超过了人工设计的 Codex CLI harness（71.9%）。
 
 其他工作也在这条线上：
 
-- Continual Harness[^continual-harness-2026]提出不需要重置（reset-free）的自我改进 harness，让具身 agent 在"执行任务"和"修改自己的 prompt、子 agent、skill、记忆"之间交替进行。
+- Continual Harness[^continual-harness-2026]提出不需要重置（reset-free）的自我演化 harness，让具身 agent 在"执行任务"和"修改自己的 prompt、子 agent、skill、记忆"之间交替进行。
 - 更早的 Voyager[^voyager-2305]引入技能库（skill library），把可复用的代码积累下来，用到以后的任务上。
 - Reflexion[^reflexion-shinn-2023]引入语言强化（verbal reinforcement）：agent 用自然语言批评自己上一轮的表现，据此修改下一轮策略。
 - ERL（Experiential Reflective Learning）[^erl-2026]把经验与反思结合起来。
@@ -27,12 +27,12 @@
 把以上合起来，本节讲的是**两个作用加一个案例**：
 
 - **作用一：单次 run 内的运行时反馈**。观测面在单次 run 内要做三件事：stub/body 分离、多模态、与 trajectory 协同存储。Trivedy 的 "Bundled Infrastructure"、Augment Code 的 "Feedback Loops"、SWE-agent 的 .traj 文件、Claude 与 GPT-4V 的视觉输入，都涉及这部分。
-- **作用二：跨 run 自我改进的数据来源**。AHE、Continual Harness、Voyager、Reflexion、ERL 这些研究都建立在"能读到历史运行数据"之上。想让 harness 的能力随时间增长，先要把这一层做扎实。
-- **案例：作者自己的实现**。ObservationPack 抽象、MechanismEvent 四态分类（Activated / Skipped / Blocked / Error）、StepSnapshot 22 字段结构、决策点与执行点的区分原则、absence-of-event（该发生的事件没有发生）、ContentPart 五类多模态抽象。这些是作者沿 AHE、Voyager、Reflexion 等方向做的具体实现，**全部属于 harness 内部的组件**。本节只展开这部分，并注明"这是作者的实践案例，不是第一天就必须有的东西"。在 harness 之上，还可以接一套外层工作台，做跨任务、跨配置的系统化调优。作者把它叫 Harness Lab（本书对"用评测、消融、调参迭代改进 harness 的外层工作台"的命名，类比 W&B 之于机器学习实验追踪、GitLab CI 之于 DevOps）。但这是进阶选项，不是自我改进的唯一形态，第七章展开，本节不讲。
+- **作用二：跨 run 自我演化的数据来源**。AHE、Continual Harness、Voyager、Reflexion、ERL 这些研究都建立在"能读到历史运行数据"之上。想让 harness 的能力随时间增长，先要把这一层做扎实。
+- **案例：作者自己的实现**。ObservationPack 抽象、MechanismEvent 四态分类（Activated / Skipped / Blocked / Error）、StepSnapshot 22 字段结构、决策点与执行点的区分原则、absence-of-event（该发生的事件没有发生）、ContentPart 五类多模态抽象。这些是作者沿 AHE、Voyager、Reflexion 等方向做的具体实现，**全部属于 harness 内部的组件**。本节只展开这部分，并注明"这是作者的实践案例，不是第一天就必须有的东西"。在 harness 之上，还可以接一套外层工作台，做跨任务、跨配置的系统化调优。作者把它叫 Harness Lab（本书对"用评测、消融、调参迭代改进 harness 的外层工作台"的命名，类比 W&B 之于机器学习实验追踪、GitLab CI 之于 DevOps）。但这是进阶选项，不是自我演化的唯一形态，第七章展开，本节不讲。
 
-三者的关系是：跨 run 的自我改进建立在单次 run 的反馈之上（没有单次 run 的 observation，就没有可供学习的跨 run trajectory）；作者的实现是这两个作用在作者工程里的具体做法。这些都是 harness 内部的组件，跨 run 自我改进是 harness 自身的能力，不需要外部工作台也能跑。合起来说明一件事：观测面的设计出发点从来不是"把工具输出存下来给人 debug"，而是"把 agent 与环境的交互建模成一股双向数据流，既喂当前推理，也喂跨 run 的优化"。
+三者的关系是：跨 run 的自我演化建立在单次 run 的反馈之上（没有单次 run 的 observation，就没有可供学习的跨 run trajectory）；作者的实现是这两个作用在作者工程里的具体做法。这些都是 harness 内部的组件，跨 run 自我演化是 harness 自身的能力，不需要外部工作台也能跑。合起来说明一件事：观测面的设计出发点从来不是"把工具输出存下来给人 debug"，而是"把 agent 与环境的交互建模成一股双向数据流，既喂当前推理，也喂跨 run 的优化"。
 
-后面九个小节依次是：observation 与 logging 的差别及 stub/body 分离、多模态 observation、observation 与 trajectory 协同、schema 设计、失效模式与反模式、业界实现对照、作为自我改进的数据来源、作者的实现案例、起步建议。前六个小节讲作用一，第七小节讲作用二，第八小节讲作者的案例，第九小节从四个方面给起步建议。
+后面九个小节依次是：observation 与 logging 的差别及 stub/body 分离、多模态 observation、observation 与 trajectory 协同、schema 设计、失效模式与反模式、业界实现对照、作为自我演化的数据来源、作者的实现案例、起步建议。前六个小节讲作用一，第七小节讲作用二，第八小节讲作者的案例，第九小节从四个方面给起步建议。
 
 ![](../diagrams/t1-layered-5.6-observation.png)
 
@@ -40,7 +40,7 @@
 
 #### 5.6.0 本节首次出现的术语
 
-§一到§五已经解释过的术语（schema、trajectory、verifier、消融、上下文、artifact、中段遗失、prompt asset、hook、工具描述等）不再重复。这里只列本节首次出现的术语。
+§一到§四及 §5.1 到 §5.5 已经解释过的术语（schema、trajectory、verifier、消融、上下文、artifact、中段遗失、prompt asset、hook、工具描述等）不再重复。这里只列本节首次出现的术语。
 
 **观测面核心术语**
 
@@ -53,15 +53,15 @@
 - **多模态 observation**（multimodal observation）：图片、PDF、音频、视频、表格等非纯文本的反馈。Anthropic Claude 的视觉输入、OpenAI GPT-4V、Google Gemini 的多模态 API 都在请求格式层支持，抽象一致，具体格式有差异。
 - **ContentPart**：多模态 observation 的类型抽象。Anthropic Claude API 的 content block 是同类抽象。作者从 Harness Lab 工作台借来的分法有五类：Text、Image、FileContent（小文件，完整读入）、FileRef（大文件，只放引用）、PreprocessError（显式的模态处理失败信号）。这是本书的配套实现案例，不是业界标准。
 
-**自我改进相关术语**
+**自我演化相关术语**
 
-- **自我改进 agent**（self-evolving agent / self-improving agent）：agent 跨 run 基于历史 trajectory、observation 和结果，自动改进 prompt、工具、记忆、skill 或 harness 配置，不依赖人介入。已有综述[^self-evolving-survey-2026]。
+- **自我演化 agent**（self-evolving agent，也称 self-improving agent）：agent 跨 run 基于历史 trajectory、observation 和结果，自动改进 prompt、工具、记忆、skill 或 harness 配置，不依赖人介入。已有综述[^self-evolving-survey-2026]。
 - **可观测性驱动的演化**（observability-driven evolution）：AHE[^ahe-2026]的提法，用运行数据驱动演化循环去改 prompt、工具、中间件、记忆、skill。
 - **技能库**（skill library）：Voyager[^voyager-2305]引入的做法，积累可复用的代码，用到以后的任务上。
 - **语言强化 / 反思**（verbal reinforcement / reflection）：Reflexion[^reflexion-shinn-2023]引入的做法，agent 用自然语言批评自己上一轮，据此修改下一轮策略。
 - **经验回放**（experience replay）：agent 从历史 trajectory 中检索相似场景，注入下一轮上下文。Contextual Experience Replay 是其中一种做法。
 - **trajectory 驱动的记忆**（trajectory-informed memory）[^trajectory-informed-memory-2026]：从 trajectory 中提取可复用的技能、经验法则、教训，写进记忆。
-- **Continual Harness**[^continual-harness-2026]：不需要重置的自我改进 harness，agent 在执行任务与修改自己的 prompt、子 agent、skill、记忆之间自动交替。
+- **Continual Harness**[^continual-harness-2026]：不需要重置的自我演化 harness，agent 在执行任务与修改自己的 prompt、子 agent、skill、记忆之间自动交替。
 - **meta-harness**：有研究提出的做法，让 agent 修改包裹模型的 harness 代码（prompt 构造、检索逻辑、状态管理），而不是更新模型权重。
 
 **作者实现案例的术语**
@@ -84,7 +84,7 @@ stub/body 分离就是从这种两极分化推出来的：
 
 有了这个结构，agent 面对大反馈时可以"先看摘要，再决定要不要深读"，不会被迫一次把所有数据塞进上下文。
 
-body 全部保存的成本顾虑，有一个简单的分级办法：**按 run 的结局分级**，而不是一刀切抽样。失败 run 的 observation body 全部保留，因为复盘和自我改进的数据价值几乎全集中在失败里；成功 run 归档时，body 可以按 1/N 抽样留存（run 进行中 body 都在，这条分级管的是跨 run 留存）。这条分级还有个便利：run 结束时 verifier 的判定本来就有，存储策略直接挂在判定结果上，不需要新机制。
+body 全部保存的成本顾虑，有一个简单的分级办法：**按 run 的结局分级**，而不是一刀切抽样。失败 run 的 observation body 全部保留，因为复盘和自我演化的数据价值几乎全集中在失败里；成功 run 归档时，body 可以按 1/N 抽样留存（run 进行中 body 都在，这条分级管的是跨 run 留存）。这条分级还有个便利：run 结束时 verifier 的判定本来就有，存储策略直接挂在判定结果上，不需要新机制。
 
 这种分离在业界已有不少做法。Trivedy 2026-03 的 harness 框架把文件系统、沙箱、浏览器等列为 harness 的必备组件：observation 不是抽象概念，必须有沙箱、artifact 存储这类具体基础设施承接。Augment Code 把这一层归为 "Feedback Loops"。这种分离的价值不只是省 token，更重要的是让"agent 自己决定读多深"成为可能：stub 让 agent 看到反馈的轮廓，body 让 agent 在需要时主动深读。没有 stub/body 分离的 harness，agent 要么淹没在原始数据里，要么因为截断丢掉信息，这是两种相反的失效模式（见 §5.6.5）。
 
@@ -134,7 +134,7 @@ schema 设计有四件事要想清楚：
 3. **哪些信号会进 prompt 缓存**：字段名和字段顺序保持稳定，是提高 prompt 缓存命中率的前提。
 4. **哪些信号要脱敏后才能持久化**：PII 和凭据必须在 observation 写出之前脱敏，不能等事后 grep 时再清。
 
-作者对此的实现叫 StepSnapshot：把每一轮的 observation 结构化为 22 个字段，包括轮次计数、输入 token、输出 token、缓存命中率、artifact 引用、模型选择理由、批量聚合标记等。22 不是固定数，只是作者在实践中形成的一种切分，其他 harness 可能用 15 个、30 个或别的切法。关键不在字段数，而在于每个字段都对应一类能被自动评测程序读的信号。这样 observation 才能从单次 run 的运行时反馈，变成跨 run 自我改进的输入。
+作者对此的实现叫 StepSnapshot：把每一轮的 observation 结构化为 22 个字段，包括轮次计数、输入 token、输出 token、缓存命中率、artifact 引用、模型选择理由、批量聚合标记等。22 不是固定数，只是作者在实践中形成的一种切分，其他 harness 可能用 15 个、30 个或别的切法。关键不在字段数，而在于每个字段都对应一类能被自动评测程序读的信号。这样 observation 才能从单次 run 的运行时反馈，变成跨 run 自我演化的输入。
 
 #### 5.6.5 失效模式与反模式：observation 过载与失真
 
@@ -169,35 +169,35 @@ schema 设计有四件事要想清楚：
 
 这四条就是本节前六个小节讲的基础部分。
 
-还在演进的是作为自我改进输入的 observation 抽象，OpenInference、Langfuse、Helicone、OTel GenAI 语义约定都还没有统一规范。这不是因为业界没做，而是自我改进本身还在快速演进，observation 作为它的输入也跟着在变。下一节展开自我改进与 observation 的关系。
+还在演进的是作为自我演化输入的 observation 抽象，OpenInference、Langfuse、Helicone、OTel GenAI 语义约定都还没有统一规范。这不是因为业界没做，而是自我演化本身还在快速发展，observation 作为它的输入也跟着在变。下一节展开自我演化与 observation 的关系。
 
-#### 5.6.7 观测面作为自我改进的数据来源
+#### 5.6.7 观测面作为自我演化的数据来源
 
-从跨 run 的角度看，观测面是自我改进 agent 的数据来源，而这种自我改进是 **harness 自身的能力**：harness 不需要外部工作台，就能基于历史 observation 优化 prompt、调整工具描述、改进上下文策略，observation 这一层直接就是它的数据基础。AHE[^ahe-2026]用运行数据驱动演化循环，同时优化 system prompt、工具描述、工具实现、中间件、skill、子 agent 配置、长期记忆七类组件，10 次迭代把 GPT-5.4 在 Terminal-Bench 2 上的通过率从初始 harness 的 69.7% 提到 77.0%。这篇论文把"用运行数据驱动 harness 改进"落到了具体的 benchmark 数据上。注意 AHE 的演化循环本身属于 harness 内部的能力，不是 harness 之外的工作台。
+从跨 run 的角度看，观测面是自我演化 agent 的数据来源，而这种自我演化是 **harness 自身的能力**：harness 不需要外部工作台，就能基于历史 observation 优化 prompt、调整工具描述、改进上下文策略，observation 这一层直接就是它的数据基础。AHE[^ahe-2026]用运行数据驱动演化循环，同时优化 system prompt、工具描述、工具实现、中间件、skill、子 agent 配置、长期记忆七类组件，10 次迭代把 GPT-5.4 在 Terminal-Bench 2 上的通过率从初始 harness 的 69.7% 提到 77.0%。这篇论文把"用运行数据驱动 harness 改进"落到了具体的 benchmark 数据上。注意 AHE 的演化循环本身属于 harness 内部的能力，不是 harness 之外的工作台。
 
-以 observation 为基础的自我改进，研究上大致有五条路径。
+以 observation 为基础的自我演化，研究上大致有五条路径。
 
 ![](../diagrams/t3-cardgrid-5.6-selfevo.png)
 
 *图 5.18 · 以 observation 为基础的 self-evolution 五条路径*
 
-**第一条：从运行数据到自动演化。** AHE[^ahe-2026]用运行数据驱动演化循环，同时改上述七类 harness 组件。TACO（免训练的自演化终端 agent 压缩框架）[^taco-2026]做按任务感知的 observation 压缩，在 TerminalBench 上带来约 1–4 个百分点的提升（论文报绝对增益，个别配置更高，全 benchmark 区间 0.36–6.02 分）。Continual Harness[^continual-harness-2026]更进一步：不需要重置的自我改进 harness，让具身 agent 在执行任务与修改自己的 prompt、子 agent、skill、记忆之间自动交替，不需要人介入。还有研究提出 meta-harness 的做法：让 agent 修改包裹模型的 harness 代码（prompt 构造、检索逻辑、状态管理），而不是更新模型权重。这条路径的共同点是：observation 数据是自我改进的直接输入。
+**第一条：从运行数据到自动演化。** AHE[^ahe-2026]用运行数据驱动演化循环，同时改上述七类 harness 组件。TACO（免训练的自演化终端 agent 压缩框架）[^taco-2026]做按任务感知的 observation 压缩，在 TerminalBench 上带来约 1–4 个百分点的提升（论文报绝对增益，个别配置更高，全 benchmark 区间 0.36–6.02 分）。Continual Harness[^continual-harness-2026]更进一步：不需要重置的自我演化 harness，让具身 agent 在执行任务与修改自己的 prompt、子 agent、skill、记忆之间自动交替，不需要人介入。还有研究提出 meta-harness 的做法：让 agent 修改包裹模型的 harness 代码（prompt 构造、检索逻辑、状态管理），而不是更新模型权重。这条路径的共同点是：observation 数据是自我演化的直接输入。
 
-**第二条：从 trajectory 到记忆。** Voyager[^voyager-2305]引入技能库，把可复用的代码积累下来用到以后的任务上。Trajectory-Informed Memory[^trajectory-informed-memory-2026]自动从 trajectory 中提取策略、恢复、优化三类经验（文本形式，不是 Voyager 那种可执行代码）写进记忆。ERL[^erl-2026]把这件事形式化为经验记忆框架，在新环境里高效地自我改进。SkillOpt[^skillopt-2026]把技能库从"积累"推进到"持续优化"：不只把验证过的 skill 存下来，还用一套执行策略把每条 skill 当成可以反复改写的对象，在六个 benchmark、七个模型上验证了 skill 自演化的稳定增益（GPT-5.5 相对无 skill 基线提升约 19 到 25 分，随 chat、Codex、Claude Code 三种 harness 形态浮动）。这条路径的共同点是：trajectory 是自我改进的间接输入，observation 是 trajectory 的组成部分。
+**第二条：从 trajectory 到记忆。** Voyager[^voyager-2305]引入技能库，把可复用的代码积累下来用到以后的任务上。Trajectory-Informed Memory[^trajectory-informed-memory-2026]自动从 trajectory 中提取策略、恢复、优化三类经验（文本形式，不是 Voyager 那种可执行代码）写进记忆。ERL[^erl-2026]把这件事形式化为经验记忆框架，在新环境里高效地自我演化。SkillOpt[^skillopt-2026]把技能库从"积累"推进到"持续优化"：不只把验证过的 skill 存下来，还用一套执行策略把每条 skill 当成可以反复改写的对象，在六个 benchmark、七个模型上验证了 skill 自演化的稳定增益（GPT-5.5 相对无 skill 基线提升约 19 到 25 分，随 chat、Codex、Claude Code 三种 harness 形态浮动）。这条路径的共同点是：trajectory 是自我演化的间接输入，observation 是 trajectory 的组成部分。
 
 **第三条：从反思到自我批评。** Reflexion[^reflexion-shinn-2023]引入语言强化：agent 用自然语言批评自己上一轮，据此修改下一轮策略。有研究认为，反思类 agent 在软件工程、战略规划、科学研究、客户运营等复杂多步任务上能提高成功率。这条路径的共同点是：agent 读自己的 observation 历史，做自我批评。
 
 **第四条：经验回放。** agent 从历史 trajectory 中检索相似场景，注入下一轮上下文，Contextual Experience Replay 是其中一种做法。这条路径把记忆层的检索与 observation 结合起来用。
 
-**第五条：自生成经验。** Self-Play SWE-RL（SSR）[^ssr-2026]让同一个 LLM 在"注入 bug"和"修 bug"两个角色之间交替：agent 给真实代码库注入 bug，再训练自己修这些 bug（SWE-bench Verified +10.4 分）。AgentEvolver[^agent-evolver-2026]通过自我提问、自我导航、自我归因自主生成任务，MemGen[^memgen-2026]用生成式隐式记忆，都属于"agent 用自己生成的经验作为自我提升信号"这一路径。这条路径的共同点是减少对人工标注数据的依赖，让 agent 从自己的产出里学。同一思路也被用在安全对齐上：FATE[^fate-2026]让 agent 在自己跑出的失败轨迹上做 on-policy 自我演化（配合 Pareto-Front Policy Optimization 平衡安全与有用性），在 AgentDojo、AgentHarm、ATBench 上把 Qwen3-8B 的攻击成功率相对降低约 33.5%，有害顺从相对降低约 82.6%。可见自我改进的优化目标不限于能力，安全对齐同样可以拿 agent 自己的轨迹做训练信号。
+**第五条：自生成经验。** Self-Play SWE-RL（SSR）[^ssr-2026]让同一个 LLM 在"注入 bug"和"修 bug"两个角色之间交替：agent 给真实代码库注入 bug，再训练自己修这些 bug（SWE-bench Verified +10.4 分）。AgentEvolver[^agent-evolver-2026]通过自我提问、自我导航、自我归因自主生成任务，MemGen[^memgen-2026]用生成式隐式记忆，都属于"agent 用自己生成的经验作为自我提升信号"这一路径。这条路径的共同点是减少对人工标注数据的依赖，让 agent 从自己的产出里学。同一思路也被用在安全对齐上：FATE[^fate-2026]让 agent 在自己跑出的失败轨迹上做 on-policy 自我演化（配合 Pareto-Front Policy Optimization 平衡安全与有用性），在 AgentDojo、AgentHarm、ATBench 上把 Qwen3-8B 的攻击成功率相对降低约 33.5%，有害顺从相对降低约 82.6%。可见自我演化的优化目标不限于能力，安全对齐同样可以拿 agent 自己的轨迹做训练信号。
 
-五条路径的共同点很清楚：都建立在"agent 能读到自己的 observation 历史"之上。没有结构化的观测面，这五条路径都跑不起来。所以观测面不只是运行时反馈的一部分，也是自我改进 harness 的数据来源；五条路径都是 harness 自身具备的自我改进能力，不依赖外部工作台。正因为这个定位，本卷把观测面作为重点章节来讲。harness 之上还可以接外层工作台做跨任务、跨配置的系统化优化（作者的实现叫 Harness Lab，第七章展开），但工作台是进阶选项，不是自我改进的唯一形态：harness 可以独立自我改进，也可以接工作台，两者不互斥。
+五条路径的共同点很清楚：都建立在"agent 能读到自己的 observation 历史"之上。没有结构化的观测面，这五条路径都跑不起来。所以观测面不只是运行时反馈的一部分，也是自我演化 harness 的数据来源；五条路径都是 harness 自身具备的自我演化能力，不依赖外部工作台。正因为这个定位，本卷把观测面作为重点章节来讲。harness 之上还可以接外层工作台做跨任务、跨配置的系统化优化（作者的实现叫 Harness Lab，第七章展开），但工作台是进阶选项，不是自我演化的唯一形态：harness 可以独立自我演化，也可以接工作台，两者不互斥。
 
 #### 5.6.8 作者的实现案例
 
-作者沿上述五条路径，在 harness 内部实现了一组观测组件：MechanismEvent 四态、absence-of-event、决策点与执行点的区分、ObservationPack、StepSnapshot、ContentPart 五类多模态抽象等。这些组件让观测面既能喂当前推理，也能喂 harness 自身的跨 run 自我改进循环，而这种自我改进不需要外部工作台。下面讲其中四个抽象。设计上沿用 AHE"用运行数据驱动 harness 改进"的思路，但具体抽象不是业界标准，只是作者的一种实现。
+作者沿上述五条路径，在 harness 内部实现了一组观测组件：MechanismEvent 四态、absence-of-event、决策点与执行点的区分、ObservationPack、StepSnapshot、ContentPart 五类多模态抽象等。这些组件让观测面既能喂当前推理，也能喂 harness 自身的跨 run 自我演化循环，而这种自我演化不需要外部工作台。下面讲其中四个抽象。设计上沿用 AHE"用运行数据驱动 harness 改进"的思路，但具体抽象不是业界标准，只是作者的一种实现。
 
-harness 之上还可以接一套外层工作台，做跨任务、跨配置的系统化调优。作者的实现叫 Harness Lab 工作台，类比 W&B 之于机器学习实验追踪、GitLab CI 之于 DevOps，内部是 Observe → Reward → Ablate → Tune → Iterate 五层流水线，**它不是 harness 本身**。工作台是进阶选项，第七章展开，本节只讲 harness 内部的实现。
+harness 之上还可以接一套外层工作台，做跨任务、跨配置的系统化调优。作者的实现叫 Harness Lab 工作台，类比 W&B 之于机器学习实验追踪、GitLab CI 之于 DevOps，内部是 Observe → Score → Ablate → Tune → Iterate 五层流水线，**它不是 harness 本身**。工作台是进阶选项，第七章展开，本节只讲 harness 内部的实现。
 
 **第一个抽象：MechanismEvent 四态分类。** 每个 harness 决策点都必须发出四态之一，observation 才算完整：Activated（机制触发）、Skipped（机制存在但本次跳过）、Blocked（机制阻断）、Error（机制出错）。有了这四态，"机制有没有运行"就成了自动评测程序可以直接读的结构化信号。
 
@@ -207,9 +207,9 @@ harness 之上还可以接一套外层工作台，做跨任务、跨配置的系
 
 **第四个抽象：ObservationPack。** stub 进上下文，body 进 ArtifactStore，agent 用 obs_id 取 body。这是 §5.6.1 讲的 stub/body 分离的一种具体实现。
 
-四个抽象合起来，让观测面既能喂当前推理（作用一），也能喂 harness 自身的跨 run 自我改进循环（作用二），这就是观测面这些组件的设计出发点。
+四个抽象合起来，让观测面既能喂当前推理（作用一），也能喂 harness 自身的跨 run 自我演化循环（作用二），这就是观测面这些组件的设计出发点。
 
-其他自我改进方案对观测这一层会有不同的抽象选择：AHE 用自己的 schema，Continual Harness 走不需要重置的路线，Voyager 走技能库路线，都是同一思路下的不同工程选择。作者的实现（MechanismEvent 四态、事件缺席、决策点、ObservationPack）只是其中一种，作为实践案例展示。读者自己做自我改进时，这四个抽象可以借鉴，也可以按自己的工程情况选别的形态。不能省的是：作为自我改进输入的 observation 必须有结构化 schema。
+其他自我演化方案对观测这一层会有不同的抽象选择：AHE 用自己的 schema，Continual Harness 走不需要重置的路线，Voyager 走技能库路线，都是同一思路下的不同工程选择。作者的实现（MechanismEvent 四态、事件缺席、决策点、ObservationPack）只是其中一种，作为实践案例展示。读者自己做自我演化时，这四个抽象可以借鉴，也可以按自己的工程情况选别的形态。不能省的是：作为自我演化输入的 observation 必须有结构化 schema。
 
 #### 5.6.9 起步建议：四个方面
 
@@ -227,7 +227,7 @@ harness 之上还可以接一套外层工作台，做跨任务、跨配置的系
 - 多模态 observation 用 ContentPart 这类枚举抽象：Text、Image、FileContent（小文件完整读入）、FileRef（大文件引用），加上显式的 PreprocessError 信号。
 - observation 与 trajectory 协同存储，按工具链选：JSONL 一行一个事件（适合长 run，便于追加），或单个 JSON（适合短 run，便于渲染）。
 - OTel GenAI 语义约定仍在制定中，想避免厂商锁定，可以跟着 OTel 走。
-- 如果目标是能支撑自我改进的观测面，schema 要做到每个字段对应一类能被自动评测程序读的信号，这是 §5.6.4 和 §5.6.7 那条主线的具体做法。
+- 如果目标是能支撑自我演化的观测面，schema 要做到每个字段对应一类能被自动评测程序读的信号，这是 §5.6.4 和 §5.6.7 那条主线的具体做法。
 
 **怎么测试**：观测面的质量不靠肉眼翻 trajectory，而靠自动评测程序读结构化 schema。HAL[^hal-2026]把评测从以周计压到以小时计，主因是统一的并行评测框架，前提之一是运行记录格式统一，能直接交给自动评测程序。具体方法有几条：
 
@@ -236,7 +236,7 @@ harness 之上还可以接一套外层工作台，做跨任务、跨配置的系
 - 测 PII 脱敏覆盖率：用合成数据注入已知 PII，看 observation 入口能否拦下；
 - 跨 run 回放 trajectory 做消融，验证 observation schema 的稳定性。
 
-如果想让观测面喂自我改进，再加一项跨 run 聚合测试：同一任务跑 N 次，看 observation schema 是否稳定到可以直接做 diff。
+如果想让观测面喂自我演化，再加一项跨 run 聚合测试：同一任务跑 N 次，看 observation schema 是否稳定到可以直接做 diff。
 
 **写什么 prompt**：system prompt 里要明确告诉 agent 几条与观测面相关的行为：
 
@@ -248,7 +248,7 @@ harness 之上还可以接一套外层工作台，做跨任务、跨配置的系
 
 ---
 
-观测面看起来是"工具反馈怎么存"的工程细节，但当一个 agent 系统从 demo 走向生产，再走向长期持续改进时，它真正的位置才显出来：观测面是 agent 与环境之间的双向数据流，既给当前推理读，也给跨 run 的优化读。这种双向性让 observation 从单纯的运行时反馈，变成了自我改进 agent 的数据来源。本节的两个作用加一个案例、九个小节，合起来就是观测面的全貌。
+观测面看起来是"工具反馈怎么存"的工程细节，但当一个 agent 系统从 demo 走向生产，再走向长期持续改进时，它真正的位置才显出来：观测面是 agent 与环境之间的双向数据流，既给当前推理读，也给跨 run 的优化读。这种双向性让 observation 从单纯的运行时反馈，变成了自我演化 agent 的数据来源。本节的两个作用加一个案例、九个小节，合起来就是观测面的全貌。
 
 ---
 

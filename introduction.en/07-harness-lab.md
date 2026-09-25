@@ -19,7 +19,7 @@ By the end of this chapter you should be able to answer:
 - which of the five layers each of these products covers: W&B, Langfuse, AgentRM, Hyperband, verl-agent;
 - how the workbench relates to the three harness mechanisms of §5.6, §5.7, and §5.8 (observation, trajectory, verifier): the harness mechanisms are the necessary precondition, the workbench is an advanced option, and neither replaces the other.
 
-#### 7.0 Terms first used in this section
+#### 7.0 Terms first used in this chapter
 
 Terms already explained in §I–§VI (runtime mechanism, harness mechanism, inner and outer loop, observation, trajectory, the three verifier layers, Hard Gate, Outcome Judge, PRM, reward hacking, Preference Leakage, non-independent reruns, ablation, and so on) are not repeated here. Listed here are only the terms that appear for the first time in this chapter.
 

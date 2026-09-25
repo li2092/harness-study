@@ -19,7 +19,7 @@
 - W&B、Langfuse、AgentRM、Hyperband、verl-agent 这些产品分别覆盖五层中的哪几层；
 - 工作台和 §5.6、§5.7、§5.8 讲的 observation、trajectory、verifier 三个 harness 机制是什么关系（harness 机制是必要前提，工作台是进阶选项，两者不是替代关系）。
 
-#### 7.0 本节首次出现的术语
+#### 7.0 本章首次出现的术语
 
 第一至六章已经解释过的术语（runtime 机制、harness 机制、内层循环与外层循环、observation、trajectory、verifier 三层、Hard Gate、Outcome Judge、PRM、reward hacking、Preference Leakage、复跑不独立、消融等）这里不再重复，只列本章首次出现的术语。
 

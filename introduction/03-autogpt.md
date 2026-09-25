@@ -110,7 +110,7 @@ AutoGPT 用的是 GPT-4，跟今天 Claude Code、Cursor、Codex CLI 背后的�
 
 **"记笔记" = Trajectory · Event Stream**：每一步动作、决策、压缩、verifier 判定都写进文件，让事后能复盘、能逐项比对两个配置、能回放。这一项是 Harness Lab（上面提到的 Observe → Score → Ablate → Tune → Iterate 五步循环）能存在的前提：没有 trajectory，跨 run 的消融只能看到分数变了，看不到为什么变。
 
-**"犯错被发现" = Verifier 三层**：每一步有独立判定，不是实习生自己说"我做完了"就算完成。三层是 hard gate（代码可判定的确定性检查，比如 `pytest` 通过没有）、outcome judge（用模型作评审，对开放性产出做语义判定）、process soft signal（过程信号，看是否符合预期模式）。错了能 fallback、能 retry、能升级到人审。
+**"犯错被发现" = Verifier 三层**：每一步有独立判定，不是实习生自己说"我做完了"就算完成。三层是 Hard Gate（代码可判定的确定性检查，比如 `pytest` 通过没有）、Outcome Judge（用模型作评审，对开放性产出做语义判定）、PRM（过程奖励模型，对推理过程逐步判定）。错了能 fallback、能 retry、能升级到人审。
 
 这八个机制属于 runtime 层，实习生干每一项具体活时都要用到它们。但 8 个之外还有一个**横切其上**的：
 

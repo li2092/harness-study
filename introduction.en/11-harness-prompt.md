@@ -1,4 +1,4 @@
-# Harness Prompt · The executable landing spec for an agent
+# Harness Prompt · The executable implementation spec for an agent
 
 This file is the **executable companion** to the main text, *Harness Study*. The main text covers "which mechanisms there are and why they are designed this way"; this file covers "what order to build them in, and how to verify that each step was done right."
 
@@ -52,7 +52,7 @@ This file is the **executable companion** to the main text, *Harness Study*. The
 Three core modules plus two supporting:
 
 - **engine**: runs the loop. The main loop is a single ReAct loop: send the message → receive the reply → execute any tool call → write the result back → decide whether to stop. Add a state machine to manage multiple turns, with the states awaiting user input, awaiting user confirmation, done, and errored. Check the cancellation signal at the start of every turn, and make a stop take effect immediately.
-- **llm**: the multi-provider abstraction. Abstract a single unified interface and handle each vendor's differences in an adapter layer. Parameters such as `thinking` and reasoning are written differently by each vendor, so configure them per vendor through an `extra` field. **Requests to domestic model services should bypass the proxy explicitly, by domain, in code.** Don't rely on environment variables alone: some libraries read the uppercase `NO_PROXY` and others the lowercase `no_proxy`, so if you do use environment variables, set both.
+- **llm**: the multi-provider abstraction. Abstract a single unified interface and handle each vendor's differences in an adapter layer. Parameters such as `thinking` and reasoning are written differently by each vendor, so configure them per vendor through an `extra` field. **Requests to model services hosted in China should bypass the proxy explicitly, by domain, in code.** Don't rely on environment variables alone: some libraries read the uppercase `NO_PROXY` and others the lowercase `no_proxy`, so if you do use environment variables, set both.
 - **tools**: handles tool registration and execution. Reload the tool list at every step and **do not cache it**: a tool newly registered in a POST hook must be visible on the next turn.
 - **storage**: stores sessions and checkpoints.
 - **types**: the central place for message and tool signatures.
@@ -106,10 +106,10 @@ The tool layer does more than "register and execute." **Tool-call quality** (whe
 When the model should call a tool but outputs only text, there are three possible causes, one at each of three layers, and the fixes are completely different. Rule them out in the order response parsing → request parameters → prompt assembly; that is much faster than repeatedly editing the prompt or swapping the model:
 
 1. **The response-parsing layer (false negative)**: the model may have written the call as a text tag in the body (e.g. `<tool_call>…</tool_call>`) instead of in the structured tool-call field (`tool_calls` in OpenAI, `tool_use` blocks in Anthropic). An Adapter that reads only the structured field then drops it as ordinary text. Fix: beyond the structured field, have the parsing layer extract text tags with a regex as a fallback.
-2. **The request-parameter layer**: the default `tool_choice: auto` means the model may or may not call a tool. When an exchange must use a tool (it must query the database, it must write to disk), set `tool_choice` to require a tool call (`required` in OpenAI, `any` in Anthropic), or name a specific tool. **Turn this on per exchange and per scenario, never globally** (forcing calls all the time pushes the model to call tools when it shouldn't, which creates noise).
+2. **The request-parameter layer**: the default `tool_choice: auto` means the model may or may not call a tool. When a turn must use a tool (it must query the database, it must write to disk), set `tool_choice` to require a tool call (`required` in OpenAI, `any` in Anthropic), or name a specific tool. **Turn this on per turn and per scenario, never globally** (forcing calls all the time pushes the model to call tools when it shouldn't, which creates noise).
 3. **The prompt-assembly layer**: an overlong Chinese prompt makes some models skip the tool call and answer in text instead. Keep the instruction to call a tool short and near the front, and split long explanations out.
 
-`↪ Main text: Tool Registry & ACI (§5.3, P0) / ObservationPack · Observation Surface (§5.6) / the Model Adapter three causes (§5.2 last subsection) / Artifact (§5.4, P2)`
+`↪ Main text: Tool Registry & ACI (§5.3, P0) / ObservationPack · Observation Surface (§5.6) / the Model Adapter three causes (§5.2.6) / Artifact (§5.4, P2)`
 
 ### 1.4 Context compression: three strengths
 
@@ -190,7 +190,7 @@ A sub-harness is a child harness, called up dynamically per task, that carries i
 4. **State machine**: an entity's legal states and transition paths (draft → review → approved → exported).
 5. **Operations**: the tool set the sub-harness exposes.
 
-**Criterion**: the design is complete only when all five dimensions are present. The more dimensions are missing, the further it is from a real sub-harness; with three or more missing, it is still at the "catch-all prompt" stage and does not count as a sub-harness. Writing one 5,000-character system prompt and letting the model improvise is not a sub-harness.
+**Criterion**: the design is complete only when all five dimensions are present. The more dimensions are missing, the further it is from a real sub-harness; with three or more missing, it is still at the "catch-all prompt" stage and does not count as a sub-harness. Writing one system prompt of 5,000 Chinese characters and letting the model improvise is not a sub-harness.
 
 `↪ Main text: the sub-harness cell's five-dimension ontology (§8.5)`
 
@@ -254,20 +254,20 @@ A mechanism that falls short of these four stays an **experimental flag** and st
 - [ ] Every mechanism in the default configuration passed the four admission conditions (above all, it has on/off ablation data).
 - [ ] Negative-contribution and near-zero-contribution mechanisms have been cut or demoted to experimental flags.
 
-`↪ Main text: the four getting-started dimensions (at each chapter's end) / mechanism admission rules (§VII Harness Lab)`
+`↪ Main text: the four getting-started dimensions (at each chapter's end) / the mechanism admission check (§3.3 of this chapter)`
 
 ---
 
 ## Cross-cutting · the four-principle self-check · run it at the end of every Phase
 
-When a Phase finishes, check it once against each of the four principles of control theory (the book borrows these concepts from control theory as an analogy; see §IX). If any one of them doesn't hold, go back and fix it; don't carry the problem into the next Phase. Whenever you hit a bug, first assign it to one of these four as well.
+When a Phase finishes, check it once against each of the four cybernetic principles (the book borrows these concepts from cybernetics as an analogy; see §IX). If any one of them doesn't hold, go back and fix it; don't carry the problem into the next Phase. Whenever you hit a bug, first assign it to one of these four as well.
 
 - **Observable**: any silent failures (an error swallowed by try/catch, producing no event)? Any hidden state (internal agent state with no corresponding event)? A persistently high "claimed-versus-actual gap" (the declared_vs_executed gap: the difference between what the agent claims it did and what the tools or the verifier actually observed) is a warning signal.
 - **Controllable**: can a control point be bypassed (Hook / Allowlist Bypass, AP13, see Appendix F)? Is the tool granularity so fine that the model can't choose well? Any "fake landing," where a mechanism is in the repo but does nothing on the production path?
 - **Stable**: does each mechanism have a bound (max_turn, max_token, max_depth, max_retry)? Can those bounds be monitored? Any loop blind spot, context bloat, or reward hacking?
 - **Closed-loop feedback**: does every change have ablation data behind it? "I think this is better" without data means closed-loop feedback has not held.
 
-`↪ Main text: how the four principles of control theory map to the anti-patterns (§9.2)`
+`↪ Main text: how the four cybernetic principles map to the anti-patterns (§9.2)`
 
 ---
 

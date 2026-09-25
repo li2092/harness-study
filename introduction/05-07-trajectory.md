@@ -4,8 +4,8 @@
 
 为什么 trajectory 不是 log？和 §5.6 讲 observation 时一样，有两层论点。
 
-- **第一层来自读者**：trajectory 的主要读者不是人，而是消融工具、verifier 调试器、回放引擎、自我改进的演化程序（evolver）。这些读者靠结构化的事件流和严格的字段 schema 读 trajectory，不靠人类语义理解。所以 trajectory 文件不是给值班工程师看的 log，而是给自动化分析用的数据资产。
-- **第二层来自用途**：trajectory 是消融、回放、回归测试、自我改进这四项工程能力的基础。没有 trajectory，你没法消融某个机制看 agent 表现有什么差别，没法重放一次 run 来调试 verifier，没法验证新版 harness 有没有回归，也没法拿历史 trajectory 喂给自我改进的演化程序。这四项能力合起来，构成改进 harness 的核心闭环。
+- **第一层来自读者**：trajectory 的主要读者不是人，而是消融工具、verifier 调试器、回放引擎、自我演化的演化程序（evolver）。这些读者靠结构化的事件流和严格的字段 schema 读 trajectory，不靠人类语义理解。所以 trajectory 文件不是给值班工程师看的 log，而是给自动化分析用的数据资产。
+- **第二层来自用途**：trajectory 是消融、回放、回归测试、自我演化这四项工程能力的基础。没有 trajectory，你没法消融某个机制看 agent 表现有什么差别，没法重放一次 run 来调试 verifier，没法验证新版 harness 有没有回归，也没法拿历史 trajectory 喂给自我演化的演化程序。这四项能力合起来，构成改进 harness 的核心闭环。
 
 上面四项都是 run 跑完之后的**事后**用途。trajectory 还有一个常被忽略的**运行时**价值：**它是 agent 能"回退"的前提**。agent 跑长任务难免跑偏：上下文被一批无关 observation 污染，顺着一条错路走了五六步，或者整个上下文偏到了错误方向。没有回退，agent 只剩两条坏路：带着污染继续跑（越跑越偏），或者整个任务推倒重来（前面几十轮全部作废）。harness 凭 trajectory 逐轮的结构化记录，加上 artifact 的版本，可以在每个干净的轮次上存检查点（checkpoint）；一旦 verifier 或人发现跑偏，就能把**消息（上下文历史）和产物（artifact）一起回退到某个正确的轮次**，从那里重新往下走。
 
@@ -19,11 +19,11 @@ trajectory 与 observation 是一对多的关系：trajectory 是事件流（eve
 
 主要的 trajectory 实现路径在 §5.6.6 已经对照过：SWE-agent 用单个 JSON 文件；据公开分析，Claude Code 用 JSONL 一行一个事件；Codex CLI 用 Rollout 格式；LangSmith 用云端 trajectory 加 UI；OpenInference 用兼容 OTel 的 schema。本节聚焦 trajectory 自身的设计：事件分类、存储格式、可回放性、与 OTel 的衔接、反模式，不重复 §5.6 讲过的 observation 与 trajectory 协同部分。
 
-后面八个小节依次是：trajectory 与 log 的根本区别、事件分类（核心 9 类）、单 JSON 与 JSONL 两种存储路径、OTel GenAI 语义约定与 W3C Trace Context、可回放性设计、反模式（trajectory 缺失、冗余、不可 diff）、trajectory 作为自我改进的数据源、起步建议。前五个小节是 trajectory 设计的基础，第六小节讲反模式，第七小节呼应 §5.6.7，从 trajectory 的角度讲自我改进，第八小节从四个方面给起步建议。
+后面八个小节依次是：trajectory 与 log 的根本区别、事件分类（核心 9 类）、单 JSON 与 JSONL 两种存储路径、OTel GenAI 语义约定与 W3C Trace Context、可回放性设计、反模式（trajectory 缺失、冗余、不可 diff）、trajectory 作为自我演化的数据源、起步建议。前五个小节是 trajectory 设计的基础，第六小节讲反模式，第七小节呼应 §5.6.7，从 trajectory 的角度讲自我演化，第八小节从四个方面给起步建议。
 
 #### 5.7.0 本节首次出现的术语
 
-§一到§六已经解释过的术语（schema、trajectory 的概念、verifier、消融、observation、上下文、OTel GenAI 语义约定、W3C Trace Context、SWE-agent、JSONL、Rollout、自我改进 agent 等）不再重复。这里只列本节首次出现的术语。
+§一到§四及 §5.1 到 §5.6 已经解释过的术语（schema、trajectory 的概念、verifier、消融、observation、上下文、OTel GenAI 语义约定、W3C Trace Context、SWE-agent、JSONL、Rollout、自我演化 agent 等）不再重复。这里只列本节首次出现的术语。
 
 **trajectory 设计术语**
 
@@ -46,7 +46,7 @@ trajectory 与 observation 是一对多的关系：trajectory 是事件流（eve
 
 #### 5.7.1 trajectory 跟 log 的根本区别
 
-trajectory 与普通 log 同样是写到磁盘的执行历史，但用途不同：log 是给值班工程师 grep 关键字找根因用的非结构化文本流，trajectory 是给自动化流程跑消融、回放、回归测试、自我改进用的结构化事件流。两者的工程要求也就完全不同。普通 log 关心"人能不能读懂"：可读性、便于 grep、时间戳精度。trajectory 关心"机器能不能回放"：schema 稳定、事件之间有因果关系字段、字段的序列化格式跨版本兼容。
+trajectory 与普通 log 同样是写到磁盘的执行历史，但用途不同：log 是给值班工程师 grep 关键字找根因用的非结构化文本流，trajectory 是给自动化流程跑消融、回放、回归测试、自我演化用的结构化事件流。两者的工程要求也就完全不同。普通 log 关心"人能不能读懂"：可读性、便于 grep、时间戳精度。trajectory 关心"机器能不能回放"：schema 稳定、事件之间有因果关系字段、字段的序列化格式跨版本兼容。
 
 把 trajectory 当 log 写是常见的错误起点。最典型的表现是用 print 语句或 log4j 那一套写 trajectory，时间、级别、消息三项就完事。这样的 trajectory 让消融做不了：你想消融某个机制看 agent 表现差异，但 log 里没有结构化的机制事件，只有"INFO: tool xxx called with args"这种半结构化文本，机器解析不了。也让 verifier 调试做不了：你想重放某次失败的轮次，看 verifier 哪一步出错，但 log 里没有模型输入输出的完整记录，只有"WARN: verifier failed"这种结论性文本，重放不了。
 
@@ -106,6 +106,8 @@ agent span 部分给 trajectory 设计的具体思路是：agent 跑一次 run�
 
 OTel GenAI 语义约定与 W3C Trace Context 是两层东西，并不同源。W3C Trace Context 是跨服务传递 trace 标识的请求头格式，分布式追踪用了多年；GenAI 语义约定是 OTel 内部针对生成式 AI 的属性命名约定。前者管"trace 标识怎么在服务之间传下去"，后者管"span 上的属性叫什么名字"。两者配合，agent 的 trajectory 就能直接接入企业已有的分布式追踪管道，不需要为 agent 单独建一套追踪基础设施。
 
+§5.7.2 建议的 9 类事件名是内部命名，与 OTel 语义约定里的名字并不一一相同，两者之间要靠一张映射表对应。映射表没人维护时，内部事件名会随版本迭代与语义约定越走越远，导出到可观测性平台时字段对不上。附录 F 把这种情况记为反模式 AP19：OTel 命名漂移（OTel Naming Drift）。
+
 #### 5.7.5 可回放性设计：trajectory 的核心能力
 
 trajectory 的核心能力是可回放性：用 trajectory 里录下的模型输入输出代替再次调用模型，让消融、verifier 调试、回归测试少花真实的模型调用预算。有了它，harness 改动前后的对比可以变成"在历史 trajectory 上重跑新逻辑，看输出差异"，至少在分叉点之前不必每次都调真模型、耗 token、等延迟。
@@ -118,7 +120,7 @@ trajectory 的核心能力是可回放性：用 trajectory 里录下的模型输
 
 几个主要平台在可回放性上各有做法。Phoenix（Arize）做 agent 调用图可视化：把 trajectory 的 span 结构渲染成节点图，子 agent 的嵌套层级一目了然，配合 Agent Replay 重放 agent 交互、调试工具调用。LangSmith 提供逐步回放和 thread_id 共享，例如把同一会话的所有轮次标上同一个 thread_id，由 Threads 标签页自动聚合渲染。Inspect AI（AISI 与 Meridian Labs 共同开发）为每次评测记录完整日志，便于逐条检视和复查。
 
-还在演进的是回放与自我改进的配合：回放不只是调试工具，也能降低自我改进的演化程序做实验的成本。AHE 论文的 NexAU 底座是这方面的一个例子：演化程序要在历史 trajectory 上比较不同 harness 配置，回放能复用分叉点之前的部分，分叉之后仍要真实运行。
+还在演进的是回放与自我演化的配合：回放不只是调试工具，也能降低自我演化的演化程序做实验的成本。AHE 论文的 NexAU 底座是这方面的一个例子：演化程序要在历史 trajectory 上比较不同 harness 配置，回放能复用分叉点之前的部分，分叉之后仍要真实运行。
 
 #### 5.7.6 反模式：trajectory 缺失、冗余、不可 diff
 
@@ -141,21 +143,21 @@ diff 分类做对之后，最后一步是接进 CI：选一组基准任务，把
 
 还有一类隐蔽的反模式，与 §5.6.5 讲的 observation 不脱敏是同一个问题：trajectory 持久化时没做脱敏，凭据、PII、API key 一进 trajectory 文件就跨 run 持久保存。OTel GenAI 语义约定也把 prompt 与输出内容的采集当作敏感项单独处理。在 trajectory 写出之前挂一个脱敏 hook，是常见做法。trajectory 入口比 observation 入口更深一层：observation 进上下文是在一轮之内，trajectory 写进文件是 run 结束后跨轮次持久保存，所以脱敏必须在 trajectory 写出之前做，不能事后再清。
 
-#### 5.7.7 trajectory 作为自我改进的数据源（含 harness 优化与模型训练）
+#### 5.7.7 trajectory 作为自我演化的数据源（含 harness 优化与模型训练）
 
-从跨 run 的角度看，trajectory 的角色与 §5.6.7 讲的观测面一样，是自我改进的数据来源。trajectory 不只是消融、回放、回归测试的基础，也是自我改进 agent 用来优化 harness、甚至训练模型的具体数据。
+从跨 run 的角度看，trajectory 的角色与 §5.6.7 讲的观测面一样，是自我演化的数据来源。trajectory 不只是消融、回放、回归测试的基础，也是自我演化 agent 用来优化 harness、甚至训练模型的具体数据。
 
 一批研究已经把这件事做成了具体方法。AHE（Agentic Harness Engineering）[^ahe-2026]的演化循环直接读取历史 trajectory 来优化 harness 配置（Terminal-Bench 2 上的具体增益见 §5.6）。AgentHER[^agent-her-2026]（论文标题意为"用于 LLM agent 轨迹重标注的事后经验回放"）做得更具体：用四阶段流程（失败分类、结果提取、LLM 引导的 prompt 重标注、数据打包）把历史 trajectory 自动转成可训练的标注数据。AgentEvolver[^agent-evolver-2026]通过自我提问自主生成任务，MemGen[^memgen-2026]用生成式隐式记忆，都属于"agent 用自己生成的经验作为自我提升信号"这一路径，减少了对人工标注的依赖。
 
-把 trajectory 用作自我改进的数据，对 trajectory 设计有几条额外要求：
+把 trajectory 用作自我演化的数据，对 trajectory 设计有几条额外要求：
 
 1. **schema 稳定，保证跨 run、跨版本可比**。如果某次 harness 升级后字段名变了，旧 trajectory 就不能再喂给新版演化程序。这方面的 schema 迁移做法还在演进。
 2. **结果归因必须显式**。trajectory 末尾要明确标注"这次 run 是通过还是失败，哪几轮是关键决策点"，否则演化程序不知道哪些 trajectory 是正例、哪些是负例。
-3. **trajectory 与任务标准答案关联存储**。自我改进需要 trajectory 与任务的标准答案（ground truth）配对；没有配对的 trajectory 只能做无监督的探索，不能做有监督的优化。
+3. **trajectory 与任务标准答案关联存储**。自我演化需要 trajectory 与任务的标准答案（ground truth）配对；没有配对的 trajectory 只能做无监督的探索，不能做有监督的优化。
 
 第一条的 schema 稳定不能只靠自觉，要有具体机制：每条 trajectory 带一个 trajectory_schema_version 字段；schema 演进只加字段，不删字段、不改字段含义（新字段给默认值）；消费端按版本号选择读取器，旧读取器读新文件时忽略新字段，新读取器读旧文件时用默认值补上。什么时候允许不兼容的改动？答案接近"永不"：宁可新起一个 v2 事件类型并行写一段时间，也不要让半年前的 trajectory 变成读不动的死数据，它们是你积累下来最贵的资产。
 
-承担这个数据源角色的，是 §5.6.8 讲的那组 harness 内部组件：MechanismEvent 四态（每个机制每次检查都报告触发、跳过、阻断、出错四种状态之一）、absence-of-event（本该发出的事件没有出现，说明机制在运行时没接上）、决策点记录（在做决策的地方记录"为什么这样做"，而不只记录"做了什么"）、ObservationPack（作者对 stub/body 分离的具体实现）。有了它们，trajectory 既能喂当前推理，也能给 harness 跨 run 的自我改进循环提供数据。和观测面一样，这是 harness 自身的能力；上面那层外层工作台（Harness Lab，第七章）只是消费 trajectory 的进阶选项，不是前提。
+承担这个数据源角色的，是 §5.6.8 讲的那组 harness 内部组件：MechanismEvent 四态（每个机制每次检查都报告触发、跳过、阻断、出错四种状态之一）、absence-of-event（本该发出的事件没有出现，说明机制在运行时没接上）、决策点记录（在做决策的地方记录"为什么这样做"，而不只记录"做了什么"）、ObservationPack（作者对 stub/body 分离的具体实现）。有了它们，trajectory 既能喂当前推理，也能给 harness 跨 run 的自我演化循环提供数据。和观测面一样，这是 harness 自身的能力；上面那层外层工作台（Harness Lab，第七章）只是消费 trajectory 的进阶选项，不是前提。
 
 #### 5.7.8 起步建议：四个方面
 
@@ -174,7 +176,7 @@ diff 分类做对之后，最后一步是接进 CI：选一组基准任务，把
 - 存储格式按 run 长度选：短 run 且需要人审，走 SWE-agent .traj 的单 JSON 路径；长 run 且生产量大，走 JSONL 路径（Codex CLI 的 Rollout 格式、Claude Code 的 JSONL 都是例子）。
 - 完整模型输入用前缀去重或只存增量来控制体积。
 - OTel GenAI 语义约定仍在制定中，想避免厂商锁定就跟着 OTel 走：一轮对应一个 span，一个事件对应 span 属性或 span event。
-- 如果目标是能支撑自我改进的 trajectory，schema 设计时结果归因字段和稳定字段必须显式，字段的序列化格式必须跨版本兼容。
+- 如果目标是能支撑自我演化的 trajectory，schema 设计时结果归因字段和稳定字段必须显式，字段的序列化格式必须跨版本兼容。
 
 **怎么测试**：可以从三个维度检查 trajectory 的质量：上下文的相关性（trajectory 里模型看到的上下文与实际任务相关程度如何）、人审体验（trajectory 渲染出来，人能不能跟上 agent 的推理过程）、安全（trajectory 有没有 PII 泄漏，有没有不该出现的凭据）。schema 校验是回归测试的基础：它不要求输出逐字一致，也能发现结构上的回归。具体方法有几条：
 
@@ -189,11 +191,11 @@ diff 分类做对之后，最后一步是接进 CI：选一组基准任务，把
 2. "不要伪造工具执行结果。历史里的 tool_call 与 tool_result 配对是真实的，需要新结果就主动调用工具"：这条与 §5.5.5"消息边界与历史完整性"提到的"历史中的 tool_call 不降级"，是同一个 trajectory 完整性要求的两面。
 3. "在决策点明确说出理由，而不只是说做了什么"：让 agent 在推理内容里写清决策依据，这样 trajectory 里的决策点记录（为什么这样做）和执行点记录（做了什么）才有信息量上的差别。
 
-这三句与 §5.5 Prompt Assets 讲的 prompt 资产管理规则配合，让 agent 产生的 trajectory 不只是能跑通，而是能用于自我改进。
+这三句与 §5.5 Prompt Assets 讲的 prompt 资产管理规则配合，让 agent 产生的 trajectory 不只是能跑通，而是能用于自我演化。
 
 ---
 
-trajectory 看起来是"agent 跑完后留个文件"的工程细节，但它的真正位置在于：它是改进 harness 的核心闭环（消融、回放、回归测试、自我改进）的数据载体。没有结构化的 trajectory，你没法消融某个机制看差异，没法重放 run 调试 verifier，没法验证新版 harness 有没有回归，也没法拿历史数据喂自我改进的演化程序，四项能力同时失去。OTel GenAI 语义约定仍在制定中，但把 trajectory 与 OTel 接通，是 harness 走向不绑定厂商的稳妥路径。本节的八个小节合起来，就是 trajectory 设计的全貌。
+trajectory 看起来是"agent 跑完后留个文件"的工程细节，但它的真正位置在于：它是改进 harness 的核心闭环（消融、回放、回归测试、自我演化）的数据载体。没有结构化的 trajectory，你没法消融某个机制看差异，没法重放 run 调试 verifier，没法验证新版 harness 有没有回归，也没法拿历史数据喂自我演化的演化程序，四项能力同时失去。OTel GenAI 语义约定仍在制定中，但把 trajectory 与 OTel 接通，是 harness 走向不绑定厂商的稳妥路径。本节的八个小节合起来，就是 trajectory 设计的全貌。
 
 ---
 
