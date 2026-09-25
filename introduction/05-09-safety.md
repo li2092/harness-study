@@ -91,7 +91,7 @@ Claude Code 官方的权限配置文档写道，控制 Claude Code 行为的机�
 
 第二层 **allow / deny / ask 规则** 是工具级别的细粒度规则。一条规则的写法通常是"允许 / 拒绝 / 询问"加上"工具名与参数模式"，比如允许 `git status`、拒绝 `git push`、执行 `git commit` 前询问。这一层的价值在于，让用户可以把"通常安全、但特殊情况下不安全"的工具收紧到具体情况。比如 `git diff` 通常只读、很安全，但 `git -c core.pager='任意命令' diff` 会通过 pager 配置执行任意命令，所以规则不能只看子命令名。规则的存储位置，常见做法是 settings.json 一类配置文件加优先级层次（例如全局、用户、项目、会话几层，越具体越优先；各产品具体的层次与优先级以其文档为准）。这样用户可以在不同项目设不同规则，也可以在会话内临时放宽某条规则而不影响全局。
 
-第三层 **Hooks** 是最灵活的用户自定义层。Hook 本质上是 agent 工具调用前后执行的用户自定义 shell 命令。比如 PreToolUse hook 可以读取工具名和参数，给出允许、拒绝或转为询问三种决定。这一层让用户可以做规则系统表达不了的复杂判断，比如"commit message 含 'WIP' 就拒绝""当前分支是 main 就强制询问"。Claude Code Hooks 公开了十几种生命周期事件，第三方文章把其中与权限相关的归纳为 5 个（PreToolUse、PostToolUse、Stop、Notification、SubagentStop，[Claude Code Hooks · Pixelmojo](https://www.pixelmojo.io/blogs/claude-code-hooks-production-quality-ci-cd-patterns)），用户可以挂任意 shell 脚本。Hooks 的工程价值在于**它把 Safety 从"写死在产品里的逻辑"变成"可扩展的用户策略"**：用户不用改 harness 源代码，写个 shell 脚本就能加新的安全检查。但 Hooks 也会失效，典型情况是规则覆盖不全：比如拒绝了 `cargo check`，却漏掉了它的内置别名 `cargo c`，agent 换用别名就绕过去了。5.9.8 的反模式部分单独展开。
+第三层 **Hooks** 是最灵活的用户自定义层。Hook 本质上是 agent 工具调用前后执行的用户自定义 shell 命令。比如 PreToolUse hook 可以读取工具名和参数，给出允许、拒绝或转为询问三种决定。这一层让用户可以做规则系统表达不了的复杂判断，比如"commit message 含 'WIP' 就拒绝""当前分支是 main 就强制询问"。Claude Code Hooks 公开了十几种生命周期事件，第三方文章把其中与权限相关的归纳为 5 个（PreToolUse、PostToolUse、Stop、Notification、SubagentStop，[Claude Code Hooks · Pixelmojo](https://www.pixelmojo.io/blogs/claude-code-hooks-production-quality-ci-cd-patterns)），用户可以挂任意 shell 脚本。Hooks 的工程价值在于**它把 Safety 从"写死在产品里的逻辑"变成"可扩展的用户策略"**：用户不用改 harness 源代码，写个 shell 脚本就能加新的安全检查。但 Hooks 和白名单规则也会失效，典型情况是匹配方式有漏洞：比如放行规则按字符串前缀判断，放行了 `cargo check`，`cargo checkpoint` 也跟着被放过（作者配套项目中真实出现过）。5.9.8 的反模式部分单独展开。
 
 第四层 **OS 级沙箱** 是由操作系统或容器提供的隔离层：前面三层都是软件逻辑判断，这一层是 OS 强制的边界。Claude Code 在 macOS 上用 **Seatbelt** 沙箱配置，在 Linux 上用 **bubblewrap** 用户态沙箱，实现两类隔离：文件系统读写隔离（只允许在工作目录内读写，阻止改动外部文件），以及网络出口隔离（只允许连接批准过的服务器，防止数据外泄）。Codex 在云端运行 agent 时，把整个 agent run 放进一个隔离的云环境，有专用的文件系统，网络访问被刻意限制（[OpenAI Codex Sandboxing · Cobus Greyling 2026-04](https://cobusgreyling.medium.com/openai-codex-sandboxing-53fbcf61ed40)），每次 run 的环境彼此独立。OpenHands 推荐企业级部署用基于 Kubernetes 的运行时，每次 agent run 在独立容器里跑，也就是常说的"把 agent 放进容器"，跟 Claude Code、Cursor 这类直接在本机文件系统上工作的桌面做法是两条路线。这一层是 Safety 的最后一道防线：前面三层的逻辑判断在极端情况下全被绕过时，前提是沙箱本身没有逃逸漏洞，沙箱的边界仍然在。
 
@@ -241,9 +241,9 @@ Safety 控制面最核心的反模式有四类：**假落地机制**（AP06，�
 
 **AP12 子 agent 深度爆炸**：主 agent 启动子 agent，子 agent 又启动孙 agent，没有深度上限，也没有 token 预算上限，最后一次 run 跑出几十万 token 的成本。它本质上是前面 Multi-Agent Over-Decomposition 那一节讲的编排开销在 Safety 维度上的体现：多智能体系统的 token 消耗约为普通对话的 15 倍，派生深度再失控，成本就成倍放大，成为 LLM10 Unbounded Consumption。该不该上多智能体的判断标准（按任务轮数和子任务的可并行度判断）在那一节已经给出，这里只讲 Safety 侧的硬约束：**子 agent 深度上限（经验值：2 到 3 层）、每次 run 的总 token 预算上限、超预算时提前中止，三者必须齐全**。前面的判断标准回答"值不值得上多智能体"，这三条保证"上了也不会失控"。
 
-**AP13 Hook 与白名单绕过**：hook 配了拒绝规则，agent 仍然找到办法绕过去。机制上，根因通常是**规则覆盖不全**：比如拒绝了 `cargo check`，却允许了它的别名 `cargo c`；拒绝了 `git push origin main`，却允许了 `git push --force origin main`；拒绝了 `rm -rf`，却允许了 `find . -delete`。以 5.9.2 提到的别名为例：hook 对 `cargo check` 配了拒绝规则，agent 换用 cargo 内置的别名 `cargo c`，规则只按字面匹配，没有识别出这是同一个命令，于是自动放行，hook 形同虚设。按工程经验，hook 被绕过是成熟 agent 项目里 hook 相关 bug 的常见一类。判断时看三点：
+**AP13 Hook 与白名单绕过**：hook 或白名单配了规则，agent 仍然找到办法绕过去。机制上，根因通常有两类：一是**匹配方式有漏洞**，规则按字符串前缀或字面比较，而不是按完整的命令词判断；二是**规则覆盖不全**，比如拒绝了 `git push origin main`，却允许了 `git push --force origin main`；拒绝了 `rm -rf`，却允许了 `find . -delete`。5.9.2 提到的 `cargo checkpoint` 属于前一类，是作者配套项目中真实出现过的缺陷（第二卷 2.7 节"权限契约"也记录了这个案例）：shell 白名单（allowlist）放行 `cargo check`，实现时直接用字符串前缀判断（裸 `starts_with`），于是 `cargo checkpoint` 也被放过。后果不只是多放过一个命令：cargo 遇到不认识的子命令，会到 PATH 上找名为 `cargo-checkpoint` 的外部程序并执行，所以这条放行规则实际上可以用来运行任意程序，白名单形同虚设。修复方法是按完整词匹配（token boundary），不认前缀：放行 `cargo check` 只放行子命令恰好是 `check` 的调用。按工程经验，hook 被绕过是成熟 agent 项目里 hook 相关 bug 的常见一类。判断时看三点：
 
-- hook 规则是按字面字符串精确匹配，还是先把命令规范化成意图再匹配？前者几乎必然有绕过的余地。
+- hook 规则是按字符串前缀或字面匹配，还是先把命令拆成完整的词、规范化成意图再匹配？前者几乎必然有绕过的余地。
 - hook 的维护流程是不是"每加一个新工具，同时检查 hook 规则要不要扩展"？通常都不是，工具越加越多，hook 规则就落后了。
 - 采用的是"默认拒绝，显式允许"还是"默认允许，显式拒绝"？前者比后者安全得多。
 
@@ -294,7 +294,7 @@ HITL 配 `requires_confirmation` 和 Auto-review 两层：需要硬把关的操�
 
 **怎么测试**：Safety 控制面要做对抗性测试，不能只跑正常路径。
 
-- **权限绕过测试**：构造一组"应该被拒绝、但 agent 可能想绕过"的工具调用，看 agent 跑下来是否真的被拒绝。比如拒绝了 `rm -rf`，就测 agent 会不会尝试 `find . -delete` 或 `mv * /tmp/` 这类替代写法；如果绕过去了，说明 hook 规则覆盖不全。
+- **权限绕过测试**：构造一组"应该被拒绝、但 agent 可能想绕过"的工具调用，看 agent 跑下来是否真的被拒绝。比如拒绝了 `rm -rf`，就测 agent 会不会尝试 `find . -delete` 或 `mv * /tmp/` 这类替代写法；如果绕过去了，说明 hook 规则覆盖不全。对放行规则，要构造贴着边界的输入：放行了 `cargo check`，就测 `cargo checkpoint` 会不会被放过；放过了，说明规则在按字符串前缀匹配，而不是按完整词匹配（见 5.9.8 AP13）。
 - **提示词注入测试**：在 agent 读取的外部数据（工具输出、抓取的网页、加载的文档）里埋入恶意指令，看 agent 会不会听从。OWASP 没有官方的注入测试套件，可以用 AgentDojo、InjecAgent 等公开基准；厂商 system card 中披露的攻击成功率可作参照。目标是攻击成功率随着防御改进持续下降，并始终与未加防御的基线对比。
 - **预算上限测试**：构造一组会触发无限制消耗的 prompt（超长思维链、无限循环的工具调用、深层子 agent 派生），看 agent 是否真的被预算上限兜住，run 在上限触发后应该干净地中止。
 - **人工审批测试**：构造一组高影响操作，看 agent 跑到这一步时是否真的暂停、等待用户审批；agent 不应该有任何路径绕过 HITL。

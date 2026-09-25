@@ -152,7 +152,7 @@
 | AP10 | 静默吞异常（Silent Try/Catch） | §5.7 / §6 | 异常被吞掉，错误没有产生事件 |
 | AP11 | 循环盲区（Loop Blind Spot） | §5.6 | agent 不知道自己在绕圈 |
 | AP12 | 子智能体深度爆炸（Sub-agent Depth Explosion） | §5.9 | fork-join 不限深度、不限 token |
-| AP13 | Hook 与白名单绕过（Hook / Allowlist Bypass） | §5.9 | 规则拒绝了 `cargo check`，agent 换用别名 `cargo c` 就被放行 |
+| AP13 | Hook 与白名单绕过（Hook / Allowlist Bypass） | §5.9 | 放行规则按字符串前缀匹配，`cargo checkpoint` 被 `cargo check` 放过（作者配套项目实例，见第二卷 2.7 节）；修复：按完整词匹配 |
 | AP14 | 记忆污染（Memory Pollution） | §5.4c | 长期记忆不断累积错误内容 |
 | AP15 | 过度代理与无界消耗（Excessive Agency / Unbounded Consumption） | §5.9 | OWASP LLM06 + LLM10（2025 版） |
 | AP16 | Schema 耦合（Schema Coupling） | §5.5 | prompt 里的 schema 与实际数据强耦合 |

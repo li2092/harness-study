@@ -135,7 +135,7 @@ Safety 不是又一个 runtime 机制，而是横切在所有机制之上的控�
 
 - **permission mode**：agent 整体的运行模式（只读、可写工作区等几个级别）。
 - **allow、deny、ask 规则**：按工具、按参数模式配置的细粒度规则，采用**默认拒绝加显式允许**（允许 `git status`，拒绝 `git push`，询问 `git commit`）。
-- **Hooks**：在调用前后运行的用户脚本，做规则表达不了的复杂决策。要**按规范化后的意图匹配，而不是按原始命令字符串匹配**，否则拒绝了 `cargo check`，agent 换用 `cargo c` 这类别名就能绕过。
+- **Hooks**：在调用前后运行的用户脚本，做规则表达不了的复杂决策。要**按完整的命令词和规范化后的意图匹配，而不是按原始命令字符串的前缀匹配**，否则放行了 `cargo check`，`cargo checkpoint` 也会被放过（cargo 会把它当作 PATH 上的外部程序 `cargo-checkpoint` 执行）。
 - **sandbox**：OS 级沙箱（Seatbelt、bubblewrap、容器），限定文件读写范围和网络出口。前三层的逻辑判断被绕过时，它是最后一道防线。
 
 起步至少先做到两条：
